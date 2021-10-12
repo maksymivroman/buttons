@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:\\Program Files\\WindowsApps\\ArduinoLLC.ArduinoIDE_1.8.51.0_x86__mdqgnx93n4wtt\\hardware\\tools\\avr\\avr\\include\\avr\\",
+                "C:\\Program Files\\WindowsApps\\ArduinoLLC.ArduinoIDE_1.8.51.0_x86__mdqgnx93n4wtt\\hardware\\**",
+                "C:\\Program Files\\WindowsApps\\ArduinoLLC.ArduinoIDE_1.8.51.0_x86__mdqgnx93n4wtt\\tools\\**",
+                "C:\\Program Files\\WindowsApps\\ArduinoLLC.ArduinoIDE_1.8.51.0_x86__mdqgnx93n4wtt\\hardware\\arduino\\avr\\**",
+                "C:\\Program Files\\WindowsApps\\ArduinoLLC.ArduinoIDE_1.8.51.0_x86__mdqgnx93n4wtt\\hardware\\tools\\avr\\avr\\**",
+                "C:\\Users\\rmaks\\Documents\\ArduinoData\\packages\\esp8266\\hardware\\esp8266\\3.0.2\\libraries\\ESP8266WiFi\\src\\**",
+                "C:\\Users\\rmaks\\Documents\\ArduinoData\\packages\\esp8266\\hardware\\esp8266\\3.0.2\\libraries\\**",
+                "C:\\Users\\rmaks\\Documents\\ArduinoData\\packages\\esp8266\\hardware\\esp8266\\3.0.2\\tests\\host\\common",
+                "C:\\Users\\rmaks\\Documents\\ArduinoData\\packages\\esp8266\\hardware\\esp8266\\3.0.2\\tools\\sdk\\include",
+                "C:\\Users\\rmaks\\Documents\\ArduinoData\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\3.0.4-gcc10.3-1757bed\\xtensa-lx106-elf\\include\\c++\\10.3.0\\parallel",
+                "C:\\Users\\rmaks\\Documents\\Arduino\\libraries\\ESPAsyncWebServer-master\\src"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

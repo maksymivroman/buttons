@@ -4,6 +4,7 @@
   #include <ESP8266HTTPClient.h>
   #include "ArduinoJson.h"
   #include <EEPROM.h>
+  #include "FS.h"
   
 //const char* ssid     = "[MikroTik]";
 //const char* password = "19591983";
@@ -108,7 +109,45 @@ void setup(){
   delay(2000);
   Serial.begin(115200);   
   EEPROM.begin(1024);
+  Serial.println("start spifs");
+        bool success = SPIFFS.begin();                         
+        if (success) {
+            Serial.println("File system mounted with success");
+        } else {
+            Serial.println("Error mounting the file system");
+        }
+                         
+        //File file = SPIFFS.open("/file.txt", "w");
+         File file = SPIFFS.open("/post.json", "r"); 
+
+          if (!file) {
+            Serial.println("Error opening file for writing");
+            Serial.println("creating new file...");
+            File file = SPIFFS.open("/post.json", "w");
+                int bytesWritten = file.print(""); 
+
+                if (bytesWritten > 0) {
+                  Serial.println("File was written");
+                  Serial.println(bytesWritten);                         
+                  } 
+                  else {
+                    Serial.println("File write failed");
+                  }
+          }           
+
+
+            file.close();
+              String cont ="";
+              File file2 = SPIFFS.open("/post.json", "r");
+            while (file2.available()) {                             
+              cont+=char(file2.read());
+            }
+
+            Serial.println(cont);
+            file2.close();
+                          
  
+
   Serial.println("Reading EEPROM ssid"); 
   String esid;
     for (int i = 0; i < 32; ++i)
@@ -265,6 +304,10 @@ void setup(){
         }
         EEPROM.commit();
         };
+  ////////////////////WRITE SPIFS
+    File file = SPIFFS.open("/post.txt", "w");
+    int bytesWritten = file.print(inputMessage);
+    file.close();
   ////////////////////
   // Print values.
   Serial.println(wifiname);
@@ -296,13 +339,11 @@ if (reading ==0) {
               delay(100);
           }
           
-               //
 
-    
-                  char Buf[128];
-                  qeventhost.toCharArray(Buf, 128);
-                  char evBuf[128];
-                  qevents.toCharArray(evBuf, 128);
+          char Buf[128];
+          qeventhost.toCharArray(Buf, 128);
+          char evBuf[128];
+          qevents.toCharArray(evBuf, 128);
 
     String ifsecure = qeventhost.substring(4,5);
     if (ifsecure=="s"){
