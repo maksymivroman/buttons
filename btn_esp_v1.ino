@@ -18,19 +18,20 @@ int buttonState;
 int lastButtonState = LOW;
 
 bool restart;
+bool onConfig=false;
 
       String qsid="";
       String qpass="";
       String qeventhost="";
       String qevents="";
       String spiff_cont ="";
-
-unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+      String inputSSID ="";
+      String inputPASS ="";
 
 AsyncWebServer server(80);
 const char* PARAM_INPUT = "inputdata";
-
+       
+        
 // HTML
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
@@ -55,38 +56,30 @@ const char index_html[] PROGMEM = R"rawliteral(
     <h1>button configuration page</h1>
     <div class="main">
         <div class="wifi-creditaince">
-            <div class="main-container">
-                <label for="wifiname">WIFI name</label>
-                <input type="text" id="wifiname" value="X[R]">
-            </div>
-
-            <div class="main-container">
-                <label for="wifipass">WIFI password</label>
-                <input type="password" id="wifipass" value="1133557799">
-            </div>
+          %BUTTONPLACEHOLDER%           
         </div>
 
         <div class="wifi-creditaince">
             <div class="main-container">
                 <label for="wifiname">HOSTS</label>
-                <input type="text" id="host1" value="https://webhook.site/71c2f7ef-1dff-492b-9377-5757859cb3c4">
-                <input type="text" id="host2" value="http://192.168.2.71:55554/event">
-                <input type="text" id="host3" value="http:2">
+                <input type="text" id="host1" onchange="showJSON() " value="https://webhook.site/71c2f7ef-1dff-492b-9377-5757859cb3c4">
+                <input type="text" id="host2" onchange="showJSON() "value="http://192.168.2.71:55554/event">
+                <input type="text" id="host3" onchange="showJSON() "value="http:2">
             </div>
 
             <div class="main-container">
                 <label for="wifipass">EVENTS</label>
-                <input type="text" id="event1" value="{\"eventName1\":\"DYNAMIC_EVENT1\"}">
-                <input type="text" id="event2" value="{\"eventName2\":\"DYNAMIC_EVENT2\"}">
-                <input type="text" id="event3" value="{\"eventName3\":\"DYNAMIC_EVENT3\"}">
-            </div>
-
+                <input type="text" id="event1" onchange="showJSON()" value='{\"eventName1\":\"DYNAMIC_EVENT1\"}'>
+                <input type="text" id="event2" onchange="showJSON()" value='{\"eventName2\":\"DYNAMIC_EVENT2\"}'>
+                <input type="text" id="event3" onchange="showJSON()" value='{\"eventName3\":\"DYNAMIC_EVENT3\"}'>
+            </div>          
         </div>
 
 
     </div>
     <div class="main-container">
         <button type="button" onclick="mergecontent()">save and reboot</button>
+        <textarea id="myTextArea" cols=90 rows=20></textarea>
     </div>
 </body>
 
@@ -113,7 +106,58 @@ const char index_html[] PROGMEM = R"rawliteral(
         window.location.href = '/get?'+data;
         //console.log(data);
     }
+    function showJSON() {
+          var wifiname = document.getElementById('wifiname').value;
+         var wifipass = document.getElementById('wifipass').value;
+         var h1 = document.getElementById('host1').value;
+         var h2 = document.getElementById('host2').value;
+         var h3 = document.getElementById('host3').value;
+         var e1 = document.getElementById('event1').value;
+         var e2 = document.getElementById('event2').value;
+         var e3 = document.getElementById('event3').value;
+            var ugly ='{ "inputdata" :{"wifiname":"' + wifiname + '","wifipass":"'+ wifipass +'","eventdata": {"'+
+             h1 +'":"' + e1 +'",'+
+             '"' + h2 +'":"'  + e2 +'",'+
+             '"' + h3 +'":"' + e3 +'"}}}';
+            var obj = JSON.parse(ugly);
+            var pretty = JSON.stringify(obj, undefined, 4);
+            document.getElementById('myTextArea').value = pretty;
+        }
+        window.onload = showJSON;
 </script>)rawliteral";
+
+void blink_led(int blink_count, int led_delay,  bool onExit){
+  digitalWrite(output, LOW);
+    delay(led_delay);
+      for(int i=0; i<blink_count;i++){
+          digitalWrite(output, !digitalRead(output));
+          delay(led_delay);
+      }
+      if(onExit){
+        digitalWrite(output, HIGH);
+      }
+      else{
+        digitalWrite(output, LOW);
+      }
+}
+
+String wificredits(const String& var){
+  //Serial.println(var);
+  if(var == "BUTTONPLACEHOLDER"){
+    String buttons = "";
+    buttons += "<div class=\"main-container\">";
+    buttons += "<label for=\"wifiname\">WIFI name</label>";
+    buttons += "<input type=\"text\" id=\"wifiname\" value=\""+inputSSID+"\"></div>";
+            
+    buttons += "<div class=\"main-container\">";
+    buttons += "<label for=\"wifipass\">WIFI password</label>";
+    buttons += "<input type=\"password\" id=\"wifipass\" value=\""+inputPASS+"\"></div>";
+            
+    return buttons;
+  }
+  return String();
+}
+
 
 void notFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "Not found");
@@ -206,8 +250,11 @@ void setup(){
   String esid;
     for (int i = 0; i < 32; ++i)
     {
-      esid += char(EEPROM.read(i));
+      if(EEPROM.read(i)!=0){
+        esid += char(EEPROM.read(i));
+      }
     }
+    inputSSID=esid;
   Serial.println();
   Serial.print("SSID: ");
   Serial.println(esid);
@@ -216,8 +263,11 @@ void setup(){
   String epass = "";
     for (int i = 32; i < 96; ++i)
     {
-      epass += char(EEPROM.read(i));
+      if(EEPROM.read(i)!=0){
+        epass += char(EEPROM.read(i));
+      }
     }
+    inputPASS=epass;
   Serial.print("PASS: ");
   Serial.println(epass);
 
@@ -245,13 +295,8 @@ void setup(){
     int reading = digitalRead(buttonPin);
 
     if (reading ==0){
-          for(int i=0; i!=10; i++) {
-              digitalWrite(output, HIGH);
-              delay(200);
-              digitalWrite(output, LOW);
-              delay(200);
-          }
-
+      onConfig=true;
+        blink_led(15,50,true);
           digitalWrite(output, HIGH);
           Serial.println(">>>CONFIG MODE<<<");
           Serial.println("Setting soft-AP ... ");
@@ -268,14 +313,15 @@ void setup(){
                 delay(1000);
                 Serial.println("Connecting to WiFi..");
                 digitalWrite(output,!digitalRead(output));
-              }
-          digitalWrite(output, HIGH); 
+              } 
         } 
   // Print ESP Local IP Address
  Serial.println(WiFi.localIP());  
+ //HTML
+
   // Route for root / web page
  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", index_html);
+    request->send_P(200, "text/html", index_html, wificredits);
   });
 
   // Send a GET request to <host_IP>/get?
@@ -330,10 +376,6 @@ void setup(){
                             Serial.println("");
                             Serial.println(qpass);
                             Serial.println("");
-                            // Serial.println(qeventhost);
-                            // Serial.println("");
-                            // Serial.println(qevents);
-                            // Serial.println("");
 
                     Serial.println("writing eeprom ssid:");
                     for (int i = 0; i < qsid.length(); ++i)
@@ -349,21 +391,7 @@ void setup(){
                       Serial.print("Wrote: ");
                       Serial.println(qpass[i]);
                     }
-                    // Serial.println("writing eeprom qeventhost:");
-                    // for (int i = 0; i < qeventhost.length(); ++i)
-                    // {
-                    //   EEPROM.write(96 + i, qeventhost[i]);
-                    //   Serial.print("Wrote: ");
-                    //   Serial.println(qeventhost[i]);
-                    // }
 
-                    //   Serial.println("writing eeprom events:");
-                    // for (int i = 0; i < qevents.length(); ++i)
-                    // {
-                    //   EEPROM.write(224 + i, qevents[i]);
-                    //   Serial.print("Wrote: ");
-                    //   Serial.println(qevents[i]);
-                    // }
                     EEPROM.commit();
                     };
               ////////////////////WRITE SPIFS             
@@ -385,17 +413,9 @@ void setup(){
         inputParam = "none";
       }
     
-////parce JSON  
-//    String stri ;
-//int str_len = inputMessage.length() + 1; 
-//char char_array[str_len];
-//stri.toCharArray(char_array, str_len);
-
-  
-  
     Serial.println(inputMessage);
-    request->send(200, "text/html", "button will reset now with parameters:(" 
-                                     + inputParam + ") with value: " + inputMessage );
+    request->send(200, "text/html", "<h2>button will reset now with parameters:(</h2><h6>" 
+                                     + inputMessage + "</h6>");
 
     Serial.println("restart ESP...");
     delay(1000);
@@ -414,79 +434,57 @@ if (restart){
   }
 
 int reading = digitalRead(buttonPin);
+if (onConfig==false){
 
-if (reading !=0) {
-  Serial.println("btn");
-            for(int i=0; i!=10; i++) {
-              digitalWrite(output, LOW);
-              delay(100);
-              digitalWrite(output, HIGH);
-              delay(100);
-          }
+  if (reading ==0) {
+    Serial.println("btn");
+      blink_led(5,100,true);
+        StaticJsonDocument<600> main;
+        deserializeJson(main, spiff_cont);
+        JsonObject maindata = main["inputdata"]["eventdata"]; 
+        String keyval;  
 
-      StaticJsonDocument<600> main;
-      deserializeJson(main, spiff_cont);
-      JsonObject maindata = main["inputdata"]["eventdata"]; 
-      String keyval;  
+      for (JsonPair keyValue : maindata) {
+            keyval=keyValue.key().c_str();
+            Serial.println(keyValue.key().c_str());
+              
+          String postname = maindata[keyValue.key().c_str()];
+              //serializeJson(postname, jsonStr);
+              Serial.println(postname);
 
-    for (JsonPair keyValue : maindata) {
-          keyval=keyValue.key().c_str();
-          Serial.println(keyValue.key().c_str());
-            
-        String postname = maindata[keyValue.key().c_str()];
-            //serializeJson(postname, jsonStr);
-            Serial.println(postname);
+          Serial.println(">HTTP DATA: " + keyval + "/" + postname );
+            char toHost[128];
+            keyval.toCharArray(toHost, 128);
+            char toEvent[128];
+            postname.toCharArray(toEvent, 128);
 
-    Serial.println(">HTTP DATA: " + keyval + "/" + postname );
-          char toHost[128];
-          keyval.toCharArray(toHost, 128);
-          char toEvent[128];
-          postname.toCharArray(toEvent, 128);   
+            String ifsecure = keyval.substring(4,5);
+            if (ifsecure=="s"){
+                Serial.println("secure");
+                  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+                  client->setInsecure();                 
+                  HTTPClient http;                  
+                  http.begin(*client, toHost);           //////qeventhost or "https://webhook.site/71c2f7ef-1dff-492b-9377-5757859cb3c4"
+                  http.addHeader("Content-Type", "application/json");                  
+                  int httpCode = http.POST(toEvent);    ///////// "{\"eventName\":\"DYNAMIC_EVENT\"}"             
+                  Serial.println(httpCode);                    
+                  http.end(); 
+            }
+            else{
+                Serial.println("not secure");
+                  WiFiClient client;
+                  HTTPClient http;                                      
+                  http.begin(client, toHost);         //http://192.168.2.71:55554/event
+                  http.addHeader("Content-Type", "application/json");                  
+                  int httpCode = http.POST(postname);                 
+                  Serial.println(httpCode);                    
+                  http.end(); 
+            }
+      }
 
+      blink_led(10,100,false);  
 
-
-    String ifsecure = keyval.substring(4,5);
-    if (ifsecure=="s"){
-        Serial.println("secure");
-          std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-          client->setInsecure();                 
-          HTTPClient http;                  
-          http.begin(*client, toHost);           //////qeventhost or "https://webhook.site/71c2f7ef-1dff-492b-9377-5757859cb3c4"
-          http.addHeader("Content-Type", "application/json");                  
-          int httpCode = http.POST(toEvent);    ///////// "{\"eventName\":\"DYNAMIC_EVENT\"}"             
-          Serial.println(httpCode);                    
-          http.end(); 
-    }
-    else{
-        Serial.println("not secure");
-          WiFiClient client;
-          HTTPClient http;                                      
-          http.begin(client, toHost);         //http://192.168.2.71:55554/event
-          http.addHeader("Content-Type", "application/json");                  
-          int httpCode = http.POST(postname);                 
-          Serial.println(httpCode);                    
-          http.end(); 
-    }
-}
-
-    digitalWrite(output, HIGH);
-    delay(3000);
-    digitalWrite(output, LOW);
-    
-    
- 
-
-//
-//            //
-
-            //
-                  //std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-                  //client->setInsecure();
-                  
- 
-            //
-
+      }
   }
-
-
 }
+
