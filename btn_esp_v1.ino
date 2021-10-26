@@ -5,11 +5,12 @@
   #include "ArduinoJson.h"
   #include <EEPROM.h>
   #include "FS.h"
-  
+
 //const char* ssid     = "[MikroTik]";
 //const char* password = "19591983";
 
-const int output = 4;  //5
+const int output = 4;
+const int outputGreen = 13;  //5
 const int buttonPin = 5;  //2
 
 // Variables will change:
@@ -27,8 +28,10 @@ bool onConfig=false;
       String spiff_cont ="";
       String inputSSID ="";
       String inputPASS ="";
+      String wifilist="";
+      String jsonStr;
 
-AsyncWebServer server(80);
+AsyncWebServer server(55554);
 const char* PARAM_INPUT = "inputdata";
        
         
@@ -46,9 +49,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         .main-container{display: flex; flex-direction: column; align-items: center; justify-content: right; margin: 2rem;}
         label{font-size: 3rem; color: white}
         .container>h1{ font-size: 5rem;}
-        button{font-size: 3rem; color: chocolate;}
+        button{font-size: 3rem; color: chocolate; margin: 2rem;}
         .wifi-creditaince{ display: flex; flex-direction: row; justify-content: center; }
-        input{font-size: 3rem}
+        input{font-size: 3rem;}
+        select, option{font-size: 3rem;}
     </style>
 
 </head>
@@ -59,7 +63,7 @@ const char index_html[] PROGMEM = R"rawliteral(
           %BUTTONPLACEHOLDER%           
         </div>
 
-        <div class="wifi-creditaince">
+        <!--<div class="wifi-creditaince">
             <div class="main-container">
                 <label for="wifiname">HOSTS</label>
                 <input type="text" id="host1" onchange="showJSON() " value="https://webhook.site/71c2f7ef-1dff-492b-9377-5757859cb3c4">
@@ -73,13 +77,13 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <input type="text" id="event2" onchange="showJSON()" value='{\"eventName2\":\"DYNAMIC_EVENT2\"}'>
                 <input type="text" id="event3" onchange="showJSON()" value='{\"eventName3\":\"DYNAMIC_EVENT3\"}'>
             </div>          
-        </div>
+        </div>-->
 
 
     </div>
     <div class="main-container">
-        <button type="button" onclick="mergecontent()">save and reboot</button>
-        <textarea id="myTextArea" cols=90 rows=20></textarea>
+        <button type="button" onclick="sentcontent()">save and reboot</button>
+        <textarea id="saved" cols=120 rows=15></textarea>
     </div>
 </body>
 
@@ -89,22 +93,33 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 <script>
      function mergecontent(){
-         var wifiname = document.getElementById('wifiname').value;
-         var wifipass = document.getElementById('wifipass').value;
-         var h1 = document.getElementById('host1').value;
-         var h2 = document.getElementById('host2').value;
-         var h3 = document.getElementById('host3').value;
-         var e1 = document.getElementById('event1').value;
-         var e2 = document.getElementById('event2').value;
-         var e3 = document.getElementById('event3').value;
+        //  var wifiname = document.getElementById('wifiname').value;
+        //  var wifipass = document.getElementById('wifipass').value;
+        //  var h1 = document.getElementById('host1').value;
+        //  var h2 = document.getElementById('host2').value;
+        //  var h3 = document.getElementById('host3').value;
+        //  var e1 = document.getElementById('event1').value;
+        //  var e2 = document.getElementById('event2').value;
+        //  var e3 = document.getElementById('event3').value;
 
-         let data='inputdata={ "inputdata" :{"wifiname":"' + wifiname + '","wifipass":"'+ wifipass +'","eventdata": {"'+
-             h1 +'":"' + e1 +'",'+
-             '"' + h2 +'":"'  + e2 +'",'+
-             '"' + h3 +'":"' + e3 +'"}}}';
+        //  let data='inputdata={ "inputdata" :{"wifiname":"' + wifiname + '","wifipass":"'+ wifipass +'","eventdata": {"'+
+        //      h1 +'":"' + e1 +'",'+
+        //      '"' + h2 +'":"'  + e2 +'",'+
+        //      '"' + h3 +'":"' + e3 +'"}}}';
 
-        window.location.href = '/get?'+data;
+        // window.location.href = '/get?'+data;
         //console.log(data);
+    }
+    function sentcontent(){
+        var name = document.getElementById('wifiname').value;
+        var pass = document.getElementById('wifipass').value;
+
+        data='/get?inputdata={ "inputdata" :{"wifiname":"' + name + '","wifipass":"'+ pass +'","eventdata":'+ document.getElementById('saved').value + '}';
+        data.replace(/" /g, '');
+        data.replace(/ "/g, '');
+        window.location.href=data;
+
+
     }
     function showJSON() {
           var wifiname = document.getElementById('wifiname').value;
@@ -123,7 +138,19 @@ const char index_html[] PROGMEM = R"rawliteral(
             var pretty = JSON.stringify(obj, undefined, 4);
             document.getElementById('myTextArea').value = pretty;
         }
-        window.onload = showJSON;
+     function showSaved() {
+
+            var obj = JSON.parse(document.getElementById('savedJSON').innerHTML);
+            var showJSON = JSON.stringify(obj, undefined, 4);
+            document.getElementById('saved').value = showJSON;
+       }
+
+      function update() {
+        var select = document.getElementById('networks');
+        var option = select.options[select.selectedIndex];
+        document.getElementById('wifiname').value = option.value;
+      }
+        window.onload = showSaved;
 </script>)rawliteral";
 
 void blink_led(int blink_count, int led_delay,  bool onExit){
@@ -152,12 +179,29 @@ String wificredits(const String& var){
     buttons += "<div class=\"main-container\">";
     buttons += "<label for=\"wifipass\">WIFI password</label>";
     buttons += "<input type=\"password\" id=\"wifipass\" value=\""+inputPASS+"\"></div>";
+    buttons += "<label style=\"display:none;\" id=\"savedJSON\">" + jsonStr + "</label>";
+    buttons+=wifilist;
             
     return buttons;
   }
   return String();
 }
 
+void scanwifinetwork(){
+  wifilist="<div class=\"main-container\">";
+  wifilist+="<label for=\"wifiname\">WIFI List</label>";
+  wifilist+="<select id=\"networks\" onChange=\"update()\">";
+  Serial.print("Scan start ... ");
+  int n = WiFi.scanNetworks();
+  Serial.print(n);
+  Serial.println(" network(s) found");
+    for (int i = 0; i < n; i++)
+    {
+      Serial.println(WiFi.SSID(i));
+      wifilist+="<option value=\"" + WiFi.SSID(i)  +"\">" + WiFi.SSID(i) + "</option>";
+    }
+  wifilist+="</select></div>";
+}
 
 void notFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "Not found");
@@ -169,15 +213,18 @@ void setup(){
 //
 //  wifi_set_macaddr(STATION_IF, &newMACAddress[0]);
 //   WiFi.hostname(newHostname.c_str());
-//  WiFi.mode(WIFI_STA); 
-
-  
+//  WiFi.mode(WIFI_STA);   
   
   pinMode(output, OUTPUT);
-    digitalWrite(output, LOW);
-  pinMode(buttonPin, INPUT);
+  digitalWrite(output, LOW);
 
-  delay(2000);
+  pinMode(buttonPin, INPUT);
+  pinMode(outputGreen, OUTPUT);
+  //digitalWrite(outputGreen, LOW);
+
+  digitalWrite(outputGreen, HIGH);
+  delay(1000);
+  digitalWrite(outputGreen, LOW);
   Serial.begin(115200);   
   EEPROM.begin(1024);
   Serial.println("start SPIFFS");
@@ -230,7 +277,7 @@ void setup(){
   deserializeJson(spif, spiff_cont);
   JsonObject evdata = spif["inputdata"]["eventdata"];
     Serial.println("Json// {inputdata}:");
-        String jsonStr;
+        // String jsonStr;
         serializeJson(evdata, jsonStr);
         Serial.println(jsonStr);
     
@@ -291,7 +338,8 @@ void setup(){
   //   qevents = eevent;
        
   //==========if btn is presed then >CONFIG MODE and wifi hotspot is active untill reboot
-  
+
+
     int reading = digitalRead(buttonPin);
 
     if (reading ==0){
@@ -299,8 +347,9 @@ void setup(){
         blink_led(15,50,true);
           digitalWrite(output, HIGH);
           Serial.println(">>>CONFIG MODE<<<");
+          scanwifinetwork();
           Serial.println("Setting soft-AP ... ");
-          WiFi.softAP("BUTTON_CONFIG", "1133557799");
+          WiFi.softAP("BUTTON_CONFIG", "12345678");
             IPAddress IP = WiFi.softAPIP();
             Serial.print("AP IP address: ");
             Serial.println(IP);          
@@ -314,6 +363,7 @@ void setup(){
                 Serial.println("Connecting to WiFi..");
                 digitalWrite(output,!digitalRead(output));
               } 
+          digitalWrite(outputGreen, HIGH);
         } 
   // Print ESP Local IP Address
  Serial.println(WiFi.localIP());  
@@ -414,7 +464,7 @@ void setup(){
       }
     
     Serial.println(inputMessage);
-    request->send(200, "text/html", "<h2>button will reset now with parameters:(</h2><h6>" 
+    request->send(200, "text/html", "<h2>button will reset now with parameters:</h2><h6>" 
                                      + inputMessage + "</h6>");
 
     Serial.println("restart ESP...");
@@ -424,13 +474,22 @@ void setup(){
   });
   server.onNotFound(notFound);
   server.begin();
+
 }  
 
 
 void loop() {
  
 if (restart){
-    ESP.reset();
+  unsigned long timing= millis ();
+  Serial.println("restart in 3 sec...");
+  do{
+    if (millis () - timing>= 3000) {
+      Serial.println("restart...");
+      ESP.reset(); 
+    }    
+  }while(restart);
+
   }
 
 int reading = digitalRead(buttonPin);
@@ -438,12 +497,13 @@ if (onConfig==false){
 
   if (reading ==0) {
     Serial.println("btn");
+      digitalWrite(outputGreen, LOW);
       blink_led(5,100,true);
         StaticJsonDocument<600> main;
         deserializeJson(main, spiff_cont);
         JsonObject maindata = main["inputdata"]["eventdata"]; 
         String keyval;  
-
+      
       for (JsonPair keyValue : maindata) {
             keyval=keyValue.key().c_str();
             Serial.println(keyValue.key().c_str());
@@ -483,8 +543,9 @@ if (onConfig==false){
       }
 
       blink_led(10,100,false);  
-
+      digitalWrite(outputGreen, HIGH);
       }
   }
+
 }
 
