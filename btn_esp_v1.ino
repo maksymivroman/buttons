@@ -29,6 +29,7 @@
 
   bool restart;
   bool onConfig=false;
+  bool blinkID=false;
 
         String qsid="";
         String qpass="";
@@ -493,7 +494,7 @@
               //SET DNS
               dnsServer.setTTL(300);
               dnsServer.setErrorReplyCode(DNSReplyCode::ServerFailure);
-              dnsServer.start(DNS_PORT, "www.btn.com", IP);    
+              dnsServer.start(DNS_PORT, "www.btn.net", IP);    
 
           }    
       else{  
@@ -527,7 +528,7 @@
             request->send(200, "text/html", "<!DOCTYPE html><html lang=\"en\"><head> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> <title>Title</title> <style> html{ color: #333333; font-size: 18px} .container{ background: #565f60; display: flex; flex-direction: column; align-content: center; align-items: center;} @media screen and (max-width: 1080px) { .wifi-credentials{flex-direction: column} .main-container{width: 60vw} } </style></head><body class=\"container\"> <h1 style=\"color:#ced4da\">hooray, dude!</h1> <h2 style=\"color:#ddf2ff\">Button was successfully configured!</h2> <p></p> <textarea cols=120 rows=15 class=\"control\" style=\"margin-bottom: 1rem\">"
       + postMessage +  "</textarea></body></html>");
       Serial.println("restart ESP...");
-      delay(1000);
+      delay(2000);
       restart=true;
     });
 
@@ -545,6 +546,13 @@
       Serial.println("send request...");
       request->send(200, "text/html", "done"); 
       //request->redirect("/save");
+    });
+
+      server.on("/getID", HTTP_POST, [](AsyncWebServerRequest *request){
+      Serial.println("recive ID POST");
+      Serial.println("send ID via post request...");
+      request->send(200, "text/html", WiFi.hostname().c_str());
+        blinkID=true;
     });
 
     // Send a GET request to <host_IP>/get?
@@ -655,6 +663,13 @@
 
   void loop() {
   
+  if (blinkID){
+      digitalWrite(outputGreen, LOW);
+      blink_led(5,500,false); 
+      digitalWrite(outputGreen, HIGH);
+      blinkID=false;
+  }
+
   if (restart){
     unsigned long timing= millis ();
     Serial.println("restart in 3 sec...");
