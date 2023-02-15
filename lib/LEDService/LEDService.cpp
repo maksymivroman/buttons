@@ -11,6 +11,9 @@ void LEDService::pinConfig(int r, int g, int b) {
 }
 
 void LEDService::switchPin(int pin, int state) {
+    digitalWrite(pinGreen, 0);
+    digitalWrite(pinRed, 0);
+    digitalWrite(pinBlue, 0);
     digitalWrite(pin, state);
 }
 

@@ -5,25 +5,31 @@
 #include "ArduinoJson.h"
 #include <EEPROM.h>
 #include <DNSServer.h>
+//New
+#include "LEDService.h"
 #include "html-page.hpp"
 
+//new
+const int bluePin = 12;
+const int greenPin = 13;
+const int redPin = 14;
+LEDService ledService;
+
+
+
+//old
 const int output = 4;
 const int outputGreen = 13;  //5
 const int buttonPin = 5;  //2
+
 const int ipPort = 80;
 //DNS SETUP
 const byte DNS_PORT = 53;
 DNSServer dnsServer;
 
-
-// Variables will change:
-int ledState = LOW;
-int buttonState;
-int lastButtonState = LOW;
-
 bool restart;
 bool onConfig=false;
-bool blinkID=false;
+
 
 String qsid="";
 String qpass="";
@@ -39,22 +45,9 @@ String postMessage;
 char host[] = "BUTTON protorype 2";
 
 AsyncWebServer server(ipPort);
+
 const char* PARAM_INPUT = "inputdata";
 
-void blink_led(int blink_count, int led_delay,  bool onExit){
-    digitalWrite(output, LOW);
-    delay(led_delay);
-    for(int i=0; i<blink_count;i++){
-        digitalWrite(output, !digitalRead(output));
-        delay(led_delay);
-    }
-    if(onExit){
-        digitalWrite(output, HIGH);
-    }
-    else{
-        digitalWrite(output, LOW);
-    }
-}
 
 String wificredits(const String& var){
     //Serial.println(var);
@@ -154,7 +147,11 @@ void saveConfig(){
 }
 
 void setup() {
-// write your initialization code here
+    ledService.pinConfig(redPin,greenPin,bluePin);
+
+
+
+
     //    uint8_t newMACAddress[] = {0x30, 0xAE, 0xA4, 0x07, 0x0D, 0x66};
     //  String newHostname = "button01";
     //
@@ -292,8 +289,10 @@ void setup() {
 
     if (reading ==0){
         onConfig=true;
-        blink_led(15,50,true);
-        digitalWrite(output, HIGH);
+
+        ledService.blinkPrimary();
+        ledService.lightOnGreen(true);
+
         Serial.println(">>>CONFIG MODE<<<");
         scanwifinetwork();
         Serial.println("Setting soft-AP ... ");
@@ -359,10 +358,7 @@ void setup() {
     });
 
     server.on("/getID", HTTP_POST, [](AsyncWebServerRequest *request){
-        Serial.println("recive ID POST");
-        Serial.println("send ID via post request...");
         request->send(200, "text/html", WiFi.hostname().c_str());
-        blinkID=true;
     });
 
     // Send a GET request to <host_IP>/get?
@@ -474,14 +470,6 @@ void setup() {
 void loop() {
 // write your code here
 
-
-    if (blinkID){
-        digitalWrite(outputGreen, LOW);
-        blink_led(5,500,false);
-        digitalWrite(outputGreen, HIGH);
-        blinkID=false;
-    }
-
     if (restart){
         unsigned long timing= millis ();
         Serial.println("restart in 3 sec...");
@@ -499,7 +487,8 @@ void loop() {
         if (reading ==0) {
             Serial.println("btn");
             digitalWrite(outputGreen, LOW);
-            blink_led(5,100,true);
+            ledService.blinkPrimary();
+
             StaticJsonDocument<900> main;
             deserializeJson(main, spiff_cont);
             JsonObject maindata = main["inputdata"]["eventdata"];
@@ -545,8 +534,8 @@ void loop() {
                 }
             }
 
-            blink_led(10,100,false);
-            digitalWrite(outputGreen, HIGH);
+            ledService.blinkWarn();
+            ledService.blinkDone();
         }
         if (WiFi.status() != WL_CONNECTED){
             Serial.println(">>>disconected...");
