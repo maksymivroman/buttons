@@ -101,24 +101,6 @@ extern const char index_html[] PROGMEM = R"rawliteral(
   </html>
 
   <script>
-      function mergecontent(){
-          //  var wifiname = document.getElementById('wifiname').value;
-          //  var wifipass = document.getElementById('wifipass').value;
-          //  var h1 = document.getElementById('host1').value;
-          //  var h2 = document.getElementById('host2').value;
-          //  var h3 = document.getElementById('host3').value;
-          //  var e1 = document.getElementById('event1').value;
-          //  var e2 = document.getElementById('event2').value;
-          //  var e3 = document.getElementById('event3').value;
-
-          //  let data='inputdata={ "inputdata" :{"wifiname":"' + wifiname + '","wifipass":"'+ wifipass +'","eventdata": {"'+
-          //      h1 +'":"' + e1 +'",'+
-          //      '"' + h2 +'":"'  + e2 +'",'+
-          //      '"' + h3 +'":"' + e3 +'"}}}';
-
-          // window.location.href = '/get?'+data;
-          //console.log(data);
-      }
       function sentcontent(){
           var name = document.getElementById('wifiname').value;
           var pass = document.getElementById('wifipass').value;
