@@ -6,14 +6,24 @@
 #define EVENT_BUTTON_BUTTONWEBSERVER_H
 
 
+#include "SettingsService.h"
+
 class ButtonWebServer {
+protected:
+//    AsyncWebServer _server;
 
 public:
-    void startServer(int port);
+    void startServer();
+    bool requireRestart = false;
 
 private:
+    String wiFiList;
+//    String wiFiCredits();
 //    static void notFound(AsyncWebServerRequest *request);
 //    void saveConfig();
+    static String wiFiCredits(const String &var);
+
+    SettingsService ButtonSettings;
 };
 
 

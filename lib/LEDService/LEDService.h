@@ -17,7 +17,7 @@ private:
     int pinGreen;
     int pinBlue;
 
-    void switchPin(int pin, int state);
+    void switchPin(int pin, int state) const;
     void blink(int pin, int count);
 
 };

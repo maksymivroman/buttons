@@ -10,7 +10,7 @@ void LEDService::pinConfig(int r, int g, int b) {
     pinMode(pinBlue, OUTPUT);
 }
 
-void LEDService::switchPin(int pin, int state) {
+void LEDService::switchPin(int pin, int state) const {
     digitalWrite(pinGreen, 0);
     digitalWrite(pinRed, 0);
     digitalWrite(pinBlue, 0);

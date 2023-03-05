@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-extern const char index_html[] PROGMEM = R"rawliteral(
+const char index_html[] PROGMEM = R"rawliteral(
   <!DOCTYPE html>
   <html lang="en">
   <head>
@@ -88,7 +88,9 @@ extern const char index_html[] PROGMEM = R"rawliteral(
       <h1 style="color:#ddf2ff">Button Setup Page</h1>
 
       <div class="wifi-credentials">
-        %BUTTONPLACEHOLDER%
+        %NETWORKINFO%
+        %EVENTINFO%
+        %WIFILIST%
       </div>
 
       <div class="main-container" style="width: 60vw;">
