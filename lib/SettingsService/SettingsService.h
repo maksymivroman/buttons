@@ -12,8 +12,9 @@ class SettingsService {
 public:
     WiFiCONFIG loadWiFiSettings();
     String loadEvents();
-    void saveWiFiSettings(WiFiCONFIG settings);
+    void saveWiFiSettings(const WiFiCONFIG& settings);
     void saveEvents(String events);
+    void saveSettings(String settings);
 };
 
 

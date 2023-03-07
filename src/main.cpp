@@ -37,8 +37,10 @@ void setup() {
     Serial.begin(115200);
     ledService.pinConfig(redPin, greenPin, bluePin);
     pinMode(buttonPin, INPUT);
-    WiFiCONFIG wiFiConnDetails = buttonSettings.loadWiFiSettings();
+    ledService.blinkDone();
+
     String eventsData = buttonSettings.loadEvents();
+    WiFiCONFIG wiFiConnDetails = buttonSettings.loadWiFiSettings();
 
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
@@ -56,6 +58,20 @@ void setup() {
         request->send_P(200, "text/html", index_html, components);
     });
 
+    server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        int params = request->params();
+        Serial.print("[HTTP_POST] ");
+        Serial.println(params);
+
+        if (params >= 0) {
+            AsyncWebParameter *p = request->getParam(0);
+            String postMessage = p->value().c_str();
+            Serial.print("[HTTP_POST] "); Serial.println(postMessage);
+
+            buttonSettings.saveSettings(postMessage);
+        }
+        request->send(200, "text/html", "done");
+    });
 
     server.begin();
 }
