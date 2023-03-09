@@ -7,7 +7,7 @@
 #include <ESP8266WiFi.h>
 #include "GlobalConfig.hpp"
 
-void NetworkService::ConnectToWiFi(char* ssid, char* pass) {
+void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
     WiFi.mode(WIFI_STA);
     wifi_station_set_hostname("Event button");
     WiFi.setAutoConnect(false);

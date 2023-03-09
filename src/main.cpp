@@ -6,7 +6,7 @@
 #include "ArduinoJson.h"
 #include <EEPROM.h>
 #include <DNSServer.h>
-//New
+
 #include "LEDService.h"
 #include "html-page.hpp"
 #include "ButtonWebServer.h"
@@ -14,6 +14,7 @@
 #include "SettingsService.h"
 #include "NetworkService.h"
 #include "HTMLComponentBuilder.h"
+#include "EventsService.h"
 
 const int bluePin = 12;
 const int greenPin = 13;
@@ -28,6 +29,7 @@ SettingsService buttonSettings;
 AsyncWebServer server(80);
 NetworkService networkService;
 HTMLComponentBuilder htmlComponent;
+EventsService* eventService = new EventsService();
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -48,11 +50,15 @@ void setup() {
     if (digitalRead(buttonPin) == 0) {
         ledService.blinkWarn();
         networkService.ButtonHotspot(true, hotspotSsid, hotspotPass);
+    } else {
+        ledService.lightOnBlue(true);
+        networkService.ConnectToWiFi(wiFiConnDetails.ssid,wiFiConnDetails.password);
     }
 
     ledService.blinkPrimary();
 
     htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList);
+    eventService->SetEvents(eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", index_html, components);
@@ -60,14 +66,10 @@ void setup() {
 
     server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
         int params = request->params();
-        Serial.print("[HTTP_POST] ");
-        Serial.println(params);
-
+        Serial.print("[MAIN->HTTP_POST] "); Serial.println(params);
         if (params >= 0) {
-            AsyncWebParameter *p = request->getParam(0);
-            String postMessage = p->value().c_str();
-            Serial.print("[HTTP_POST] "); Serial.println(postMessage);
-
+            AsyncWebParameter *param = request->getParam(0);
+            String postMessage = param->value().c_str();
             buttonSettings.saveSettings(postMessage);
         }
         request->send(200, "text/html", "done");
@@ -77,5 +79,11 @@ void setup() {
 }
 
 void loop() {
-
+    delay(100);
+    if (digitalRead(buttonPin) == 1) {
+        Serial.println("[event]");
+        ledService.lightOnBlue(true);
+        eventService->SendEvents();
+        ledService.lightOnBlue(false);
+    }
 }

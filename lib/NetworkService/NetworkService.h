@@ -12,7 +12,7 @@ class NetworkService {
 
 public:
     void ButtonHotspot(bool isOn, const char* ssid, const char* pass);
-    void ConnectToWiFi(char* ssid, char* pass);
+    void ConnectToWiFi(const String& ssid, const String& pass);
     NETWORKLIST WiFiList();
 };
 
