@@ -1,5 +1,3 @@
-# Event button 2.0
-
 > ### Pin state for button is `0` by default (pulled down)
 
 ### EEPROM byte configuration (for future version)
