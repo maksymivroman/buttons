@@ -20,6 +20,9 @@ const int bluePin = 12;
 const int greenPin = 13;
 const int redPin = 14;
 const int buttonPin = 5;
+const int buzzerPin = 4;
+bool requiredToFind;
+bool requiredRestart;
 
 const char *hotspotSsid = "BUTTON_CONFIG";
 const char *hotspotPass = "12345678";
@@ -47,7 +50,7 @@ void setup() {
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
 
-    if (digitalRead(buttonPin) == 0) {
+    if (digitalRead(buttonPin) == 1) {
         ledService.blinkWarn();
         networkService.ButtonHotspot(true, hotspotSsid, hotspotPass);
     } else {
@@ -70,7 +73,15 @@ void setup() {
         if (params >= 0) {
             AsyncWebParameter *param = request->getParam(0);
             String postMessage = param->value().c_str();
-            buttonSettings.saveSettings(postMessage);
+            Serial.print("[MAIN->HTTP_POST] "); Serial.println(postMessage);
+            const char *findMe = "find";
+            if (postMessage == findMe) {
+                requiredToFind = true;
+            } else {
+                buttonSettings.saveSettings(postMessage);
+                requiredRestart = true;
+            }
+
         }
         request->send(200, "text/html", "done");
     });
@@ -85,5 +96,27 @@ void loop() {
         ledService.lightOnBlue(true);
         eventService->SendEvents();
         ledService.lightOnBlue(false);
+    }
+
+    if(requiredToFind) {
+        ledService.lightOnRed(true);
+        for(int i = 0; i<10 ; i++) {
+            tone(buzzerPin,800*i,200);
+            delay(100);
+        }
+        noTone(buzzerPin);
+        ledService.blinkWarn();
+        ledService.blinkDone();
+        ledService.blinkPrimary();
+        requiredToFind = !requiredToFind;
+    }
+
+    if(requiredRestart) {
+        ledService.lightOnRed(true);
+        for(int i = 0; i<5 ; i++) {
+            tone(buzzerPin,500*i,50);
+            delay(100);
+        }
+        EspClass::restart();
     }
 }

@@ -18,3 +18,29 @@
 | **265 - 513** |               PASSWORD               | 
 |     **-**     |     `RESERVED for HOTSPOT SSID`      | 
 |     **-**     |     `RESERVED for HOTSPOT PASS`      | 
+
+
+> ### Receiving configuration data via POST request
+### Data structure (JSON)
+
+
+```json
+{
+    "inputdata" : {
+      "wifiname" : "SSID",
+      "wifipass" : "PASS",
+      
+      "eventdata": {
+        "${HOST1}": "${EVENT1}",
+        "${HOST2}": "${EVENT2}",
+        ...
+        "${HOSTn}": "${EVENTn}"
+      },
+      
+      "configuration" : {
+        "clientWebAccess" : "1-true, 0-false", 
+        "useDnsName"      : "1-true, 0-false"
+      }
+    }
+}
+```
