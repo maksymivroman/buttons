@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include "GlobalConfig.hpp"
+#include <ESP8266WiFi.h>
 
 class HTMLComponentBuilder {
 public:

@@ -11,7 +11,7 @@ void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String 
     networkList = list;
 }
 
-String HTMLComponentBuilder::componentById(const String& ref) {
+String HTMLComponentBuilder::componentById(const String &ref) {
     String data = "";
     if (ref == "NETWORKINFO") {
         data += "<div class=\"main-container\">";
@@ -27,25 +27,33 @@ String HTMLComponentBuilder::componentById(const String& ref) {
     } else if (ref == "WIFILIST") {
         data += wiFiList();
         return data;
+    } else if (ref == "FWVERSION") {
+        data += __DATE__;
+        return data;
+    } else if (ref == "MAC") {
+        data += WiFi.macAddress();
+        return data;
+    } else if (ref == "HEAP") {
+        data += ESP.getFreeHeap();
+        return data;
     }
-    return String();
+    return ref;
 }
 
 String HTMLComponentBuilder::wiFiList() {
     String wifilist = "";
-    wifilist="<div class=\"main-container\">";
-    wifilist+="<label class=\"label\" for=\"wifiname\">WIFI List</label>";
-    wifilist+="<select class=\"control\" id=\"networks\" onChange=\"update()\">";
+    wifilist = "<div class=\"main-container\">";
+    wifilist += "<label class=\"label\" for=\"wifiname\">WIFI List</label>";
+    wifilist += "<select class=\"control\" id=\"networks\" onChange=\"update()\">";
     Serial.print("Scan start ... ");
     int n = networkList.size;
     Serial.print(n);
     Serial.println(" network(s) found");
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++) {
         Serial.println(networkList.arr[i]);
-        wifilist+="<option value=\"" + networkList.arr[i]  +"\">" + networkList.arr[i] + "</option>";
+        wifilist += "<option value=\"" + networkList.arr[i] + "\">" + networkList.arr[i] + "</option>";
     }
-    wifilist+="</select></div>";
+    wifilist += "</select></div>";
     return wifilist;
 }
 
