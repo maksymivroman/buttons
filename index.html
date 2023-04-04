@@ -284,6 +284,10 @@
         <h5 style="margin: 5px">%MAC% </h5>
     </div>
     <div style="display: flex;">
+        <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP address:</h5>
+        <h5 style="margin: 5px">%IP% </h5>
+    </div>
+    <div style="display: flex;">
         <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
         <h5 style="margin: 5px">%HEAP% </h5>
     </div>
@@ -292,16 +296,6 @@
 </html>
 
 <script>
-    // function sentcontent() {
-    //     var name = document.getElementById('wifiname').value;
-    //     var pass = document.getElementById('wifipass').value;
-    //
-    //     data = '/get?inputdata={ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","eventdata":' + document.getElementById('events').value + '}';
-    //     data.replace(/" /g, '');
-    //     data.replace(/ "/g, '');
-    //     window.location.href = data;
-    // }
-
     function find() {
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
         const httpRequest = new XMLHttpRequest();
@@ -342,9 +336,15 @@
     }
 
     function showSaved() {
-        const data = JSON.parse(document.getElementById('savedJSON').innerHTML);
+        let data, jsonEvents;
+        try {
+            jsonEvents = document.getElementById('savedJSON').innerHTML;
+            data = JSON.parse(jsonEvents);
+        }catch (e) {
+            jsonEvents = '{"sample_event_host" : "sample_event_data"}';
+        }
         document.getElementById('events').value = JSON.stringify(data, undefined, 4);
-        eventSettings = document.getElementById('savedJSON').innerHTML;
+        eventSettings = jsonEvents;//document.getElementById('savedJSON').innerHTML;
         console.log(eventSettings);
         buildTable();
     }

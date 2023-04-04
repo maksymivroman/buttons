@@ -289,6 +289,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         <h5 style="margin: 5px">%MAC% </h5>
     </div>
     <div style="display: flex;">
+        <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP address:</h5>
+        <h5 style="margin: 5px">%IP% </h5>
+    </div>
+    <div style="display: flex;">
         <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
         <h5 style="margin: 5px">%HEAP% </h5>
     </div>
@@ -337,9 +341,15 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
 
     function showSaved() {
-        const data = JSON.parse(document.getElementById('savedJSON').innerHTML);
+        let data, jsonEvents;
+        try {
+            jsonEvents = document.getElementById('savedJSON').innerHTML;
+            data = JSON.parse(jsonEvents);
+        }catch (e) {
+            jsonEvents = '{"sample_event_host" : "sample_event_data"}';
+        }
         document.getElementById('events').value = JSON.stringify(data, undefined, 4);
-        eventSettings = document.getElementById('savedJSON').innerHTML;
+        eventSettings = jsonEvents;
         console.log(eventSettings);
         buildTable();
     }
