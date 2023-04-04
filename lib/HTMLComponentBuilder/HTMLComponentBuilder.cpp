@@ -36,6 +36,9 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "HEAP") {
         data += ESP.getFreeHeap();
         return data;
+    } else if (ref == "IP") {
+        data += WiFi.localIP().toString();
+        return data;
     }
     return ref;
 }
