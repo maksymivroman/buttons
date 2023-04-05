@@ -53,4 +53,32 @@ void LEDService::blinkDone() {
     blink(pinGreen, 5);
 }
 
+void LEDService::findMe() {
+    saveCurrentRGBState();
+    blinkWarn();
+    blinkPrimary();
+    restoreCurrentRGBState();
+}
 
+void LEDService::saveCurrentRGBState() {
+    rgbCurrentState = {digitalRead(pinRed),digitalRead(pinGreen),digitalRead(pinBlue)};
+}
+
+void LEDService::restoreCurrentRGBState() {
+    digitalWrite(pinRed, rgbCurrentState.r);
+    digitalWrite(pinGreen, rgbCurrentState.g);
+    digitalWrite(pinBlue, rgbCurrentState.b);
+}
+
+void LEDService::eventsSendInProgress(bool on) {
+    if (on) {
+        saveCurrentRGBState();
+        lightOnBlue(true);
+    } else {
+        restoreCurrentRGBState();
+    }
+}
+
+void LEDService::idle() {
+//TODO standby RGB gradient
+}

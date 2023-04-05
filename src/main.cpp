@@ -1,16 +1,11 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <ESP8266HTTPClient.h>
-#include "ArduinoJson.h"
-#include <EEPROM.h>
 #include <DNSServer.h>
 
-#include "LEDService.h"
-#include "html-page.hpp"
-#include "ButtonWebServer.h"
 #include "GlobalConfig.hpp"
+#include "html-page.hpp"
+#include "LEDService.h"
+#include "ButtonWebServer.h"
 #include "SettingsService.h"
 #include "NetworkService.h"
 #include "HTMLComponentBuilder.h"
@@ -36,6 +31,15 @@ EventsService* eventService = new EventsService();
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
+}
+
+[[noreturn]] void restart() {
+    ledService.lightOnRed(true);
+    for(int i = 0; i<5 ; i++) {
+        tone(buzzerPin,500*i,50);
+        delay(100);
+    }
+    EspClass::restart();
 }
 
 void setup() {
@@ -81,42 +85,36 @@ void setup() {
                 buttonSettings.saveSettings(postMessage);
                 requiredRestart = true;
             }
-
         }
         request->send(200, "text/html", "done");
     });
 
     server.begin();
+
+    ledService.lightOnGreen(true);
 }
 
 void loop() {
     delay(100);
+
     if (digitalRead(buttonPin) == 1) {
-        Serial.println("[event]");
-        ledService.lightOnBlue(true);
+        ledService.eventsSendInProgress(true);
         eventService->SendEvents();
-        ledService.lightOnBlue(false);
+        ledService.eventsSendInProgress(false);
     }
 
     if(requiredToFind) {
-        ledService.lightOnRed(true);
         for(int i = 0; i<10 ; i++) {
             tone(buzzerPin,800*i,200);
             delay(100);
         }
         noTone(buzzerPin);
-        ledService.blinkWarn();
-        ledService.blinkDone();
-        ledService.blinkPrimary();
+        ledService.findMe();
         requiredToFind = !requiredToFind;
     }
 
     if(requiredRestart) {
-        ledService.lightOnRed(true);
-        for(int i = 0; i<5 ; i++) {
-            tone(buzzerPin,500*i,50);
-            delay(100);
-        }
-        EspClass::restart();
+        restart();
     }
 }
+
