@@ -24,4 +24,18 @@ struct RGBCONFIG {
     int b;
 };
 
+struct EEPROMSETTINGS {
+    bool serialEnabled = false;
+    bool clientWebAccess = false;
+    bool enableOtaUpdate = false;
+    bool useDnsName = false;
+    bool useSound = false;
+    bool reservedA = false;
+    bool reservedB = false;
+    bool reservedC = false;
+    unsigned int fwVersion = 0;
+    char wifiSsid[256]{};
+    char wifiPass[256]{};
+};
+
 #endif //EVENT_BUTTON_GLOBALCONFIG_HPP

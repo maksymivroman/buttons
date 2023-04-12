@@ -81,12 +81,16 @@ const char index_html[] PROGMEM = R"rawliteral(
             display: flex;
             flex: 1;
             flex-direction: column;
+            align-content: flex-start;
+            flex-wrap: wrap;
             margin-bottom: 16px;
+            max-height: 100px;
         }
 
         .item {
             display: flex;
             padding: 8px;
+            margin-right: 20px;
         }
 
         table {
@@ -263,13 +267,28 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     <div class="extras-container">
         <div class="item">
-            <input type="checkbox" id="clientWebAccess" name="hotspotAccess" value="1" checked>
+            <input type="checkbox" id="clientWebAccess" name="hotspotAccess">
             <label style="margin-left: 8px;" for="clientWebAccess">web access on WIFI client mode</label>
         </div>
 
         <div class="item">
-            <input type="checkbox" id="useDnsName" name="dnsName" value="1" checked>
+            <input type="checkbox" id="useDnsName" name="dnsName">
             <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
+        </div>
+
+        <div class="item">
+            <input type="checkbox" id="serialEnabled" name="dnsName">
+            <label style="margin-left: 8px;" for="serialEnabled">Debug data via serial (115200 8-N-1)</label>
+        </div>
+
+        <div class="item">
+            <input type="checkbox" id="useSound" name="dnsName">
+            <label style="margin-left: 8px;" for="useSound">Use sound notification</label>
+        </div>
+
+        <div class="item">
+            <input type="checkbox" id="enableOtaUpdate" name="dnsName">
+            <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on client mode</label>
         </div>
     </div>
 
@@ -317,8 +336,19 @@ const char index_html[] PROGMEM = R"rawliteral(
         const pass = document.getElementById('wifipass').value;
         const clientWebAccess = Number(document.getElementById('clientWebAccess').checked);
         const useDnsName = Number(document.getElementById('useDnsName').checked);
+        const serialEnabled = Number(document.getElementById('serialEnabled').checked);
+        const useSound = Number(document.getElementById('useSound').checked);
+        const enableOtaUpdate = Number(document.getElementById('enableOtaUpdate').checked);
 
-        const extrasConfig = JSON.stringify({clientWebAccess, useDnsName});
+        const extrasConfig = JSON.stringify({
+            clientWebAccess,
+            useDnsName,
+            serialEnabled,
+            useSound,
+            enableOtaUpdate,
+            wifiSsid: name,
+            wifiPass: pass
+        });
 
         let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"eventdata":' + eventSettings + '}}';
         data.replace(/" /g, '');
@@ -332,7 +362,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         httpRequest.onreadystatechange = function () {
             if (httpRequest.readyState === httpRequest.DONE) {
                 if (httpRequest.status === 200) {
-                    console.log(httpRequest.response);
                     const editor = document.getElementById('successModel');
                     editor.style.visibility = 'visible';
                 }
@@ -341,16 +370,24 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
 
     function showSaved() {
+        config = %CONFIGURATION%;
+        console.log(config);
+
+        document.getElementById('clientWebAccess').checked = config.clientWebAccess;
+        document.getElementById('useDnsName').checked = config.useDnsName;
+        document.getElementById('serialEnabled').checked = config.serialEnabled;
+        document.getElementById('useSound').checked = config.useSound;
+        document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
+
         let data, jsonEvents;
         try {
             jsonEvents = document.getElementById('savedJSON').innerHTML;
             data = JSON.parse(jsonEvents);
-        }catch (e) {
+        } catch (e) {
             jsonEvents = '{"sample_event_host" : "sample_event_data"}';
         }
         document.getElementById('events').value = JSON.stringify(data, undefined, 4);
         eventSettings = jsonEvents;
-        console.log(eventSettings);
         buildTable();
     }
 
@@ -399,6 +436,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     const eventsFormatWarn = document.getElementById("eventsFormatWarn");
     const autoFormat = document.getElementById('editorAutoFormat');
     let eventSettings;
+    let config;
 
     eventsTextarea.addEventListener("input", () => {
         eventsFormatWarn.style.visibility = 'hidden';

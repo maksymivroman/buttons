@@ -4,11 +4,12 @@
 
 #include "HTMLComponentBuilder.h"
 
-void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list) {
+void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config) {
     networkSsid = ssid;
     networkPassword = password;
     events = eventsConfig;
     networkList = list;
+    configuration = config;
 }
 
 String HTMLComponentBuilder::componentById(const String &ref) {
@@ -26,6 +27,9 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         return data;
     } else if (ref == "WIFILIST") {
         data += wiFiList();
+        return data;
+    }else if (ref == "CONFIGURATION") {
+        data += createConfigurationObject(configuration);
         return data;
     } else if (ref == "FWVERSION") {
         data += __DATE__;
@@ -58,5 +62,25 @@ String HTMLComponentBuilder::wiFiList() {
     }
     wifilist += "</select></div>";
     return wifilist;
+}
+
+String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
+    String configObj = R"({
+            serialEnabled: <serialEnabled>,
+            clientWebAccess: <clientWebAccess>,
+            enableOtaUpdate: <enableOtaUpdate>,
+            useDnsName: <useDnsName>,
+            useSound: <useSound>,
+            fwVersion: <fwVersion>
+        })";
+
+    configObj.replace("<serialEnabled>", String(data.serialEnabled));
+    configObj.replace("<clientWebAccess>", String(data.clientWebAccess));
+    configObj.replace("<enableOtaUpdate>", String(data.enableOtaUpdate));
+    configObj.replace("<useDnsName>", String(data.useDnsName));
+    configObj.replace("<useSound>", String(data.useSound));
+    configObj.replace("<fwVersion>", String(data.fwVersion));
+
+    return configObj;
 }
 

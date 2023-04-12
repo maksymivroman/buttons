@@ -5,7 +5,6 @@
 #include "GlobalConfig.hpp"
 #include "html-page.hpp"
 #include "LEDService.h"
-#include "ButtonWebServer.h"
 #include "SettingsService.h"
 #include "NetworkService.h"
 #include "HTMLComponentBuilder.h"
@@ -49,7 +48,10 @@ void setup() {
     ledService.blinkDone();
 
     String eventsData = buttonSettings.loadEvents();
-    WiFiCONFIG wiFiConnDetails = buttonSettings.loadWiFiSettings();
+
+    buttonSettings.loadButtonEepromSettings();
+    WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
+    EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
 
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
@@ -64,7 +66,7 @@ void setup() {
 
     ledService.blinkPrimary();
 
-    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList);
+    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration);
     eventService->SetEvents(eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {

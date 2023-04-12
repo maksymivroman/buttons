@@ -16,7 +16,7 @@ void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
         Serial.print("[NetworkService] Connecting to ");
-        Serial.println(ssid);
+        Serial.print(ssid); Serial.print(" / "); Serial.println(pass);
     }
     Serial.println(WiFi.localIP());
     Serial.printf("hostname: %s\n", WiFi.hostname().c_str());

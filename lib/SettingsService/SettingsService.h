@@ -10,11 +10,17 @@
 
 class SettingsService {
 public:
-    WiFiCONFIG loadWiFiSettings();
+    WiFiCONFIG getWiFiConnDetails();
     String loadEvents();
-    void saveWiFiSettings(const WiFiCONFIG& settings);
+    EEPROMSETTINGS getButtonConfig();
     void saveEvents(String events);
     void saveSettings(String settings);
+    void loadButtonEepromSettings();
+
+private:
+    void writeButtonEepromSettings(String& config);
+
+    EEPROMSETTINGS buttonEepromSettings;
 };
 
 
