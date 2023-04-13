@@ -9,6 +9,7 @@
 #include "NetworkService.h"
 #include "HTMLComponentBuilder.h"
 #include "EventsService.h"
+#include "SoundService.h"
 
 const int bluePin = 12;
 const int greenPin = 13;
@@ -26,6 +27,7 @@ SettingsService buttonSettings;
 AsyncWebServer server(80);
 NetworkService networkService;
 HTMLComponentBuilder htmlComponent;
+SoundService notifier(buzzerPin);
 EventsService* eventService = new EventsService();
 
 String components(const String &ref) {
@@ -34,10 +36,7 @@ String components(const String &ref) {
 
 [[noreturn]] void restart() {
     ledService.lightOnRed(true);
-    for(int i = 0; i<5 ; i++) {
-        tone(buzzerPin,500*i,50);
-        delay(100);
-    }
+    notifier.onRestart();
     EspClass::restart();
 }
 
@@ -48,13 +47,13 @@ void setup() {
     ledService.blinkDone();
 
     String eventsData = buttonSettings.loadEvents();
-
     buttonSettings.loadButtonEepromSettings();
+
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
-
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
+    notifier.useSound = buttonSettings.useSoundNotification();
 
     if (digitalRead(buttonPin) == 1) {
         ledService.blinkWarn();
@@ -107,11 +106,7 @@ void loop() {
     }
 
     if(requiredToFind) {
-        for(int i = 0; i<10 ; i++) {
-            tone(buzzerPin,800*i,200);
-            delay(100);
-        }
-        noTone(buzzerPin);
+        notifier.onFindMe();
         ledService.findMe();
         requiredToFind = !requiredToFind;
     }

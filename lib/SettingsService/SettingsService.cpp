@@ -130,3 +130,7 @@ bool SettingsService::clientWebAccessEnabled() const {
     return buttonEepromSettings.clientWebAccess | false;
 }
 
+bool SettingsService::useSoundNotification() const {
+    return buttonEepromSettings.useSound | false;
+}
+

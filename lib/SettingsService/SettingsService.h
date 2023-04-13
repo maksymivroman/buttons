@@ -17,6 +17,7 @@ public:
     void saveSettings(String settings);
     void loadButtonEepromSettings();
     bool clientWebAccessEnabled() const;
+    bool useSoundNotification() const;
 
 private:
     void writeButtonEepromSettings(String& config);
