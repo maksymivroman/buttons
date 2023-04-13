@@ -126,3 +126,7 @@ EEPROMSETTINGS SettingsService::getButtonConfig() {
     return buttonEepromSettings;
 }
 
+bool SettingsService::clientWebAccessEnabled() const {
+    return buttonEepromSettings.clientWebAccess | false;
+}
+

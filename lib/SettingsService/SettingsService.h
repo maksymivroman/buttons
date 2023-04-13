@@ -16,6 +16,7 @@ public:
     void saveEvents(String events);
     void saveSettings(String settings);
     void loadButtonEepromSettings();
+    bool clientWebAccessEnabled() const;
 
 private:
     void writeButtonEepromSettings(String& config);

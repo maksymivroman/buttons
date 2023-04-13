@@ -91,7 +91,8 @@ void setup() {
         request->send(200, "text/html", "done");
     });
 
-    server.begin();
+    const bool serverEnabled = !networkService.isClientMode() || (buttonSettings.clientWebAccessEnabled() && networkService.isClientMode());
+    if ( serverEnabled ) { server.begin(); }
 
     ledService.lightOnGreen(true);
 }

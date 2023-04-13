@@ -49,3 +49,8 @@ NETWORKLIST NetworkService::WiFiList() {
 
     return list;
 }
+
+bool NetworkService::isClientMode() {
+    Serial.print("[NetworkService] isClientMode: "); Serial.println(WiFi.isConnected());
+    return WiFi.isConnected();
+}
