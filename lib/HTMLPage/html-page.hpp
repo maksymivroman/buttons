@@ -63,7 +63,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             justify-content: space-evenly;
         }
 
-        .editor {
+        .modal {
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -139,6 +139,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
 
+        .btn:disabled {
+            color: lightgray;
+            background-color: gray;
+            border: 1px solid gray;
+        }
+
         .btn-red {
             background-color: #cb1d38;
             border: 1px solid #cb1d38;
@@ -149,11 +155,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             border: 1px solid #165c9f;
         }
 
-        .btn-red:hover {
+        .btn-red:hover:not(:disabled) {
             background-color: #a6132f;
         }
 
-        .btn-blue:hover {
+        .btn-blue:hover:not(:disabled) {
             background-color: #083867;
         }
 
@@ -162,6 +168,10 @@ const char index_html[] PROGMEM = R"rawliteral(
             display: inline-block;
             margin-bottom: .5rem;
             align-self: flex-start;
+        }
+
+        input[type=checkbox]:disabled+label {
+            color: darkgray;
         }
 
         option {
@@ -203,7 +213,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     </div>
     <div style="display: flex; align-items: center; gap: 10px;">
         <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="find()">Find me</button>
-        <button style="align-self: flex-end;" type="button" class="btn btn-red">FW Update</button>
+        <button disabled style="align-self: flex-end;" type="button" class="btn btn-red">FW Update</button>
     </div>
 </div>
 
@@ -238,7 +248,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     <h2 style="font-weight: 200">General settings</h2>
 
-    <div class="editor" id="editor">
+    <div class="modal" id="editor">
         <h2 style="color: white; font-weight: 200; align-self: center;">Edit events</h2>
         <h5 style="color: #b9b9b9;">Events should be valid JSON and host cannot be duplicated!</h5>
         <textarea id="events" cols=120 rows=20 class="control"
@@ -251,13 +261,13 @@ const char index_html[] PROGMEM = R"rawliteral(
             <h5 id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal">events format not
                 valid</h5>
             <div style="align-self: flex-end">
-                <button type="button" class="btn btn-red" onclick="saveEvensFromEditor()">Save</button>
+                <button id="saveEvensFromEditor" type="button" class="btn btn-red" onclick="saveEvensFromEditor()">Save</button>
                 <button type="button" class="btn btn-blue" onclick="openEditor(false)">Cancel</button>
             </div>
         </div>
     </div>
 
-    <div class="editor" id="successModel">
+    <div class="modal" id="successModel">
         <div style="display: flex; align-items: center; flex-flow: column">
             <h1 style="color: #b9b9b9;">Configuration saved!</h1>
             <h4 style="color: #b9b9b9; font-weight: 200">Button will reboot now. Please reconnect to continue or close
@@ -268,16 +278,16 @@ const char index_html[] PROGMEM = R"rawliteral(
     <div class="extras-container">
         <div class="item">
             <input type="checkbox" id="clientWebAccess" name="hotspotAccess">
-            <label style="margin-left: 8px;" for="clientWebAccess">web access on WIFI client mode</label>
+            <label style="margin-left: 8px;" for="clientWebAccess">web access on Wi-Fi client mode</label>
         </div>
 
         <div class="item">
-            <input type="checkbox" id="useDnsName" name="dnsName">
+            <input type="checkbox" id="useDnsName" name="dnsName" disabled>
             <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
         </div>
 
         <div class="item">
-            <input type="checkbox" id="serialEnabled" name="dnsName">
+            <input type="checkbox" id="serialEnabled" name="dnsName" disabled>
             <label style="margin-left: 8px;" for="serialEnabled">Debug data via serial (115200 8-N-1)</label>
         </div>
 
@@ -287,8 +297,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         </div>
 
         <div class="item">
-            <input type="checkbox" id="enableOtaUpdate" name="dnsName">
-            <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on client mode</label>
+            <input type="checkbox" id="enableOtaUpdate" name="dnsName" disabled>
+            <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on Wi-Fi client mode</label>
         </div>
     </div>
 
@@ -370,9 +380,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
 
     function showSaved() {
-        config = %CONFIGURATION%;
-        console.log(config);
-
+        config = %CONFIGURATION% ;
         document.getElementById('clientWebAccess').checked = config.clientWebAccess;
         document.getElementById('useDnsName').checked = config.useDnsName;
         document.getElementById('serialEnabled').checked = config.serialEnabled;
@@ -435,6 +443,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     const eventsTextarea = document.getElementById("events");
     const eventsFormatWarn = document.getElementById("eventsFormatWarn");
     const autoFormat = document.getElementById('editorAutoFormat');
+    const saveBtn = document.getElementById("saveEvensFromEditor");
     let eventSettings;
     let config;
 
@@ -446,9 +455,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             if (autoFormat.checked) {
                 eventsTextarea.value = JSON.stringify(obj, undefined, 4);
             }
+            saveBtn.disabled = false;
         } catch (e) {
             eventsFormatWarn.style.visibility = 'visible';
             eventsTextarea.style.border = '3px solid red';
+            saveBtn.disabled = true;
         }
     });
 
