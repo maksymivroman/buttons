@@ -11,14 +11,20 @@
 
 class HTMLComponentBuilder {
 public:
-    String componentById(const String& ref);
-    void setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config);
+    String componentById(const String &ref);
+
+    void setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, INTEGRATIONSETTINGS integrationData);
+
 private:
     String events, networkSsid, networkPassword;
     EEPROMSETTINGS configuration;
     NETWORKLIST networkList;
+    INTEGRATIONSETTINGS integrationSettings;
+
     String wiFiList();
+
     String createConfigurationObject(EEPROMSETTINGS data);
+    String createIntegrationDataObject(INTEGRATIONSETTINGS data);
 };
 
 

@@ -12,7 +12,9 @@ class SettingsService {
 public:
     WiFiCONFIG getWiFiConnDetails();
     String loadEvents();
+    INTEGRATIONSETTINGS integrationSettings();
     EEPROMSETTINGS getButtonConfig();
+
     void saveEvents(String events);
     void saveSettings(String settings);
     void loadButtonEepromSettings();
@@ -23,6 +25,9 @@ public:
 
 private:
     void writeButtonEepromSettings(String& config);
+    void saveIntegrationSettings(String settings);
+
+    String dataFromFS(const String& fileName);
 
     EEPROMSETTINGS buttonEepromSettings;
 };

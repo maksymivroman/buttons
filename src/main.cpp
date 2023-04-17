@@ -49,6 +49,7 @@ void setup() {
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
+    INTEGRATIONSETTINGS integrationConfig = buttonSettings.integrationSettings();
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
     notifier.useSound = buttonSettings.useSoundNotification();
@@ -64,7 +65,7 @@ void setup() {
 
     ledService.blinkPrimary();
 
-    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration);
+    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig);
     eventService->SetEvents(eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {

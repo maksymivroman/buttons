@@ -334,6 +334,31 @@
 
     </div>
 
+    <h2 style="font-weight: 200">Integration</h2>
+    <div class="item">
+        <input type="checkbox" id="useTelegramIntegration">
+        <label for="useTelegramIntegration" style="margin: 0 8px;">Forward message to Telegram</label>
+    </div>
+    <div id="telegramIntegration" class="item" style="margin-bottom: 20px;">
+        <div class="item">
+            <label for="tToken" style="margin: 0 8px;">Token</label>
+            <input maxlength="32" type="text" id="tToken" class="control">
+        </div>
+        <div class="item">
+            <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
+            <input maxlength="32" type="text" id="tChanelID" class="control">
+        </div>
+    </div>
+    <div class="item">
+        <label for="tPrefix" style="margin: 0 8px;">Message prefix</label>
+        <input maxlength="32" type="text" id="tPrefix" class="control">
+    </div>
+    <div class="item">
+        <label for="tSuffix" style="margin: 0 8px;">Message suffix</label>
+        <input maxlength="32" type="text" id="tSuffix" class="control">
+    </div>
+
+
     <div style="display: flex; flex: 1; justify-content: center">
         <button id="saveButton" type="button" class="btn btn-red" onclick="saveSettings()">Save And Reboot</button>
     </div>
@@ -409,12 +434,14 @@
         const useSound = Number(document.getElementById('useSound').checked);
         const enableOtaUpdate = Number(document.getElementById('enableOtaUpdate').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
+        const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked)
 
         const extrasConfig = JSON.stringify({
             clientWebAccess,
             useDnsName,
             serialEnabled,
             useSound,
+            useTelegramIntegration,
             customHSsid,
             enableOtaUpdate,
             wifiSsid: name,
@@ -422,7 +449,19 @@
             hotspotSsid: hSsid
         });
 
-        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"eventdata":' + eventSettings + '}}';
+        const tToken = document.getElementById('tToken').value;
+        const tChanelID = document.getElementById('tChanelID').value;
+        const tPrefix = document.getElementById('tPrefix').value;
+        const tSuffix = document.getElementById('tSuffix').value;
+
+        const integration = JSON.stringify({
+            tToken,
+            tChanelID,
+            tPrefix,
+            tSuffix
+        })
+
+        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"integration":' + integration +',"eventdata":' + eventSettings + '}}';
         data.replace(/" /g, '');
         data.replace(/ "/g, '');
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
@@ -450,6 +489,13 @@
         document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
+        document.getElementById('useTelegramIntegration').value = config.useTelegramIntegration;
+
+        integrationConfig = {};// %INTEGRATION% ;
+        document.getElementById('tToken').value = integrationConfig.tToken;
+        document.getElementById('tChanelID').value = integrationConfig.tChanelID;
+        document.getElementById('tPrefix').value = integrationConfig.tPrefix;
+        document.getElementById('tSuffix').value = integrationConfig.tSuffix;
 
         let data, jsonEvents;
         try {
@@ -510,7 +556,7 @@
     const autoFormat = document.getElementById('editorAutoFormat');
     const saveBtn = document.getElementById("saveEvensFromEditor");
     let eventSettings;
-    let config;
+    let config, integrationConfig;
 
     eventsTextarea.addEventListener("input", () => {
         eventsFormatWarn.style.visibility = 'hidden';

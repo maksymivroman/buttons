@@ -19,33 +19,25 @@ WiFiCONFIG SettingsService::getWiFiConnDetails() {
 }
 
 String SettingsService::loadEvents() {
+    return dataFromFS("/post.json");
+}
 
-    String eventsData;
+INTEGRATIONSETTINGS SettingsService::integrationSettings() {
+    String data = dataFromFS("/integration.json");
+    StaticJsonDocument<900> jsonDoc;
+    deserializeJson(jsonDoc, data);
+    String tToken = jsonDoc["tToken"] | "";
+    String tChanelID = jsonDoc["tChanelID"] | "";
+    String tPrefix = jsonDoc["tPrefix"] | "";
+    String tSuffix = jsonDoc["tSuffix"] | "";
 
-    bool success = SPIFFS.begin();
-    if (success) {
-        Serial.println("[SPIFFS] File system mounted with success");
-    } else {
-        Serial.println("[SPIFFS] Error mounting the dataFile system");
-    }
+    INTEGRATIONSETTINGS settings;
+    settings.tToken = tToken;
+    settings.tChanelID = tChanelID;
+    settings.tPrefix = tPrefix;
+    settings.tSuffix = tSuffix;
 
-    File dataFile = SPIFFS.open("/post.json", "r");
-
-    if (!dataFile) {
-        Serial.println("[SPIFFS] Error opening dataFile for writing. Creating new");
-        File fileWrite = SPIFFS.open("/post.json", "w");
-        int bytesWritten = fileWrite.print("");
-        fileWrite.close();
-    } else {
-        while (dataFile.available()) {
-            eventsData += char(dataFile.read());
-        }
-        Serial.println("[SPIFFS] dataFile ./post.json:");
-        Serial.println(eventsData);
-        dataFile.close();
-    }
-
-    return eventsData;
+    return settings;
 }
 
 void SettingsService::saveEvents(String events) {
@@ -55,6 +47,15 @@ void SettingsService::saveEvents(String events) {
     [[maybe_unused]] int bytesWritten = file.print(events);
     file.close();
 }
+
+void SettingsService::saveIntegrationSettings(String settings) {
+    Serial.print("[SettingsService] saveIntegrationSettings: ");
+    Serial.println(settings);
+    File file = SPIFFS.open("/integration.json", "w");
+    [[maybe_unused]] int bytesWritten = file.print(settings);
+    file.close();
+}
+
 
 void SettingsService::saveSettings(String settings) {
     StaticJsonDocument<900> jsonDoc;
@@ -72,6 +73,7 @@ void SettingsService::saveSettings(String settings) {
     String config = data["configuration"];
     writeButtonEepromSettings(config);
 
+    String integrationData = data["integration"];
 
     Serial.print("[SettingsService] 'eventdata' data json: "); Serial.println(events);
     Serial.print("[SettingsService] 'configuration' data json: "); Serial.println(config);
@@ -83,6 +85,7 @@ void SettingsService::saveSettings(String settings) {
     Serial.print("[SettingsService] 'eventData' data json: "); Serial.println(events);
 
     saveEvents(events);
+    saveIntegrationSettings(integrationData);
 }
 
 void SettingsService::loadButtonEepromSettings() {
@@ -118,6 +121,7 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
+    settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
 
     Serial.print("[SettingsService] -> EEPROM config size: "); Serial.println(sizeof settings);
@@ -164,5 +168,35 @@ char * SettingsService::customHotspotSsid() {
     strcpy(name, espDefaultName.c_str());
 
     return const_cast<char *>(name);
+}
+
+String SettingsService::dataFromFS(const String& fileName) {
+    String data;
+    const char *file = fileName.c_str();
+
+    bool success = SPIFFS.begin();
+    if (success) {
+        Serial.println("[SPIFFS] File system mounted with success");
+    } else {
+        Serial.println("[SPIFFS] Error mounting the dataFile system");
+    }
+
+    File dataFile = SPIFFS.open(file, "r");
+
+    if (!dataFile) {
+        Serial.println("[SPIFFS] Error opening dataFile for writing. Creating new");
+        File fileWrite = SPIFFS.open(file, "w");
+        int bytesWritten = fileWrite.print("");
+        fileWrite.close();
+    } else {
+        while (dataFile.available()) {
+            data += char(dataFile.read());
+        }
+        Serial.print("[SPIFFS] File name/data:"); Serial.println(file);
+        Serial.println(data);
+        dataFile.close();
+    }
+
+    return data;
 }
 

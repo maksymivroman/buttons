@@ -4,12 +4,13 @@
 
 #include "HTMLComponentBuilder.h"
 
-void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config) {
+void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, INTEGRATIONSETTINGS integrationData) {
     networkSsid = ssid;
     networkPassword = password;
     events = eventsConfig;
     networkList = list;
     configuration = config;
+    integrationSettings = integrationData;
 }
 
 String HTMLComponentBuilder::componentById(const String &ref) {
@@ -30,6 +31,9 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         return data;
     }else if (ref == "CONFIGURATION") {
         data += createConfigurationObject(configuration);
+        return data;
+    } else if (ref == "INTEGRATION") {
+        data += createIntegrationDataObject(integrationSettings);
         return data;
     } else if (ref == "FWVERSION") {
         data += __DATE__;
@@ -72,6 +76,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             useDnsName: <useDnsName>,
             useSound: <useSound>,
             customHSsid: <useCustomHSsid>,
+            useTelegramIntegration: <useTelegramIntegration>,
             fwVersion: <fwVersion>,
             hotspotSsid: "<hotspotSsid>"
         })";
@@ -81,6 +86,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     configObj.replace("<enableOtaUpdate>", String(data.enableOtaUpdate));
     configObj.replace("<useDnsName>", String(data.useDnsName));
     configObj.replace("<useSound>", String(data.useSound));
+    configObj.replace("<useTelegramIntegration>", String(data.useTelegramIntegration));
     configObj.replace("<fwVersion>", String(data.fwVersion));
     configObj.replace("<hotspotSsid>", String(data.hotspotSsid));
     configObj.replace("<useCustomHSsid>", String(data.useCustomHSsid));
@@ -88,3 +94,17 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     return configObj;
 }
 
+String HTMLComponentBuilder::createIntegrationDataObject(INTEGRATIONSETTINGS data) {
+    String configObj = R"({
+            tToken: "<tToken>",
+            tChanelID: "<tChanelID>",
+            tPrefix: "<tPrefix>",
+            tSuffix: "<tSuffix>"
+        })";
+    configObj.replace("<tToken>", String(data.tToken));
+    configObj.replace("<tChanelID>", String(data.tChanelID));
+    configObj.replace("<tPrefix>", String(data.tPrefix));
+    configObj.replace("<tSuffix>", String(data.tSuffix));
+
+    return configObj;
+}

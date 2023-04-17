@@ -31,12 +31,19 @@ struct EEPROMSETTINGS {
     bool useDnsName = false;
     bool useSound = false;
     bool useCustomHSsid = false;
-    bool reservedB = false;
+    bool useTelegramIntegration = false;
     bool reservedC = false;
     unsigned int fwVersion = 0;
     char wifiSsid[256]{};
     char wifiPass[256]{};
     char hotspotSsid[32]{};
+};
+
+struct INTEGRATIONSETTINGS {
+    String tToken;
+    String tChanelID;
+    String tPrefix;
+    String tSuffix;
 };
 
 #endif //EVENT_BUTTON_GLOBALCONFIG_HPP
