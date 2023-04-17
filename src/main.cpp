@@ -16,10 +16,8 @@ const int greenPin = 13;
 const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
-bool requiredToFind;
-bool requiredRestart;
+bool requiredToFind, requiredRestart, requiredEepromClear;
 
-const char *hotspotSsid = "BUTTON_CONFIG";
 const char *hotspotPass = "12345678";
 
 LEDService ledService;
@@ -57,7 +55,8 @@ void setup() {
 
     if (digitalRead(buttonPin) == 1) {
         ledService.blinkWarn();
-        networkService.ButtonHotspot(true, hotspotSsid, hotspotPass);
+        const char *networkSsid =  buttonSettings.customHotspotSsid();
+        networkService.ButtonHotspot(true, networkSsid, hotspotPass);
     } else {
         ledService.lightOnBlue(true);
         networkService.ConnectToWiFi(wiFiConnDetails.ssid,wiFiConnDetails.password);
@@ -80,9 +79,12 @@ void setup() {
             String postMessage = param->value().c_str();
             Serial.print("[MAIN->HTTP_POST] "); Serial.println(postMessage);
             const char *findMe = "find";
+            const char *clearEEPROM = "clearEEPROM";
             if (postMessage == findMe) {
                 requiredToFind = true;
-            } else {
+            } else if (postMessage == clearEEPROM) {
+                requiredEepromClear = true;
+            }  else {
                 buttonSettings.saveSettings(postMessage);
                 requiredRestart = true;
             }
@@ -109,6 +111,11 @@ void loop() {
         notifier.onFindMe();
         ledService.findMe();
         requiredToFind = !requiredToFind;
+    }
+
+    if(requiredEepromClear) {
+        buttonSettings.clearEeprom();
+        requiredRestart = true;
     }
 
     if(requiredRestart) {

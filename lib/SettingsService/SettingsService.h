@@ -16,8 +16,10 @@ public:
     void saveEvents(String events);
     void saveSettings(String settings);
     void loadButtonEepromSettings();
+    void clearEeprom();
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
+    char * customHotspotSsid();
 
 private:
     void writeButtonEepromSettings(String& config);

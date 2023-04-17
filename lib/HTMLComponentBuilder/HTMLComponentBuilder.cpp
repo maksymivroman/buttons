@@ -16,7 +16,7 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     String data = "";
     if (ref == "NETWORKINFO") {
         data += "<div class=\"main-container\">";
-        data += R"(<label class="label" for="wifiname">WiFi SSID</label>)";
+        data += R"(<label for="wifiname">WiFi SSID</label>)";
         data += R"(<input class="control" type="text" id="wifiname" value=")" + networkSsid + "\"></div>";
         data += "<div class=\"main-container\">";
         data += R"(<label class="label" for="wifipass">WiFi password</label>)";
@@ -50,7 +50,7 @@ String HTMLComponentBuilder::componentById(const String &ref) {
 String HTMLComponentBuilder::wiFiList() {
     String wifilist = "";
     wifilist = "<div class=\"main-container\">";
-    wifilist += "<label class=\"label\" for=\"wifiname\">WIFI List</label>";
+    wifilist += "<label for=\"networks\">Select available network</label>";
     wifilist += "<select class=\"control\" id=\"networks\" onChange=\"update()\">";
     Serial.print("Scan start ... ");
     int n = networkList.size;
@@ -71,7 +71,9 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             enableOtaUpdate: <enableOtaUpdate>,
             useDnsName: <useDnsName>,
             useSound: <useSound>,
-            fwVersion: <fwVersion>
+            customHSsid: <useCustomHSsid>,
+            fwVersion: <fwVersion>,
+            hotspotSsid: "<hotspotSsid>"
         })";
 
     configObj.replace("<serialEnabled>", String(data.serialEnabled));
@@ -80,6 +82,8 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     configObj.replace("<useDnsName>", String(data.useDnsName));
     configObj.replace("<useSound>", String(data.useSound));
     configObj.replace("<fwVersion>", String(data.fwVersion));
+    configObj.replace("<hotspotSsid>", String(data.hotspotSsid));
+    configObj.replace("<useCustomHSsid>", String(data.useCustomHSsid));
 
     return configObj;
 }

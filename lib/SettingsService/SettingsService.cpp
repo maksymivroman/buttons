@@ -100,20 +100,25 @@ void SettingsService::writeButtonEepromSettings(String &config) {
 
     String wiFiName = jsonSettings["wifiSsid"] | "";
     String wiFiPassword = jsonSettings["wifiPass"] | "";
+    String hotspotSsid = jsonSettings["hotspotSsid"] | "";
 
-    char ssid[256], pass[256];
+    char ssid[256], pass[256], hSsid[32];
 
     wiFiName.toCharArray(ssid,256);
     wiFiPassword.toCharArray(pass,256);
+    hotspotSsid.toCharArray(hSsid, 32);
 
     strcpy(settings.wifiSsid, ssid);
     strcpy(settings.wifiPass, pass);
+
+    strcpy(settings.hotspotSsid, hSsid);
 
     settings.serialEnabled = jsonSettings["serialEnabled"].as<bool>() | false;
     settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
+    settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
 
     Serial.print("[SettingsService] -> EEPROM config size: "); Serial.println(sizeof settings);
 
@@ -132,5 +137,32 @@ bool SettingsService::clientWebAccessEnabled() const {
 
 bool SettingsService::useSoundNotification() const {
     return buttonEepromSettings.useSound | false;
+}
+
+void SettingsService::clearEeprom() {
+    Serial.print("[SettingsService] -> Start clear EEPROM [1024] ...");
+    EEPROM.begin(1024);
+    for (int i = 0; i < 1024; ++i) {
+        EEPROM.write(i, 0);
+    }
+    EEPROM.commit();
+    EEPROM.end();
+    Serial.println("Done!");
+}
+
+char * SettingsService::customHotspotSsid() {
+    String espDefaultName = "eButton-";
+    const String mac = WiFi.macAddress();
+    espDefaultName += mac.substring(mac.length() - 6, mac.length());
+    espDefaultName.replace(':','x');
+
+    const bool useCustomSsid = buttonEepromSettings.hotspotSsid[0] != '\0';
+    if (useCustomSsid && buttonEepromSettings.useCustomHSsid ) {
+        return buttonEepromSettings.hotspotSsid;
+    }
+    char *name = new char[espDefaultName.length() + 1];
+    strcpy(name, espDefaultName.c_str());
+
+    return const_cast<char *>(name);
 }
 

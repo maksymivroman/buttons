@@ -27,7 +27,7 @@ void NetworkService::ButtonHotspot(bool isOn, const char* ssid, const char* pass
         WiFi.mode(WIFI_STA);
         WiFi.softAP(ssid, pass);
         IPAddress IP = WiFi.softAPIP();
-        Serial.print("[NetworkService] Set AP. IP address: ");
+        Serial.print("[NetworkService] Set AP: ");Serial.print(ssid);Serial.print(". IP address: ");
         Serial.println(IP);
     } else {
         WiFi.softAPdisconnect(isOn);

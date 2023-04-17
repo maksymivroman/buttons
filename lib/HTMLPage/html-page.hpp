@@ -23,6 +23,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             flex-direction: column;
             align-items: center;
             height: 100vh;
+            overflow: auto;
         }
 
         .header {
@@ -57,10 +58,10 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         .wifi-credentials {
             display: flex;
-            flex-direction: row;
-            align-items: center;
+            flex-direction: column;
+            align-items: flex-start;
             align-content: space-between;
-            justify-content: space-evenly;
+            padding: 0 8px;
         }
 
         .modal {
@@ -87,10 +88,22 @@ const char index_html[] PROGMEM = R"rawliteral(
             max-height: 100px;
         }
 
+        .connectivity-container {
+            display: flex;
+            flex: 1;
+            align-content: flex-start;
+            flex-wrap: wrap;
+        }
+
         .item {
             display: flex;
+            align-items: center;
             padding: 8px;
             margin-right: 20px;
+        }
+
+        .--vertical {
+            flex-flow: column;
         }
 
         table {
@@ -110,7 +123,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         .control {
             display: block;
             min-width: 220px;
-            padding: .375rem .75rem;
+            padding: .175rem .75rem;
             font-size: 1rem;
             line-height: 1.5;
             color: #495057;
@@ -166,12 +179,18 @@ const char index_html[] PROGMEM = R"rawliteral(
         .label {
             font-size: 1rem;
             display: inline-block;
-            margin-bottom: .5rem;
+            margin-top: .5rem;
             align-self: flex-start;
+            font-weight: 600;
         }
 
         input[type=checkbox]:disabled+label {
             color: darkgray;
+        }
+
+        input[type=checkbox]:not(:checked)+label+input {
+            color: darkgray;
+            display: none;
         }
 
         option {
@@ -219,11 +238,19 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 <div class="content">
     <h2 style="font-weight: 200">Connectivity</h2>
-    <div class="wifi-credentials">
-        %NETWORKINFO%
-        %EVENTINFO%
-        %WIFILIST%
+    <div class="connectivity-container">
+
+        <div class="wifi-credentials">
+            %WIFILIST%
+
+            <label class="label" style="margin: 16px 0;">Or fill credentials manually</label>
+
+            %NETWORKINFO%
+        </div>
+
     </div>
+
+    %EVENTINFO%
 
     <div style="display: flex; flex: 1; align-items: center; justify-content: space-between">
         <h2 style="font-weight: 200">Assigned events</h2>
@@ -271,10 +298,16 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     <div class="modal" id="successModel">
         <div style="display: flex; align-items: center; flex-flow: column">
-            <h1 style="color: #b9b9b9;">Configuration saved!</h1>
-            <h4 style="color: #b9b9b9; font-weight: 200">Button will reboot now. Please reconnect to continue or close
+            <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
+            <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. Please reconnect to continue or close
                 this page.</h4>
         </div>
+    </div>
+
+    <div class="item" style="margin-bottom: 20px; min-height: 55px;">
+        <input type="checkbox" id="useHotspotSsid">
+        <label for="useHotspotSsid" style="margin: 0 8px;">Use custom hotspot SSID</label>
+        <input maxlength="32" type="text" id="hotspotSsid" class="control">
     </div>
 
     <div class="extras-container">
@@ -302,6 +335,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             <input type="checkbox" id="enableOtaUpdate" name="dnsName" disabled>
             <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on Wi-Fi client mode</label>
         </div>
+
     </div>
 
     <div style="display: flex; flex: 1; justify-content: center">
@@ -310,7 +344,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 </div>
 
-<div style="display: flex; flex: 1; justify-content: flex-start; align-items: flex-end; width: 95vw;">
+<div style="display: flex; flex: 1; justify-content: flex-start; align-items: center; width: 95vw;">
     <div style="display: flex;">
         <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Firmware version:</h5>
         <h5 style="margin: 5px">%FWVERSION% </h5>
@@ -327,11 +361,37 @@ const char index_html[] PROGMEM = R"rawliteral(
         <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
         <h5 style="margin: 5px">%HEAP% </h5>
     </div>
+
+    <button style="padding: 0 10px; margin-left: 50px; font-size: 12px" type="button" ondblclick="clearEeprom()" title="use double click" class="btn btn-red">Clear EEPROM</button>
+
 </div>
 </body>
 </html>
 
 <script>
+    function httpPOST(data, successMessage) {
+        const srvURL = window.location.protocol + "//" + window.location.host + "/";
+        const httpRequest = new XMLHttpRequest();
+        httpRequest.open("POST", srvURL, true);
+        httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+        httpRequest.send(data);
+        httpRequest.responseType = 'text';
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.readyState === httpRequest.DONE) {
+                if (httpRequest.status === 200) {
+                    document.getElementById('dialogMessageTitle').innerText = successMessage;
+                    const successModel = document.getElementById('successModel');
+                    successModel.style.visibility = 'visible';
+                }
+            }
+        };
+    }
+
+    function clearEeprom() {
+        httpPOST("clearEEPROM", "EEPROM cleared!");
+    }
+
+    //deprecated
     function find() {
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
         const httpRequest = new XMLHttpRequest();
@@ -346,20 +406,24 @@ const char index_html[] PROGMEM = R"rawliteral(
     function saveSettings() {
         const name = document.getElementById('wifiname').value;
         const pass = document.getElementById('wifipass').value;
+        const hSsid = document.getElementById('hotspotSsid').value;
         const clientWebAccess = Number(document.getElementById('clientWebAccess').checked);
         const useDnsName = Number(document.getElementById('useDnsName').checked);
         const serialEnabled = Number(document.getElementById('serialEnabled').checked);
         const useSound = Number(document.getElementById('useSound').checked);
         const enableOtaUpdate = Number(document.getElementById('enableOtaUpdate').checked);
+        const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
 
         const extrasConfig = JSON.stringify({
             clientWebAccess,
             useDnsName,
             serialEnabled,
             useSound,
+            customHSsid,
             enableOtaUpdate,
             wifiSsid: name,
-            wifiPass: pass
+            wifiPass: pass,
+            hotspotSsid: hSsid
         });
 
         let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"eventdata":' + eventSettings + '}}';
@@ -388,6 +452,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('serialEnabled').checked = config.serialEnabled;
         document.getElementById('useSound').checked = config.useSound;
         document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
+        document.getElementById('useHotspotSsid').checked = config.customHSsid;
+        document.getElementById('hotspotSsid').value = config.hotspotSsid;
 
         let data, jsonEvents;
         try {
