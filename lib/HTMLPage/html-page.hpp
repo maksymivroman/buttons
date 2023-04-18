@@ -343,14 +343,15 @@ const char index_html[] PROGMEM = R"rawliteral(
         <input type="checkbox" id="useTelegramIntegration">
         <label for="useTelegramIntegration" style="margin: 0 8px;">Forward message to Telegram</label>
     </div>
+    <h5 class="item">${HOST} /integration?data= ${MESSAGE}</h5>
     <div id="telegramIntegration" class="item" style="margin-bottom: 20px;">
         <div class="item">
             <label for="tToken" style="margin: 0 8px;">Token</label>
-            <input maxlength="32" type="text" id="tToken" class="control">
+            <input maxlength="50" type="text" id="tToken" class="control" style="min-width: 350px;">
         </div>
         <div class="item">
             <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
-            <input maxlength="32" type="text" id="tChanelID" class="control">
+            <input maxlength="32" type="number" id="tChanelID" class="control">
         </div>
     </div>
     <div class="item">
@@ -454,7 +455,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         });
 
         const tToken = document.getElementById('tToken').value;
-        const tChanelID = document.getElementById('tChanelID').value;
+        const tChanelID = Number(document.getElementById('tChanelID').value);
         const tPrefix = document.getElementById('tPrefix').value;
         const tSuffix = document.getElementById('tSuffix').value;
 
@@ -493,7 +494,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
-        document.getElementById('useTelegramIntegration').value = config.useTelegramIntegration;
+        document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
 
         integrationConfig = %INTEGRATION% ;
         document.getElementById('tToken').value = integrationConfig.tToken;

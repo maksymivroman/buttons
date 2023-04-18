@@ -14,6 +14,7 @@ public:
 
     void onRestart();
     void onFindMe();
+    void onIntegrationMessage();
 
     bool useSound = false;
 

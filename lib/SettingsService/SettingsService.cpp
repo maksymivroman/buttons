@@ -27,7 +27,7 @@ INTEGRATIONSETTINGS SettingsService::integrationSettings() {
     StaticJsonDocument<900> jsonDoc;
     deserializeJson(jsonDoc, data);
     String tToken = jsonDoc["tToken"] | "";
-    String tChanelID = jsonDoc["tChanelID"] | "";
+    long long tChanelID = jsonDoc["tChanelID"];
     String tPrefix = jsonDoc["tPrefix"] | "";
     String tSuffix = jsonDoc["tSuffix"] | "";
 
@@ -143,6 +143,10 @@ bool SettingsService::useSoundNotification() const {
     return buttonEepromSettings.useSound | false;
 }
 
+bool SettingsService::useTelegramIntegration() const {
+    return buttonEepromSettings.useTelegramIntegration | false;
+}
+
 void SettingsService::clearEeprom() {
     Serial.print("[SettingsService] -> Start clear EEPROM [1024] ...");
     EEPROM.begin(1024);
@@ -199,4 +203,3 @@ String SettingsService::dataFromFS(const String& fileName) {
 
     return data;
 }
-

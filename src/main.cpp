@@ -10,13 +10,16 @@
 #include "HTMLComponentBuilder.h"
 #include "EventsService.h"
 #include "SoundService.h"
+#include "TelegramIntegration.h"
 
 const int bluePin = 12;
 const int greenPin = 13;
 const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
+
 bool requiredToFind, requiredRestart, requiredEepromClear;
+String messageToSend = "";
 
 const char *hotspotPass = "12345678";
 
@@ -27,6 +30,7 @@ NetworkService networkService;
 HTMLComponentBuilder htmlComponent;
 SoundService notifier(buzzerPin);
 EventsService* eventService = new EventsService();
+TelegramIntegration telegramBot;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -93,6 +97,20 @@ void setup() {
         request->send(200, "text/html", "done");
     });
 
+    if(buttonSettings.useTelegramIntegration()) {
+        telegramBot.configureTelegramIntegration(buttonSettings.integrationSettings());
+        server.on("/integration", HTTP_GET, [](AsyncWebServerRequest *request) {
+            if (request->hasParam("data")) {
+                messageToSend += buttonSettings.integrationSettings().tPrefix;
+                messageToSend += request->getParam("data")->value();
+                messageToSend += buttonSettings.integrationSettings().tSuffix;
+                Serial.print("[HTTP GET -> integration]: "); Serial.println(messageToSend);
+            }
+            else {Serial.print("[HTTP GET -> integration]: "); Serial.println("wrong GET data");}
+            request->send_P(200, "text/html", "OK");
+        });
+    }
+
     const bool serverEnabled = !networkService.isClientMode() || (buttonSettings.clientWebAccessEnabled() && networkService.isClientMode());
     if ( serverEnabled ) { server.begin(); }
 
@@ -117,6 +135,12 @@ void loop() {
     if(requiredEepromClear) {
         buttonSettings.clearEeprom();
         requiredRestart = true;
+    }
+
+    if(messageToSend.length() != 0) {
+        notifier.onIntegrationMessage();
+        telegramBot.sendMessage(messageToSend);
+        messageToSend = "";
     }
 
     if(requiredRestart) {

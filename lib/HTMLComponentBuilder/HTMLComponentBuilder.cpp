@@ -97,7 +97,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
 String HTMLComponentBuilder::createIntegrationDataObject(INTEGRATIONSETTINGS data) {
     String configObj = R"({
             tToken: "<tToken>",
-            tChanelID: "<tChanelID>",
+            tChanelID: <tChanelID>,
             tPrefix: "<tPrefix>",
             tSuffix: "<tSuffix>"
         })";

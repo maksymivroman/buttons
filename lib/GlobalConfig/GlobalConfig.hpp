@@ -41,7 +41,7 @@ struct EEPROMSETTINGS {
 
 struct INTEGRATIONSETTINGS {
     String tToken;
-    String tChanelID;
+    long long tChanelID;
     String tPrefix;
     String tSuffix;
 };

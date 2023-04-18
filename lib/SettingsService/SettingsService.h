@@ -21,6 +21,7 @@ public:
     void clearEeprom();
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
+    bool useTelegramIntegration() const;
     char * customHotspotSsid();
 
 private:
