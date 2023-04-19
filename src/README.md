@@ -1,25 +1,25 @@
 > ### Pin state for button is `0` by default (pulled down)
 
-### EEPROM byte configuration (for future version)
+### EEPROM struct configuration 
+#### _reserved 1024 bytes_
+#### _used 556 bytes_
 
-|  _**byte**_   |          _**description**_           |
-|:-------------:|:------------------------------------:|
-|     **0**     |            Serial enabled            | 
-|     **1**     | enable WEB Server on **Client** mode | 
-|     **2**     |          enable OTA update           | 
-|     **3**     |         enable DNS host name         | 
-|     **4**     |        `RESERVED / NOT USED`         | 
-|     **5**     |        `RESERVED / NOT USED`         | 
-|     **6**     |        `RESERVED / NOT USED`         | 
-|     **7**     |        `RESERVED / NOT USED`         | 
-|     **8**     |        `RESERVED / NOT USED`         | 
-|     **9**     |        `RESERVED / NOT USED`         | 
-| **10 - 265**  |                 SSID                 | 
-| **265 - 513** |               PASSWORD               | 
-|     **-**     |     `RESERVED for HOTSPOT SSID`      | 
-|     **-**     |     `RESERVED for HOTSPOT PASS`      | 
-
-
+```c++
+struct EEPROMSETTINGS {
+    bool serialEnabled;
+    bool clientWebAccess;
+    bool enableOtaUpdate;
+    bool useDnsName ;
+    bool useSound;
+    bool useCustomHSsid;
+    bool useTelegramIntegration;
+    bool reservedC;
+    unsigned int fwVersion;
+    char wifiSsid[256]{};
+    char wifiPass[256]{};
+    char hotspotSsid[32]{};
+};
+```
 > ### Receiving configuration data via POST request
 ### Data structure (JSON)
 
@@ -38,8 +38,23 @@
       },
       
       "configuration" : {
-        "clientWebAccess" : "1-true, 0-false", 
-        "useDnsName"      : "1-true, 0-false"
+        "serialEnabled": "1-true, 0-false",
+        "clientWebAccess":"1-true, 0-false",
+        "enableOtaUpdate": "1-true, 0-false",
+        "useDnsName": "1-true, 0-false",
+        "useSound": "1-true, 0-false",
+        "useCustomHSsid": "1-true, 0-false",
+        "useTelegramIntegration": "1-true, 0-false",
+        "fwVersion": "unsigned int",
+        "wifiSsid": "char[256]",
+        "wifiPass": "char[256]",
+        "hotspotSsid": "char[32]"
+      },
+      "integration" : {
+        "tToken" : "string",
+        "tChanelID": number,
+        "tPrefix": "string",
+        "tSuffix": "string"
       }
     }
 }
