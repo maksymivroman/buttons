@@ -8,14 +8,12 @@
 #include <Arduino.h>
 #include <BearSSLHelpers.h>
 #include <WiFiClientSecure.h>
+#include <ESP8266WiFi.h>
+#include <utility>
+#include <AsyncTelegram2.h>
+#include "tg_certificate.h"
 
 #include "GlobalConfig.hpp"
-
-
-#include <AsyncTelegram2.h>
-#include <ESP8266WiFi.h>
-#include "tg_certificate.h"
-#include <utility>
 
 class TelegramIntegration {
 
