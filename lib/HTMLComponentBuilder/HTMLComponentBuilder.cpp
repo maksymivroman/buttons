@@ -36,7 +36,7 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         data += createIntegrationDataObject(integrationSettings);
         return data;
     } else if (ref == "FWVERSION") {
-        data += __DATE__;
+        data += currentFirmwareVersion;
         return data;
     } else if (ref == "MAC") {
         data += WiFi.macAddress();

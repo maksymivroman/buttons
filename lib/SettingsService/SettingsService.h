@@ -22,6 +22,7 @@ public:
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
     bool useTelegramIntegration() const;
+    bool otaUpdateOnClientMode() const;
     char * customHotspotSsid();
 
 private:

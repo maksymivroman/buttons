@@ -8,6 +8,8 @@
 
 #include <Arduino.h>
 
+const String currentFirmwareVersion = String("0.9.1 - build date: ") + __DATE__;
+
 struct WiFiCONFIG {
     String ssid;
     String password;

@@ -2,6 +2,7 @@
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
 
+#include "AsyncOtaUpdate.h"
 #include "GlobalConfig.hpp"
 #include "html-page.hpp"
 #include "LEDService.h"
@@ -31,6 +32,7 @@ HTMLComponentBuilder htmlComponent;
 SoundService notifier(buzzerPin);
 EventsService* eventService = new EventsService();
 TelegramIntegration telegramBot;
+AsyncOtaUpdate ButtonOTAUpdate;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -112,7 +114,13 @@ void setup() {
     }
 
     const bool serverEnabled = !networkService.isClientMode() || (buttonSettings.clientWebAccessEnabled() && networkService.isClientMode());
-    if ( serverEnabled ) { server.begin(); }
+    if ( serverEnabled ) {
+        //TODO check client mode
+        if(buttonSettings.otaUpdateOnClientMode()) {
+            ButtonOTAUpdate.setID(buttonSettings.customHotspotSsid());
+            ButtonOTAUpdate.begin(&server);
+        }
+        server.begin(); }
 
     ledService.lightOnGreen(true);
 }
@@ -143,8 +151,7 @@ void loop() {
         messageToSend = "";
     }
 
-    if(requiredRestart) {
+    if(requiredRestart || ButtonOTAUpdate.requireToRestart) {
         restart();
     }
 }
-

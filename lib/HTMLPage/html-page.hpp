@@ -235,7 +235,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="find()">Find me</button>
-            <button disabled style="align-self: flex-end;" type="button" class="btn btn-red">FW Update</button>
+            <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="location.href='/update'">FW Update</button>
         </div>
     </div>
 

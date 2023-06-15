@@ -147,6 +147,10 @@ bool SettingsService::useTelegramIntegration() const {
     return buttonEepromSettings.useTelegramIntegration | false;
 }
 
+bool SettingsService::otaUpdateOnClientMode() const {
+    return buttonEepromSettings.enableOtaUpdate | false;
+}
+
 void SettingsService::clearEeprom() {
     Serial.print("[SettingsService] -> Start clear EEPROM [1024] ...");
     EEPROM.begin(1024);
