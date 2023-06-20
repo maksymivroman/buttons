@@ -71,7 +71,7 @@ void setup() {
 
     ledService.blinkPrimary();
 
-    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig);
+    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig, networkService.isClientMode());
     eventService->SetEvents(eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -115,8 +115,7 @@ void setup() {
 
     const bool serverEnabled = !networkService.isClientMode() || (buttonSettings.clientWebAccessEnabled() && networkService.isClientMode());
     if ( serverEnabled ) {
-        //TODO check client mode
-        if(buttonSettings.otaUpdateOnClientMode()) {
+        if(!networkService.isClientMode() || (buttonSettings.otaUpdateOnClientMode() && networkService.isClientMode())) {
             ButtonOTAUpdate.setID(buttonSettings.customHotspotSsid());
             ButtonOTAUpdate.begin(&server);
         }

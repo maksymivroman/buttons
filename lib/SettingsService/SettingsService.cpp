@@ -116,9 +116,11 @@ void SettingsService::writeButtonEepromSettings(String &config) {
 
     strcpy(settings.hotspotSsid, hSsid);
 
-    settings.serialEnabled = jsonSettings["serialEnabled"].as<bool>() | false;
+    //TODO if button on client mode next settings should not be changed
     settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
+
+    settings.serialEnabled = jsonSettings["serialEnabled"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
     settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;

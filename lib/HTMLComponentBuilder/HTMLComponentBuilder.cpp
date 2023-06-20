@@ -4,13 +4,14 @@
 
 #include "HTMLComponentBuilder.h"
 
-void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, INTEGRATIONSETTINGS integrationData) {
+void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient) {
     networkSsid = ssid;
     networkPassword = password;
     events = eventsConfig;
     networkList = list;
     configuration = config;
     integrationSettings = integrationData;
+    isClientMode = isClient;
 }
 
 String HTMLComponentBuilder::componentById(const String &ref) {
@@ -29,7 +30,19 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "WIFILIST") {
         data += wiFiList();
         return data;
-    }else if (ref == "CONFIGURATION") {
+    } else if (ref == "CLIENTMODEOPTIONS") {
+        if (!isClientMode){
+            data += R"(<div class="item">
+                <input type="checkbox" id="enableOtaUpdate" name="otaUpdate">
+                <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on Wi-Fi client mode</label>
+            </div>)";
+            data += R"(<div class="item">
+                <input type="checkbox" id="clientWebAccess" name="hotspotAccess">
+                <label style="margin-left: 8px;" for="clientWebAccess">web access on Wi-Fi client mode</label>
+            </div>)";
+        }
+        return data;
+    } else if (ref == "CONFIGURATION") {
         data += createConfigurationObject(configuration);
         return data;
     } else if (ref == "INTEGRATION") {

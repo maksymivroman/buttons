@@ -235,7 +235,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="find()">Find me</button>
-            <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="location.href='/update'">FW Update</button>
+            <button id="updateBtn" style="align-self: flex-end;" type="button" class="btn btn-red" onclick="location.href='/update'">FW Update</button>
         </div>
     </div>
 
@@ -313,10 +313,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         </div>
 
         <div class="extras-container">
-            <div class="item">
-                <input type="checkbox" id="clientWebAccess" name="hotspotAccess">
-                <label style="margin-left: 8px;" for="clientWebAccess">web access on Wi-Fi client mode</label>
-            </div>
 
             <div class="item">
                 <input type="checkbox" id="useDnsName" name="dnsName" disabled>
@@ -333,10 +329,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <label style="margin-left: 8px;" for="useSound">Use sound notification</label>
             </div>
 
-            <div class="item">
-                <input type="checkbox" id="enableOtaUpdate" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on Wi-Fi client mode</label>
-            </div>
+            %CLIENTMODEOPTIONS%
 
         </div>
 
@@ -448,11 +441,12 @@ const char index_html[] PROGMEM = R"rawliteral(
         const name = document.getElementById('wifiname').value;
         const pass = document.getElementById('wifipass').value;
         const hSsid = document.getElementById('hotspotSsid').value;
-        const clientWebAccess = Number(document.getElementById('clientWebAccess').checked);
+
+        const clientWebAccess = document.getElementById('clientWebAccess')? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
+        const enableOtaUpdate = document.getElementById('enableOtaUpdate')? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
         const useDnsName = Number(document.getElementById('useDnsName').checked);
         const serialEnabled = Number(document.getElementById('serialEnabled').checked);
         const useSound = Number(document.getElementById('useSound').checked);
-        const enableOtaUpdate = Number(document.getElementById('enableOtaUpdate').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked)
 
@@ -502,11 +496,20 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function showSaved() {
         config = %CONFIGURATION% ;
-        document.getElementById('clientWebAccess').checked = config.clientWebAccess;
+        try {
+            document.getElementById('clientWebAccess').checked = config.clientWebAccess;
+            document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
+        } catch (e) {
+            console.warn('some options restricted in client mode');
+        }
+
+        if (!config.enableOtaUpdate && !document.getElementById('enableOtaUpdate')) {
+            document.getElementById('updateBtn').remove();
+        }
+
         document.getElementById('useDnsName').checked = config.useDnsName;
         document.getElementById('serialEnabled').checked = config.serialEnabled;
         document.getElementById('useSound').checked = config.useSound;
-        document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
         document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
