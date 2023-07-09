@@ -14,7 +14,7 @@ void TelegramIntegration::sendMessage(const String& message) {
     BearSSL::Session session;
     BearSSL::X509List certificate(telegram_cert);
 
-    AsyncTelegram2 tBot(client);
+    AsyncTelegram2 tBot(client, 1024);
 
     configTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
 
@@ -23,6 +23,8 @@ void TelegramIntegration::sendMessage(const String& message) {
     client.setBufferSizes(1024, 1024);
 
     tBot.setTelegramToken(settings.tToken.c_str());
+
+    tBot.begin() ? Serial.print("[TelegramIntegration] -> Init OK ") : Serial.print("[TelegramIntegration] -> Failed to start");
 
     tBot.sendTo(settings.tChanelID , message);
 }
