@@ -336,12 +336,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         <h2 style="font-weight: 200">Integration</h2>
         <div class="item">
             <input type="checkbox" id="useTelegramIntegration">
-            <label for="useTelegramIntegration" style="margin: 0 8px;">Forward message to Telegram</label>
-        </div>
-
-        <div style="display: flex; flex-flow: row; align-items: center">
-            <h5 class="item" style="margin: 0">URL structure:</h5>
-            <h5 class="item" style="margin: 0">${HOST} /integration?data= ${MESSAGE}</h5>
+            <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message forwarding)</label>
         </div>
 
         <div id="telegramIntegration" class="item" style="margin-bottom: 20px;">
@@ -354,16 +349,26 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <input maxlength="32" type="number" id="tChanelID" class="control">
             </div>
         </div>
-        <div class="item">
+
+        <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+            <h4 class="item" style="margin: 0">Message forwarding:</h4>
+        </div>
+
+        <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+            <h5 class="item" style="margin: 0">URL structure:</h5>
+            <h5 class="item" style="margin: 0">${HOST} /integration?data= ${MESSAGE}</h5>
+        </div>
+
+        <div class="item" style="margin-left: 16px;">
             <label for="tPrefix" style="margin: 0 8px;">Message prefix</label>
             <input maxlength="32" type="text" id="tPrefix" class="control">
         </div>
-        <div class="item">
+        <div class="item" style="margin-left: 16px;">
             <label for="tSuffix" style="margin: 0 8px;">Message suffix</label>
             <input maxlength="32" type="text" id="tSuffix" class="control">
         </div>
 
-        <div style="display: flex; flex-flow: row; align-items: center">
+        <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
             <h5 class="item" style="margin: 0">Result:</h5>
             <h5 id="integrationResult" class="item" style="margin: 0">MESSAGE</h5>
         </div>

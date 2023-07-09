@@ -30,7 +30,7 @@ AsyncWebServer server(80);
 NetworkService networkService;
 HTMLComponentBuilder htmlComponent;
 SoundService notifier(buzzerPin);
-EventsService* eventService = new EventsService();
+EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
 
@@ -72,7 +72,7 @@ void setup() {
     ledService.blinkPrimary();
 
     htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig, networkService.isClientMode());
-    eventService->SetEvents(eventsData);
+    eventService.SetEvents(eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", index_html, components);
@@ -101,6 +101,7 @@ void setup() {
 
     if(buttonSettings.useTelegramIntegration()) {
         telegramBot.configureTelegramIntegration(buttonSettings.integrationSettings());
+        eventService.telegramBotRef = &telegramBot;
         server.on("/integration", HTTP_GET, [](AsyncWebServerRequest *request) {
             if (request->hasParam("data")) {
                 messageToSend += buttonSettings.integrationSettings().tPrefix;
@@ -129,7 +130,7 @@ void loop() {
 
     if (digitalRead(buttonPin) == 1) {
         ledService.eventsSendInProgress(true);
-        eventService->SendEvents();
+        eventService.SendEvents();
         ledService.eventsSendInProgress(false);
     }
 

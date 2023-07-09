@@ -7,13 +7,20 @@
 
 #include <Arduino.h>
 
+#include "TelegramIntegration.h"
+
 class EventsService {
 
 public:
     void SendEvents();
     void SetEvents(String eventsData);
 
+    TelegramIntegration *telegramBotRef = nullptr;
+
 private:
+    void SendMessageToTelegram(String message);
+    void SendHttpEvent(String &host, String &payload);
+
     String events;
 
 };
