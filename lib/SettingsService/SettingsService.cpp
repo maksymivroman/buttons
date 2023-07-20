@@ -24,7 +24,7 @@ String SettingsService::loadEvents() {
 
 INTEGRATIONSETTINGS SettingsService::integrationSettings() {
     String data = dataFromFS("/integration.json");
-    StaticJsonDocument<900> jsonDoc;
+    DynamicJsonDocument jsonDoc(2048);
     deserializeJson(jsonDoc, data);
     String tToken = jsonDoc["tToken"] | "";
     long long tChanelID = jsonDoc["tChanelID"];
@@ -58,11 +58,10 @@ void SettingsService::saveIntegrationSettings(String settings) {
 
 
 void SettingsService::saveSettings(String settings) {
-    StaticJsonDocument<900> jsonDoc;
+    DynamicJsonDocument jsonDoc(4096);
     deserializeJson(jsonDoc, settings);
     JsonObject data = jsonDoc["inputdata"];
-    Serial.print("[SettingsService] events data json: ");
-    Serial.println(data);
+    Serial.print("[SettingsService] events data json: "); Serial.println(data);
 
     WiFiCONFIG wiFiSett;
 
@@ -98,7 +97,7 @@ void SettingsService::loadButtonEepromSettings() {
 void SettingsService::writeButtonEepromSettings(String &config) {
     EEPROMSETTINGS settings = *new EEPROMSETTINGS;
 
-    StaticJsonDocument<900> jsonSettings;
+    DynamicJsonDocument jsonSettings(1024);
     deserializeJson(jsonSettings, config);
 
     String wiFiName = jsonSettings["wifiSsid"] | "";
@@ -196,7 +195,7 @@ String SettingsService::dataFromFS(const String& fileName) {
     if (!dataFile) {
         Serial.println("[SPIFFS] Error opening dataFile for writing. Creating new");
         File fileWrite = SPIFFS.open(file, "w");
-        int bytesWritten = fileWrite.print("");
+        [[maybe_unused]] int bytesWritten = fileWrite.print("");
         fileWrite.close();
     } else {
         while (dataFile.available()) {

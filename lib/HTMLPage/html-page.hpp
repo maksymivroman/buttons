@@ -278,7 +278,9 @@ const char index_html[] PROGMEM = R"rawliteral(
             <h5 style="color: #b9b9b9; margin: 10px 0;">If you want to use JSON as event data please use escape
                 characters '\"'</h5>
             <h5 style="color: #91a9ff;"> Example:
-                "{\"eventName\":\"DYNAMIC_EVENT\",\"eventData\":[{\"name\":\"user_check\",\"value\":\"yes\"}]}"</h5>
+                { \"eventName\":\"DYNAMIC_EVENT\",\"eventData\":[{\"name\":\"user_check\",\"value\":\"yes\"}] }</h5>
+            <h5 style="color: #91a9ff;"> Telegram event example:
+                { "telegram": "Hello world!" }</h5>
             <textarea id="events" cols=120 rows=20 class="control"
                       style="margin-bottom: 0.5rem; background-color: #e0dddd"></textarea>
             <div style="display: flex; justify-content: space-between">

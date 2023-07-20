@@ -52,7 +52,12 @@ void EventsService::SendMessageToTelegram(String message) {
 
 void EventsService::SendHttpEvent(String &host, String &payload) {
     Serial.println("[EventsService] HTTP request");
+
+    Serial.print("[EventsService] HOST: "); Serial.println(host);
+    Serial.print("[EventsService] PAYLOAD: "); Serial.println(payload);
     const bool isSecure = host.substring(4,5) == "s";
+
+    Serial.print("[EventsService] HTTPS: "); Serial.println(isSecure);
 
     //Skip secure connection
     if (!isSecure) {
