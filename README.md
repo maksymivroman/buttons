@@ -20,7 +20,14 @@
 #### Message can be combined with additional text
 #### Telegram token, chanel ID and additional text can be set up from Setup page
 
->### 3. LED and sound notification
+
+>### 3. Trigger BUTTON remotely:
+#### Handled by HTTP POST request with key `TRIGGER_BUTTON`
+#### Boby: `form-data`
+#### Key-value: `TRIGGER_BUTTON:` `AUTO` | `ON` | `OFF`
+
+
+>### 4. LED and sound notification
 #### RGB support
 #### RGB PWM support _(currently not implemented)_
 #### using of sound notification can be configured from Setup page

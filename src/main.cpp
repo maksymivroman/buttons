@@ -19,7 +19,14 @@ const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
 
-bool requiredToFind, requiredRestart, requiredEepromClear;
+bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton;
+
+// this const used for handle POST message type
+const char *FIND_ME = "FIND";
+const char *SAVE_SETTINGS = "SAVE";
+const char *CLEAR_EEPROM = "CLEAR_EEPROM";
+const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
+
 String messageToSend = "";
 
 const char *hotspotPass = "12345678";
@@ -79,24 +86,31 @@ void setup() {
     });
 
     server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
-        int params = request->params();
-        Serial.print("[MAIN->HTTP_POST] "); Serial.println(params);
-        if (params >= 0) {
+        unsigned int params = request->params();
+        Serial.print("[MAIN->HTTP_POST] params count: "); Serial.println(params);
+        int responseCode = 200;
+        if (params > 0) {
             AsyncWebParameter *param = request->getParam(0);
-            String postMessage = param->value().c_str();
-            Serial.print("[MAIN->HTTP_POST] "); Serial.println(postMessage);
-            const char *findMe = "find";
-            const char *clearEEPROM = "clearEEPROM";
-            if (postMessage == findMe) {
+            String paramName = param->name().c_str();
+            String paramMessage = param->value().c_str();
+
+            Serial.print("[MAIN->HTTP_POST] "); Serial.print(paramName); Serial.print(": "); Serial.println(paramMessage);
+
+            if (paramName == FIND_ME) {
                 requiredToFind = true;
-            } else if (postMessage == clearEEPROM) {
+            } else if (paramName == TRIGGER_BUTTON) {
+                buttonSettings.remoteButtonTriggering() ? requiredToTriggerButton = true : responseCode = 403;
+            } else if (paramName == CLEAR_EEPROM) {
                 requiredEepromClear = true;
-            }  else {
-                buttonSettings.saveSettings(postMessage);
+            } else if (paramName == SAVE_SETTINGS) {
+                buttonSettings.saveSettings(paramMessage);
                 requiredRestart = true;
+            } else {
+                responseCode = 418;
             }
         }
-        request->send(200, "text/html", "done");
+        Serial.print("[MAIN->HTTP_POST->STATUS] "); Serial.println(responseCode);
+        request->send(responseCode, "text/html", "done");
     });
 
     if(buttonSettings.useTelegramIntegration()) {
@@ -128,7 +142,11 @@ void setup() {
 void loop() {
     delay(100);
 
-    if (digitalRead(buttonPin) == 1) {
+    if (digitalRead(buttonPin) == 1 || requiredToTriggerButton) {
+        if (requiredToTriggerButton) {
+            requiredToTriggerButton =!requiredToTriggerButton;
+            notifier.onIntegrationMessage();
+        }
         ledService.eventsSendInProgress(true);
         eventService.SendEvents();
         ledService.eventsSendInProgress(false);

@@ -23,6 +23,7 @@ public:
     bool useSoundNotification() const;
     bool useTelegramIntegration() const;
     bool otaUpdateOnClientMode() const;
+    bool remoteButtonTriggering() const;
     char * customHotspotSsid();
 
 private:

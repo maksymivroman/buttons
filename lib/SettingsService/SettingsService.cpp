@@ -152,6 +152,10 @@ bool SettingsService::otaUpdateOnClientMode() const {
     return buttonEepromSettings.enableOtaUpdate | false;
 }
 
+bool SettingsService::remoteButtonTriggering() const {
+    return buttonEepromSettings.remoteTriggering | false;
+}
+
 void SettingsService::clearEeprom() {
     Serial.print("[SettingsService] -> Start clear EEPROM [1024] ...");
     EEPROM.begin(1024);
@@ -208,3 +212,4 @@ String SettingsService::dataFromFS(const String& fileName) {
 
     return data;
 }
+

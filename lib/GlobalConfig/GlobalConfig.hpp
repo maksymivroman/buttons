@@ -8,7 +8,7 @@
 
 #include <Arduino.h>
 
-const String currentFirmwareVersion = String("0.9.3 - build date: ") + __DATE__;
+const String currentFirmwareVersion = String("0.9.3-remote - build date: ") + __DATE__;
 
 struct WiFiCONFIG {
     String ssid;
@@ -34,7 +34,7 @@ struct EEPROMSETTINGS {
     bool useSound = false;
     bool useCustomHSsid = false;
     bool useTelegramIntegration = false;
-    bool reservedC = false;
+    bool remoteTriggering = false;
     unsigned int fwVersion = 0;
     char wifiSsid[256]{};
     char wifiPass[256]{};

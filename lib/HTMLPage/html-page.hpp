@@ -429,7 +429,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
 
     function clearEeprom() {
-        httpPOST("clearEEPROM", "EEPROM cleared!");
+        httpPOST("CLEAR_EEPROM", "EEPROM cleared!");
     }
 
     //deprecated
@@ -438,7 +438,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const httpRequest = new XMLHttpRequest();
         httpRequest.open("POST", srvURL, true);
         httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-        httpRequest.send("find");
+        httpRequest.send("FIND=find");
         httpRequest.responseType = 'text';
         httpRequest.onreadystatechange = function () {
         };
@@ -489,7 +489,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const httpRequest = new XMLHttpRequest();
         httpRequest.open("POST", srvURL, true);
         httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-        httpRequest.send(data);
+        httpRequest.send("SAVE=" + data);
         httpRequest.responseType = 'text';
         httpRequest.onreadystatechange = function () {
             if (httpRequest.readyState === httpRequest.DONE) {

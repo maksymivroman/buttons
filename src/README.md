@@ -13,7 +13,7 @@ struct EEPROMSETTINGS {
     bool useSound;
     bool useCustomHSsid;
     bool useTelegramIntegration;
-    bool reservedC;
+    bool remoteTriggering;
     unsigned int fwVersion;
     char wifiSsid[256]{};
     char wifiPass[256]{};
@@ -45,6 +45,7 @@ struct EEPROMSETTINGS {
         "useSound": "1-true, 0-false",
         "useCustomHSsid": "1-true, 0-false",
         "useTelegramIntegration": "1-true, 0-false",
+        "remoteTriggering": "1-true, 0-false",
         "fwVersion": "unsigned int",
         "wifiSsid": "char[256]",
         "wifiPass": "char[256]",
