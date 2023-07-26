@@ -36,3 +36,14 @@ void SoundService::onIntegrationMessage() {
         noTone(buzzerPin);
     }
 }
+
+void SoundService::onRemoteTrigger() {
+    Serial.print("[SoundService] useSound onRemoteTrigger: "); Serial.println(useSound);
+    if (useSound) {
+        for (int i = 0; i < 3; i++) {
+            tone(buzzerPin, 350 * i, 100);
+            delay(100);
+        }
+        noTone(buzzerPin);
+    }
+}

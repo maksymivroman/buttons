@@ -15,6 +15,7 @@ public:
     void onRestart();
     void onFindMe();
     void onIntegrationMessage();
+    void onRemoteTrigger();
 
     bool useSound = false;
 

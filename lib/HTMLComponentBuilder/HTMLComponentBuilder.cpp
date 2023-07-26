@@ -90,6 +90,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             useSound: <useSound>,
             customHSsid: <useCustomHSsid>,
             useTelegramIntegration: <useTelegramIntegration>,
+            remoteTriggering:<remoteTriggering>,
             fwVersion: <fwVersion>,
             hotspotSsid: "<hotspotSsid>"
         })";
@@ -100,6 +101,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     configObj.replace("<useDnsName>", String(data.useDnsName));
     configObj.replace("<useSound>", String(data.useSound));
     configObj.replace("<useTelegramIntegration>", String(data.useTelegramIntegration));
+    configObj.replace("<remoteTriggering>", String(data.remoteTriggering));
     configObj.replace("<fwVersion>", String(data.fwVersion));
     configObj.replace("<hotspotSsid>", String(data.hotspotSsid));
     configObj.replace("<useCustomHSsid>", String(data.useCustomHSsid));

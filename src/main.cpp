@@ -145,7 +145,7 @@ void loop() {
     if (digitalRead(buttonPin) == 1 || requiredToTriggerButton) {
         if (requiredToTriggerButton) {
             requiredToTriggerButton =!requiredToTriggerButton;
-            notifier.onIntegrationMessage();
+            notifier.onRemoteTrigger();
         }
         ledService.eventsSendInProgress(true);
         eventService.SendEvents();

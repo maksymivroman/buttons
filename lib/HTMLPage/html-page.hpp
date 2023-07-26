@@ -335,6 +335,25 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         </div>
 
+        <h2 style="font-weight: 200">Remote triggering</h2>
+
+        <div class="item">
+            <input type="checkbox" id="remoteTriggering">
+            <label for="remoteTriggering" style="margin: 0 8px;">Remote button triggering</label>
+        </div>
+
+        <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+            <h5 class="item" style="margin: 0">Trigger button using POST request:</h5>
+        </div>
+        <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
+            <h5 class="item" style="margin: 0">Content-Type: </h5>
+            <h5 class="item" style="font-weight: normal; margin: 0">application/form-data</h5>
+        </div>
+        <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
+            <h5 class="item" style="margin: 0">Key/Value: </h5>
+            <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
+        </div>
+
         <h2 style="font-weight: 200">Integration</h2>
         <div class="item">
             <input type="checkbox" id="useTelegramIntegration">
@@ -455,7 +474,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         const serialEnabled = Number(document.getElementById('serialEnabled').checked);
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
-        const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked)
+        const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
+        const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
 
         const extrasConfig = JSON.stringify({
             clientWebAccess,
@@ -465,6 +485,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             useTelegramIntegration,
             customHSsid,
             enableOtaUpdate,
+            remoteTriggering,
             wifiSsid: name,
             wifiPass: pass,
             hotspotSsid: hSsid
@@ -520,6 +541,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
         document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
+        document.getElementById('remoteTriggering').checked = config.remoteTriggering;
 
         integrationConfig = %INTEGRATION% ;
         document.getElementById('tToken').value = integrationConfig.tToken;

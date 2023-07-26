@@ -123,6 +123,7 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
     settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;
+    settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
 
     Serial.print("[SettingsService] -> EEPROM config size: "); Serial.println(sizeof settings);
