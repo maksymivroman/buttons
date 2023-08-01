@@ -69,7 +69,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             flex-direction: column;
             justify-content: center;
             padding: 18px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             width: 100vw;
             height: 100vh;
             position: absolute;
@@ -79,13 +79,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
 
         .extras-container {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-            align-content: flex-start;
-            flex-wrap: wrap;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 320px);
             margin-bottom: 16px;
-            max-height: 100px;
         }
 
         .connectivity-container {
@@ -104,6 +101,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         .--vertical {
             flex-flow: column;
+            align-items: flex-start;
         }
 
         table {
@@ -216,9 +214,23 @@ const char index_html[] PROGMEM = R"rawliteral(
             height: calc(2.25rem + 2px);
         }
 
+        .flexbox-wrap {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .max-h {
+            height: 100%;
+            align-content: space-between;
+        }
+
         @media screen and (max-width: 800px) {
             .wifi-credentials {
                 flex-direction: column;
+            }
+
+            .setup-logo {
+                display: none;
             }
         }
     </style>
@@ -230,8 +242,9 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     <div class="header">
         <div style="display: flex; align-items: baseline;">
-            <h2 style="color: white; font-weight: 200;">event button |&nbsp</h2>
-            <h4 style="color: lightgray; font-weight: 200;">Setup</h4>
+            <h2 style="color: white; font-weight: 200;">event button</h2>
+            <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
+            <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Setup</h4>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="find()">Find me</button>
@@ -283,13 +296,13 @@ const char index_html[] PROGMEM = R"rawliteral(
                 { "telegram": "Hello world!" }</h5>
             <textarea id="events" cols=120 rows=20 class="control"
                       style="margin-bottom: 0.5rem; background-color: #e0dddd"></textarea>
+            <h5 id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal">events format not
+                    valid</h5>
             <div style="display: flex; justify-content: space-between">
                 <div style="align-self: flex-end">
                     <input type="checkbox" id="editorAutoFormat" name="dnsName" value="1" checked>
                     <label style="margin-left: 8px; color: white" for="editorAutoFormat">Automatically format</label>
                 </div>
-                <h5 id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal">events format not
-                    valid</h5>
                 <div style="align-self: flex-end">
                     <button id="saveEvensFromEditor" type="button" class="btn btn-red" onclick="saveEvensFromEditor()">
                         Save
@@ -302,9 +315,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="modal" id="successModel">
             <div style="display: flex; align-items: center; flex-flow: column">
                 <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
-                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. Please
-                    reconnect to continue or close
-                    this page.</h4>
+                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take a while</h4>
+                <button type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
             </div>
         </div>
 
@@ -360,14 +372,14 @@ const char index_html[] PROGMEM = R"rawliteral(
             <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message forwarding)</label>
         </div>
 
-        <div id="telegramIntegration" class="item" style="margin-bottom: 20px;">
-            <div class="item">
+        <div id="telegramIntegration" class="item" style="margin-bottom: 20px; flex-wrap: wrap;">
+            <div class="item --vertical">
                 <label for="tToken" style="margin: 0 8px;">Token</label>
-                <input maxlength="50" type="text" id="tToken" class="control" style="min-width: 400px;">
+                <input maxlength="50" type="text" id="tToken" class="control" style="min-width: 375px; font-size: 0.75rem;">
             </div>
-            <div class="item">
+            <div class="item --vertical">
                 <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
-                <input maxlength="32" type="number" id="tChanelID" class="control">
+                <input maxlength="32" type="number" id="tChanelID" class="control" style="font-size: 0.75rem;">
             </div>
         </div>
 
@@ -401,27 +413,22 @@ const char index_html[] PROGMEM = R"rawliteral(
     </div>
 
     <div style="display: flex; justify-content: flex-start; align-items: center; width: 100vw; background: lightgray;">
-        <div style="display: flex;">
+        <div class="flexbox-wrap max-h">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Firmware version:</h5>
             <h5 style="margin: 5px">%FWVERSION% </h5>
         </div>
-        <div style="display: flex;">
+        <div class="flexbox-wrap max-h">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">MAC address:</h5>
             <h5 style="margin: 5px">%MAC% </h5>
         </div>
-        <div style="display: flex;">
+        <div class="flexbox-wrap max-h">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP address:</h5>
             <h5 style="margin: 5px">%IP% </h5>
         </div>
-        <div style="display: flex;">
+        <div class="flexbox-wrap max-h">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
             <h5 style="margin: 5px">%HEAP% </h5>
         </div>
-
-        <button style="padding: 0 10px; margin-left: 50px; font-size: 12px" type="button" ondblclick="clearEeprom()"
-                title="use double click" class="btn btn-red">Clear EEPROM
-        </button>
-
     </div>
 
 </div>
