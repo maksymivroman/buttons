@@ -19,10 +19,10 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     if (ref == "NETWORKINFO") {
         data += "<div class=\"main-container\">";
         data += R"(<label for="wifiname">WiFi SSID</label>)";
-        data += R"(<input class="control" type="text" id="wifiname" value=")" + networkSsid + "\"></div>";
+        data += R"(<input class="control mt-m" type="text" id="wifiname" list="wifiList" value=")" + networkSsid + "\"></div>";
         data += "<div class=\"main-container\">";
-        data += R"(<label class="label" for="wifipass">WiFi password</label>)";
-        data += R"(<input class="control" type="password" id="wifipass" value=")" + networkPassword + "\"></div>";
+        data += R"(<label for="wifipass">WiFi password</label>)";
+        data += R"(<input class="control mt-m" type="password" id="wifipass" value=")" + networkPassword + "\"></div>";
         return data;
     } else if (ref == "EVENTINFO") {
         data += R"(<label style="display:none;" id="savedJSON">)" + events + "</label>";
@@ -34,11 +34,11 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         if (!isClientMode){
             data += R"(<div class="item">
                 <input type="checkbox" id="enableOtaUpdate" name="otaUpdate">
-                <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on Wi-Fi client mode</label>
+                <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on client mode</label>
             </div>)";
             data += R"(<div class="item">
                 <input type="checkbox" id="clientWebAccess" name="hotspotAccess">
-                <label style="margin-left: 8px;" for="clientWebAccess">web access on Wi-Fi client mode</label>
+                <label style="margin-left: 8px;" for="clientWebAccess">Web access on client mode</label>
             </div>)";
         }
         return data;
@@ -58,7 +58,17 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         data += ESP.getFreeHeap();
         return data;
     } else if (ref == "IP") {
-        data += WiFi.localIP().toString();
+        switch (WiFi.getMode()) {
+            case WIFI_STA:
+                data += WiFi.localIP().toString();
+                break;
+            case WIFI_AP_STA:
+                data += WiFi.softAPIP().toString();
+                break;
+            default:
+                data += "unknown";
+                break;
+        }
         return data;
     }
     return ref;
@@ -66,18 +76,13 @@ String HTMLComponentBuilder::componentById(const String &ref) {
 
 String HTMLComponentBuilder::wiFiList() {
     String wifilist = "";
-    wifilist = "<div class=\"main-container\">";
-    wifilist += "<label for=\"networks\">Select available network</label>";
-    wifilist += "<select class=\"control\" id=\"networks\" onChange=\"update()\">";
-    Serial.print("Scan start ... ");
-    int n = networkList.size;
-    Serial.print(n);
-    Serial.println(" network(s) found");
-    for (int i = 0; i < n; i++) {
+    const uint8_t networksFund = networkList.size;
+    wifilist += "<datalist id=\"wifiList\">";
+    for (int i = 0; i < networksFund; i++) {
         Serial.println(networkList.arr[i]);
-        wifilist += "<option value=\"" + networkList.arr[i] + "\">" + networkList.arr[i] + "</option>";
+        wifilist += "<option value=\"" + networkList.arr[i] + "\"></option>";
     }
-    wifilist += "</select></div>";
+    wifilist += "</datalist>";
     return wifilist;
 }
 

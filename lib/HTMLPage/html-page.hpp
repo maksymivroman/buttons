@@ -36,6 +36,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             justify-content: space-between;
         }
 
+        .section-header {
+            font-weight: 200;
+            margin-top: 36px;
+        }
+
         .content {
             display: flex;
             flex-flow: column;
@@ -46,9 +51,6 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         .event-data {
             display: flex;
-            border: 1px solid lightgray;
-            border-radius: 5px;
-            box-shadow: 0 2px 7px #13537a24;
             padding: 5px;
             background: inherit;
             min-height: 500px;
@@ -56,11 +58,19 @@ const char index_html[] PROGMEM = R"rawliteral(
             overflow: auto;
         }
 
+        .border {
+            border: 1px solid lightgray;
+            border-radius: 5px;
+            box-shadow: 0 2px 7px #13537a24;
+        }
+
         .wifi-credentials {
             display: flex;
-            flex-direction: column;
             align-items: flex-start;
             align-content: space-between;
+        }
+
+        .main-container {
             padding: 0 8px;
         }
 
@@ -79,17 +89,19 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
 
         .extras-container {
-            max-width: 1000px;
             display: grid;
             grid-template-columns: repeat(auto-fill, 320px);
             margin-bottom: 16px;
+            padding: 24px;
         }
 
         .connectivity-container {
             display: flex;
             flex: 1;
+            flex-flow: column;
             align-content: flex-start;
             flex-wrap: wrap;
+            padding: 24px;
         }
 
         .item {
@@ -104,6 +116,10 @@ const char index_html[] PROGMEM = R"rawliteral(
             align-items: flex-start;
         }
 
+        .--fill {
+            width: -webkit-fill-available;
+        }
+
         table {
             background: inherit;
             width: 100vw;
@@ -116,6 +132,10 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         td {
             border-bottom: 1px solid lightgray;
+        }
+
+        .mt-m {
+            margin-top: 24px;
         }
 
         .control {
@@ -253,20 +273,27 @@ const char index_html[] PROGMEM = R"rawliteral(
     </div>
 
     <div class="content">
-        <h2 style="font-weight: 200">Connectivity</h2>
-        <div class="connectivity-container">
+        <h2 class="section-header">Connectivity</h2>
+        <div class="connectivity-container border">
             <div class="wifi-credentials">
                 %WIFILIST%
-                <label class="label" style="margin: 16px 0;">Or fill credentials manually</label>
+                <label class="label"></label>
                 %NETWORKINFO%
             </div>
+
+            <div class="item mt-m" style="min-height: 55px; flex-wrap: wrap; gap: 20px;">
+                <input type="checkbox" id="useHotspotSsid">
+                <label for="useHotspotSsid">Use custom hotspot SSID</label>
+                <input maxlength="32" type="text" id="hotspotSsid" class="control">
+            </div>
+
         </div>
         %EVENTINFO%
         <div style="display: flex; flex: 1; align-items: center; justify-content: space-between">
-            <h2 style="font-weight: 200">Assigned events</h2>
+            <h2 class="section-header">Assigned events</h2>
             <button style="padding: 0 10px" type="button" class="btn btn-blue" onclick="openEditor(true)">edit</button>
         </div>
-        <div class="event-data">
+        <div class="event-data border">
             <table>
                 <thead>
                 <tr>
@@ -283,7 +310,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             </table>
         </div>
 
-        <h2 style="font-weight: 200">General settings</h2>
+        <h2 class="section-header">General settings</h2>
 
         <div class="modal" id="editor">
             <h2 style="color: white; font-weight: 200; align-self: center;">Edit events</h2>
@@ -320,13 +347,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
         </div>
 
-        <div class="item" style="margin-bottom: 20px; min-height: 55px;">
-            <input type="checkbox" id="useHotspotSsid">
-            <label for="useHotspotSsid" style="margin: 0 8px;">Use custom hotspot SSID</label>
-            <input maxlength="32" type="text" id="hotspotSsid" class="control">
-        </div>
-
-        <div class="extras-container">
+        <div class="extras-container border">
 
             <div class="item">
                 <input type="checkbox" id="useDnsName" name="dnsName" disabled>
@@ -347,65 +368,67 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         </div>
 
-        <h2 style="font-weight: 200">Remote triggering</h2>
+        <h2 class="section-header">Remote triggering</h2>
 
-        <div class="item">
-            <input type="checkbox" id="remoteTriggering">
-            <label for="remoteTriggering" style="margin: 0 8px;">Remote button triggering</label>
-        </div>
+        <div class="border" style="padding: 24px">
+                <div class="item">
+                    <input type="checkbox" id="remoteTriggering">
+                    <label for="remoteTriggering" style="margin: 0 8px;">Remote button triggering</label>
+                </div>
 
-        <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-            <h5 class="item" style="margin: 0">Trigger button using POST request:</h5>
-        </div>
-        <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-            <h5 class="item" style="margin: 0">Content-Type: </h5>
-            <h5 class="item" style="font-weight: normal; margin: 0">application/form-data</h5>
-        </div>
-        <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-            <h5 class="item" style="margin: 0">Key/Value: </h5>
-            <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
-        </div>
-
-        <h2 style="font-weight: 200">Integration</h2>
-        <div class="item">
-            <input type="checkbox" id="useTelegramIntegration">
-            <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message forwarding)</label>
-        </div>
-
-        <div id="telegramIntegration" class="item" style="margin-bottom: 20px; flex-wrap: wrap;">
-            <div class="item --vertical">
-                <label for="tToken" style="margin: 0 8px;">Token</label>
-                <input maxlength="50" type="text" id="tToken" class="control" style="min-width: 375px; font-size: 0.75rem;">
+                <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+                    <h5 class="item" style="margin: 0">Trigger button using POST request:</h5>
+                </div>
+                <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
+                    <h5 class="item" style="margin: 0">Content-Type: </h5>
+                    <h5 class="item" style="font-weight: normal; margin: 0">application/form-data</h5>
+                </div>
+                <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
+                    <h5 class="item" style="margin: 0">Key/Value: </h5>
+                    <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
+                </div>
             </div>
-            <div class="item --vertical">
-                <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
-                <input maxlength="32" type="number" id="tChanelID" class="control" style="font-size: 0.75rem;">
+            <h2 class="section-header">Integration</h2>
+            <div class="border" style="padding: 24px">
+            <div class="item">
+                <input type="checkbox" id="useTelegramIntegration">
+                <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message forwarding)</label>
+            </div>
+
+            <div id="telegramIntegration" class="item" style="margin-bottom: 20px; flex-wrap: wrap">
+                <div class="item --vertical" style="flex: 1; max-width: 400px;">
+                    <label for="tToken" style="margin: 0 8px;">Token</label>
+                    <input maxlength="50" type="text" id="tToken" class="control --fill" style="max-width: 375px; font-size: 0.75rem;">
+                </div>
+                <div class="item --vertical">
+                    <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
+                    <input maxlength="32" type="number" id="tChanelID" class="control" style="font-size: 0.75rem;">
+                </div>
+            </div>
+
+            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+                <h4 class="item" style="margin: 0">Message forwarding:</h4>
+            </div>
+
+            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+                <h5 class="item" style="margin: 0">URL structure:</h5>
+                <h5 class="item" style="margin: 0">http://%IP%/integration?data=MESSAGE</h5>
+            </div>
+
+            <div class="item" style="margin-left: 16px;">
+                <label for="tPrefix" style="margin: 0 8px;">Message prefix</label>
+                <input maxlength="32" type="text" id="tPrefix" class="control">
+            </div>
+            <div class="item" style="margin-left: 16px;">
+                <label for="tSuffix" style="margin: 0 8px;">Message suffix</label>
+                <input maxlength="32" type="text" id="tSuffix" class="control">
+            </div>
+
+            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+                <h5 class="item" style="margin: 0">Result:</h5>
+                <h5 id="integrationResult" class="item" style="margin: 0">MESSAGE</h5>
             </div>
         </div>
-
-        <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-            <h4 class="item" style="margin: 0">Message forwarding:</h4>
-        </div>
-
-        <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-            <h5 class="item" style="margin: 0">URL structure:</h5>
-            <h5 class="item" style="margin: 0">${HOST} /integration?data= ${MESSAGE}</h5>
-        </div>
-
-        <div class="item" style="margin-left: 16px;">
-            <label for="tPrefix" style="margin: 0 8px;">Message prefix</label>
-            <input maxlength="32" type="text" id="tPrefix" class="control">
-        </div>
-        <div class="item" style="margin-left: 16px;">
-            <label for="tSuffix" style="margin: 0 8px;">Message suffix</label>
-            <input maxlength="32" type="text" id="tSuffix" class="control">
-        </div>
-
-        <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-            <h5 class="item" style="margin: 0">Result:</h5>
-            <h5 id="integrationResult" class="item" style="margin: 0">MESSAGE</h5>
-        </div>
-
         <div style="display: flex; flex: 1; justify-content: center; margin: 80px 0;">
             <button id="saveButton" type="button" class="btn btn-red" onclick="saveSettings()">Save And Reboot</button>
         </div>
