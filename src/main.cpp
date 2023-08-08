@@ -12,6 +12,7 @@
 #include "EventsService.h"
 #include "SoundService.h"
 #include "TelegramIntegration.h"
+#include "Tasks/ButtonTask.h"
 
 const int bluePin = 12;
 const int greenPin = 13;
@@ -27,7 +28,7 @@ const char *SAVE_SETTINGS = "SAVE";
 const char *CLEAR_EEPROM = "CLEAR_EEPROM";
 const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
 
-String messageToSend = "";
+String integrationMessageToSend = "";
 
 const char *hotspotPass = "12345678";
 
@@ -41,11 +42,14 @@ EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
 
+ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask;
+
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
 }
 
 [[noreturn]] void restart() {
+    optimistic_yield(1000);
     ledService.lightOnRed(true);
     notifier.onRestart();
     EspClass::restart();
@@ -53,6 +57,8 @@ String components(const String &ref) {
 
 void setup() {
     Serial.begin(115200);
+    Serial.println();
+    Serial.println( "BUTTON CURRENT FW: " + currentFirmwareVersion);
     ledService.pinConfig(redPin, greenPin, bluePin);
     pinMode(buttonPin, INPUT);
     ledService.blinkDone();
@@ -78,7 +84,8 @@ void setup() {
 
     ledService.blinkPrimary();
 
-    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig, networkService.isClientMode());
+    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig,
+                                  networkService.isConnectedToWiFi());
     eventService.SetEvents(eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -118,19 +125,21 @@ void setup() {
         eventService.telegramBotRef = &telegramBot;
         server.on("/integration", HTTP_GET, [](AsyncWebServerRequest *request) {
             if (request->hasParam("data")) {
-                messageToSend += buttonSettings.integrationSettings().tPrefix;
-                messageToSend += request->getParam("data")->value();
-                messageToSend += buttonSettings.integrationSettings().tSuffix;
-                Serial.print("[HTTP GET -> integration]: "); Serial.println(messageToSend);
+                integrationMessageToSend += buttonSettings.integrationSettings().tPrefix;
+                integrationMessageToSend += request->getParam("data")->value();
+                integrationMessageToSend += buttonSettings.integrationSettings().tSuffix;
+                Serial.print("[HTTP GET -> integration]: "); Serial.println(integrationMessageToSend);
             }
             else {Serial.print("[HTTP GET -> integration]: "); Serial.println("wrong GET data");}
             request->send_P(200, "text/html", "OK");
         });
     }
 
-    const bool serverEnabled = !networkService.isClientMode() || (buttonSettings.clientWebAccessEnabled() && networkService.isClientMode());
+    const bool serverEnabled = !networkService.isConnectedToWiFi() || (buttonSettings.clientWebAccessEnabled() &&
+                                                                       networkService.isConnectedToWiFi());
     if ( serverEnabled ) {
-        if(!networkService.isClientMode() || (buttonSettings.otaUpdateOnClientMode() && networkService.isClientMode())) {
+        if(!networkService.isConnectedToWiFi() || (buttonSettings.otaUpdateOnClientMode() &&
+                                                   networkService.isConnectedToWiFi())) {
             ButtonOTAUpdate.setID(buttonSettings.customHotspotSsid());
             ButtonOTAUpdate.begin(&server);
         }
@@ -142,7 +151,7 @@ void setup() {
 void loop() {
     delay(100);
 
-    if (digitalRead(buttonPin) == 1 || requiredToTriggerButton) {
+    SendEventsTask((digitalRead(buttonPin) == 1 || requiredToTriggerButton), [](){
         if (requiredToTriggerButton) {
             requiredToTriggerButton =!requiredToTriggerButton;
             notifier.onRemoteTrigger();
@@ -150,26 +159,31 @@ void loop() {
         ledService.eventsSendInProgress(true);
         eventService.SendEvents();
         ledService.eventsSendInProgress(false);
-    }
+    } );
 
-    if(requiredToFind) {
+    RequiredToFindTask(requiredToFind , [](){
         notifier.onFindMe();
         ledService.findMe();
         requiredToFind = !requiredToFind;
-    }
+    });
 
-    if(requiredEepromClear) {
+    EepromClearTask(requiredEepromClear,  [](){
         buttonSettings.clearEeprom();
         requiredRestart = true;
-    }
+    });
 
-    if(messageToSend.length() != 0) {
+    RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+
+    IntegrationTask(integrationMessageToSend.length() != 0, [](){
         notifier.onIntegrationMessage();
-        telegramBot.sendMessage(messageToSend);
-        messageToSend = "";
-    }
+        telegramBot.sendMessage(integrationMessageToSend);
+        integrationMessageToSend = "";
+    });
 
-    if(requiredRestart || ButtonOTAUpdate.requireToRestart) {
-        restart();
-    }
+    CheckConnectionTask(
+            networkService.isConnectedToWiFi(),
+            [](){ Serial.println("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
+            [](){ Serial.println("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); }
+            );
+
 }

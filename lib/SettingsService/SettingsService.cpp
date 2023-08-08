@@ -206,8 +206,8 @@ String SettingsService::dataFromFS(const String& fileName) {
         while (dataFile.available()) {
             data += char(dataFile.read());
         }
-        Serial.print("[SPIFFS] File name/data:"); Serial.println(file);
-        Serial.println(data);
+        Serial.print("[SPIFFS] File name: "); Serial.println(file);
+        Serial.print("[SPIFFS] File data: "); Serial.println(data);
         dataFile.close();
     }
 

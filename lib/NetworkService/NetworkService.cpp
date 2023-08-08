@@ -11,7 +11,7 @@ void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
     WiFi.mode(WIFI_STA);
     wifi_station_set_hostname("Event button");
     WiFi.setAutoConnect(false);
-    Serial.printf("hostname: %s\n", WiFi.hostname().c_str());
+    Serial.printf("[NetworkService] hostname: %s\n", WiFi.hostname().c_str());
     WiFi.begin(ssid, pass);
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
@@ -50,7 +50,7 @@ NETWORKLIST NetworkService::WiFiList() {
     return list;
 }
 
-bool NetworkService::isClientMode() {
-    Serial.print("[NetworkService] isClientMode: "); Serial.println(WiFi.isConnected());
+bool NetworkService::isConnectedToWiFi() {
     return WiFi.isConnected();
 }
+

@@ -79,7 +79,6 @@ String HTMLComponentBuilder::wiFiList() {
     const uint8_t networksFund = networkList.size;
     wifilist += "<datalist id=\"wifiList\">";
     for (int i = 0; i < networksFund; i++) {
-        Serial.println(networkList.arr[i]);
         wifilist += "<option value=\"" + networkList.arr[i] + "\"></option>";
     }
     wifilist += "</datalist>";
