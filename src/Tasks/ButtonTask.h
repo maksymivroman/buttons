@@ -10,9 +10,14 @@
 class ButtonTask {
 
 public:
+    ButtonTask()= default;
+    explicit ButtonTask(bool startWith) {
+        this->distinctChangeFlag = startWith;
+    };
+
     template<typename FnTrue>
-    void operator()(bool truthHandler, FnTrue execute){
-        if ((truthHandler != this->distinctChangeFlag)) {
+    void operator()(bool truthHandler, FnTrue execute, bool skipTask = false){
+        if ((truthHandler != this->distinctChangeFlag) & !skipTask) {
             Serial.println("[ButtonTask]-> truth handler");
             this->distinctChangeFlag = truthHandler;
             if (truthHandler) execute();
@@ -20,8 +25,8 @@ public:
     };
 
     template<typename FnTrue, typename FnFalse>
-    void operator()(bool handler, FnTrue executeOnTrue, FnFalse executeOnFalse){
-        if (handler != this->distinctChangeFlag) {
+    void operator()(bool handler, FnTrue executeOnTrue, FnFalse executeOnFalse, bool skipTask = false){
+        if ((handler != this->distinctChangeFlag) & !skipTask) {
             Serial.println("[ButtonTask]-> distinct handler");
             this->distinctChangeFlag = handler;
             handler ? executeOnTrue() : executeOnFalse();

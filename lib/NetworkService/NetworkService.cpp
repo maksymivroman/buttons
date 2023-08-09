@@ -54,3 +54,6 @@ bool NetworkService::isConnectedToWiFi() {
     return WiFi.isConnected();
 }
 
+bool NetworkService::isAPMode() {
+    return (WiFi.getMode() == WIFI_AP) | (WiFi.getMode() == WIFI_AP_STA);
+}

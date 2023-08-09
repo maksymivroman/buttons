@@ -42,7 +42,7 @@ EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
 
-ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask;
+ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true);
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -159,7 +159,7 @@ void loop() {
         ledService.eventsSendInProgress(true);
         eventService.SendEvents();
         ledService.eventsSendInProgress(false);
-    } );
+    },networkService.isAPMode());
 
     RequiredToFindTask(requiredToFind , [](){
         notifier.onFindMe();
@@ -183,7 +183,8 @@ void loop() {
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
             [](){ Serial.println("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
-            [](){ Serial.println("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); }
+            [](){ Serial.println("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); },
+            networkService.isAPMode()
             );
 
 }

@@ -15,6 +15,7 @@ public:
     void ConnectToWiFi(const String& ssid, const String& pass);
     NETWORKLIST WiFiList();
     bool isConnectedToWiFi();
+    bool isAPMode();
 };
 
 
