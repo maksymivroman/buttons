@@ -135,7 +135,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
 
         .mt-m {
-            margin-top: 24px;
+            margin-top: 16px;
         }
 
         .control {
@@ -184,6 +184,11 @@ const char index_html[] PROGMEM = R"rawliteral(
         .btn-blue {
             background-color: #1e5e9d;
             border: 1px solid #165c9f;
+        }
+
+        .small-btn {
+            max-height: 24px;
+            padding: 0 10px;
         }
 
         .btn-red:hover:not(:disabled) {
@@ -288,56 +293,29 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
 
         </div>
-        %EVENTINFO%
+
         <div style="display: flex; flex: 1; align-items: center; justify-content: space-between">
             <h2 class="section-header">Assigned events</h2>
-            <button style="padding: 0 10px" type="button" class="btn btn-blue" onclick="openEditor(true)">edit</button>
+            <button style="padding: 0 10px" type="button" class="btn btn-blue" onclick="addEntry()">Add new event</button>
         </div>
         <div class="event-data border">
-            <table>
+
+            <table id="dataTable">
                 <thead>
                 <tr>
-                    <th colspan="1">Host</th>
-                    <th style="width: 70%;" colspan="2">Data</th>
+                    <th>host</th>
+                    <th style="width: 70%;">event data</th>
+                    <th>actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr id="event" style="">
-                    <td><h5 style="margin: 5px" id="eventHost"></h5></td>
-                    <td><h6 id="eventData" style="margin: 5px 20px"></h6></td>
-                </tr>
+                <!-- Table data -->
                 </tbody>
             </table>
+
         </div>
 
         <h2 class="section-header">General settings</h2>
-
-        <div class="modal" id="editor">
-            <h2 style="color: white; font-weight: 200; align-self: center;">Edit events</h2>
-            <h5 style="color: #b9b9b9;">Events should be valid JSON and host cannot be duplicated!</h5>
-            <h5 style="color: #b9b9b9; margin: 10px 0;">If you want to use JSON as event data please use escape
-                characters '\"'</h5>
-            <h5 style="color: #91a9ff;"> Example:
-                { \"eventName\":\"DYNAMIC_EVENT\",\"eventData\":[{\"name\":\"user_check\",\"value\":\"yes\"}] }</h5>
-            <h5 style="color: #91a9ff;"> Telegram event example:
-                { "telegram": "Hello world!" }</h5>
-            <textarea id="events" cols=120 rows=20 class="control"
-                      style="margin-bottom: 0.5rem; background-color: #e0dddd"></textarea>
-            <h5 id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal">events format not
-                    valid</h5>
-            <div style="display: flex; justify-content: space-between">
-                <div style="align-self: flex-end">
-                    <input type="checkbox" id="editorAutoFormat" name="dnsName" value="1" checked>
-                    <label style="margin-left: 8px; color: white" for="editorAutoFormat">Automatically format</label>
-                </div>
-                <div style="align-self: flex-end">
-                    <button id="saveEvensFromEditor" type="button" class="btn btn-red" onclick="saveEvensFromEditor()">
-                        Save
-                    </button>
-                    <button type="button" class="btn btn-blue" onclick="openEditor(false)">Cancel</button>
-                </div>
-            </div>
-        </div>
 
         <div class="modal" id="successModel">
             <div style="display: flex; align-items: center; flex-flow: column">
@@ -437,7 +415,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     <div style="display: flex; justify-content: flex-start; align-items: center; width: 100vw; background: lightgray;">
         <div class="flexbox-wrap max-h">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Firmware version:</h5>
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">FW version:</h5>
             <h5 style="margin: 5px">%FWVERSION% </h5>
         </div>
         <div class="flexbox-wrap max-h">
@@ -481,7 +459,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         httpPOST("CLEAR_EEPROM", "EEPROM cleared!");
     }
 
-    //deprecated
     function find() {
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
         const httpRequest = new XMLHttpRequest();
@@ -497,7 +474,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         const name = document.getElementById('wifiname').value;
         const pass = document.getElementById('wifipass').value;
         const hSsid = document.getElementById('hotspotSsid').value;
-
         const clientWebAccess = document.getElementById('clientWebAccess')? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
         const enableOtaUpdate = document.getElementById('enableOtaUpdate')? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
         const useDnsName = Number(document.getElementById('useDnsName').checked);
@@ -533,7 +509,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             tSuffix
         })
 
-        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + eventSettings + '}}';
+        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + JSON.stringify(eventDataObj) + '}}';
         data.replace(/" /g, '');
         data.replace(/ "/g, '');
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
@@ -554,6 +530,9 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function showSaved() {
         config = %CONFIGURATION% ;
+
+        eventDataObj = %EVENTINFO% ;
+
         try {
             document.getElementById('clientWebAccess').checked = config.clientWebAccess;
             document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
@@ -579,34 +558,13 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('tPrefix').value = integrationConfig.tPrefix;
         document.getElementById('tSuffix').value = integrationConfig.tSuffix;
 
-        let data, jsonEvents;
         try {
-            jsonEvents = document.getElementById('savedJSON').innerHTML;
-            data = JSON.parse(jsonEvents);
+            JSON.parse( '"' + eventDataObj + '"');
         } catch (e) {
-            jsonEvents = '{"sample_event_host" : "sample_event_data"}';
+            eventDataObj = {"sample_event_host" : "sample_event_data"};
         }
-        document.getElementById('events').value = JSON.stringify(data, undefined, 4);
-        eventSettings = jsonEvents;
-        buildTable();
 
         integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
-    }
-
-    function buildTable() {
-        const item = document.querySelector('#event');
-        let i = 0;
-        JSON.parse(eventSettings, (key, value) => {
-            if (typeof value !== "object") {
-                const clone = item.cloneNode(true);
-                clone.id = `event-item${i}`;
-                item.before(clone);
-                const newItem = document.getElementById(`event-item${i}`);
-                newItem.querySelector('h5').innerHTML = key;
-                newItem.querySelector('h6').innerHTML = value;
-            }
-            i++;
-        });
     }
 
     function update() {
@@ -615,61 +573,11 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('wifiname').value = option.value;
     }
 
-    function openEditor(open) {
-        const editor = document.getElementById('editor');
-        if (open === true) {
-            document.getElementById('events').value = JSON.stringify(JSON.parse(eventSettings), undefined, 4);
-            editor.style.visibility = 'visible'
-        } else {
-            eventsFormatWarn.style.visibility = 'hidden';
-            eventsTextarea.style.border = '1px solid white';
-            editor.style.visibility = 'hidden';
-        }
-    }
-
-    function saveEvensFromEditor() {
-        eventSettings = document.getElementById('events').value;
-        const matches = document.querySelectorAll(`[id*='event-item']`);
-        matches.forEach(item => item.remove());
-        buildTable();
-        openEditor(false);
-    }
-
-    const eventsTextarea = document.getElementById("events");
-    const eventsFormatWarn = document.getElementById("eventsFormatWarn");
-    const autoFormat = document.getElementById('editorAutoFormat');
-    const saveBtn = document.getElementById("saveEvensFromEditor");
-
     const tPrefixValue = document.getElementById('tPrefix');
     const tSuffixValue = document.getElementById('tSuffix');
     const integrationResult = document.getElementById('integrationResult');
 
-
-    let eventSettings;
-    let config, integrationConfig;
-
-    eventsTextarea.addEventListener("input", () => {
-        eventsFormatWarn.style.visibility = 'hidden';
-        eventsTextarea.style.border = '1px solid white';
-        try {
-            const obj = JSON.parse(eventsTextarea.value);
-            if (autoFormat.checked) {
-                eventsTextarea.value = JSON.stringify(obj, undefined, 4);
-            }
-            saveBtn.disabled = false;
-        } catch (e) {
-            eventsFormatWarn.style.visibility = 'visible';
-            eventsTextarea.style.border = '3px solid red';
-            saveBtn.disabled = true;
-        }
-    });
-
-    autoFormat.addEventListener("input", () => {
-        if (autoFormat.checked) {
-            const obj = JSON.parse(eventsTextarea.value);
-            eventsTextarea.value = JSON.stringify(obj, undefined, 4);
-        }
-    })
+    let config, integrationConfig, eventDataObj;
 
     tPrefixValue.addEventListener("input", () =>{
         integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
@@ -679,7 +587,61 @@ const char index_html[] PROGMEM = R"rawliteral(
         integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
     });
 
-    window.onload = showSaved;
+    const dataTable = document.getElementById('dataTable');
+    const tbody = dataTable.querySelector('tbody');
+
+    function populateTable() {
+        tbody.innerHTML = '';
+        for (const key in eventDataObj) {
+            const row = `
+        <tr>
+          <td>${key}</td>
+          <td >${eventDataObj[key]}</td>
+          <td style="display: flex; justify-content: space-evenly;">
+            <button class="btn btn-blue small-btn" onclick="editEntry('${key}')">Edit</button>
+            <button class="btn btn-red small-btn" onclick="removeEntry('${key}')">Remove</button>
+          </td>
+        </tr>
+      `;
+            tbody.insertAdjacentHTML('beforeend', row);
+        }
+    }
+
+    function addEntry() {
+        const newKey = prompt('Event Host:');
+        if (newKey && !eventDataObj.hasOwnProperty(newKey)) {
+            const newValue = prompt('Event data:');
+            if (newValue !== null) {
+                eventDataObj[newKey] = newValue; //.replace(/'/g, '\\"').replace( /"/g, '\\"')
+                populateTable();
+            }
+        }
+    }
+
+    function editEntry(key) {
+        const newKey = prompt(`Edit the event host name "${key}":`, key);
+        if (newKey !== null && newKey !== key && !eventDataObj.hasOwnProperty(newKey)) {
+            const newValue = prompt(`Edit the event data for host "${newKey}":`, eventDataObj[key]);
+            if (newValue !== null) {
+                eventDataObj[newKey] = newValue;
+                if (newKey !== key) {
+                    delete eventDataObj[key];
+                }
+                populateTable();
+            }
+        }
+    }
+
+    function removeEntry(key) {
+        if (confirm(`Are you sure you want to remove the event "${key}"?`)) {
+            delete eventDataObj[key];
+            populateTable();
+        }
+    }
+
+    showSaved();
+    populateTable();
+
 </script>)rawliteral";
 
 #endif //EVENT_BUTTON_HTML_PAGE_HPP
