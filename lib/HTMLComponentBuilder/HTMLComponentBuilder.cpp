@@ -25,7 +25,7 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         data += R"(<input class="control mt-m" type="password" id="wifipass" value=")" + networkPassword + "\"></div>";
         return data;
     } else if (ref == "EVENTINFO") {
-        data += R"(<label style="display:none;" id="savedJSON">)" + events + "</label>";
+        data += events;
         return data;
     } else if (ref == "WIFILIST") {
         data += wiFiList();
