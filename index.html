@@ -118,6 +118,10 @@
             visibility: hidden;
         }
 
+        .--display-none {
+            display: none !important;
+        }
+
         .--not-valid-event {
             border: 1px solid red;
         }
@@ -290,7 +294,6 @@
             }
         }
     </style>
-
 </head>
 <body>
 
@@ -495,7 +498,7 @@
 
 </div>
 
-<div class="modal" id="editor"> <!--style="visibility: visible;"-->
+<dialog id="editor" style="background-color: #444444;">
     <div class="flexbox-column-centered">
         <h1 style="color: white; font-weight: 200; margin-bottom: 64px;">Add new event</h1>
         <div class="flexbox-column-centered" style="align-items: flex-start; gap: 8px;">
@@ -528,16 +531,22 @@
             </div>
             <label style="color: white; margin-top: 16px;" for="events">Event data</label>
             <textarea id="events" cols=75 rows=10></textarea>
-            <h5 id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal;">events data not
-                valid</h5>
-            <div>
+            <span id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal;">Events data not
+                valid</span>
+            <span id="eventAlreadyExist" style="color: red; visibility: hidden; line-height: normal;">Event already exists for this host</span>
+            <div style="margin-top: 24px;">
                 <input type="checkbox" id="eventJsonFormat" name="dnsName" value="1">
                 <label style="margin-left: 8px; color: white" for="eventJsonFormat">Format as JSON</label>
             </div>
         </div>
 
-        <div class="flexbox-wrap" style="gap: 64px;">
-            <button id="addNewEvent" type="button" class="btn btn-red" style="min-width: 100px; margin-top: 32px;" disabled
+        <div class="flexbox-wrap" style="gap: 32px; align-self: flex-end;">
+            <button id="editThisEvent" type="button" class="btn btn-red --hidden"
+                    style="min-width: 100px; margin-top: 32px;"
+                    onclick="editEvent()">Edit
+            </button>
+            <button id="addNewEvent" type="button" class="btn btn-red" style="min-width: 100px; margin-top: 32px;"
+                    disabled
                     onclick="addToEventList()">Add
             </button>
             <button type="button" class="btn btn-red" style="min-width: 100px; margin-top: 32px;"
@@ -545,6 +554,10 @@
             </button>
         </div>
     </div>
+</dialog>
+
+<!--<div class="modal" > &lt;!&ndash;style="visibility: visible;"&ndash;&gt;-->
+
 </div>
 <div id="body"></div>
 
@@ -656,7 +669,7 @@
             document.getElementById('clientWebAccess').checked = config.clientWebAccess;
             document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
         } catch (e) {
-            console.warn('some options restricted in client mode');
+            console.warn('some options are restricted in client mode');
         }
 
         if (!config.enableOtaUpdate && !document.getElementById('enableOtaUpdate')) {
@@ -672,6 +685,7 @@
         document.getElementById('remoteTriggering').checked = config.remoteTriggering;
 
         integrationConfig = {};// %INTEGRATION% ;
+
         document.getElementById('tToken').value = integrationConfig.tToken;
         document.getElementById('tChanelID').value = integrationConfig.tChanelID;
         document.getElementById('tPrefix').value = integrationConfig.tPrefix;
@@ -681,6 +695,7 @@
             JSON.parse('"' + eventDataObj + '"');
         } catch (e) {
             eventDataObj = {"sample_event_host": "sample_event_data"};
+            console.warn('no saved events found');
         }
 
         integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
@@ -697,6 +712,8 @@
     const integrationResult = document.getElementById('integrationResult');
 
     let config, integrationConfig, eventDataObj;
+
+    let entryKeyToEdit;
 
     tPrefixValue.addEventListener("input", () => {
         integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
@@ -717,25 +734,12 @@
                           <td>${key}</td>
                           <td >${eventDataObj[key]}</td>
                           <td style="display: flex; justify-content: flex-end; gap: 8px;">
-                            <button class="btn btn-blue small-btn" onclick="editEntry('${key}')">Edit</button>
+                            <button class="btn btn-blue small-btn" onclick="openEditSingleEventModal('${key}')">Edit</button>
                             <button class="btn btn-red small-btn" onclick="removeEntry('${key}')">Remove</button>
                           </td>
                         </tr>
                       `;
             tbody.insertAdjacentHTML('beforeend', row);
-        }
-    }
-
-    function addEntry() {
-        const newKey = prompt('Event Host:');
-        if (newKey && !eventDataObj.hasOwnProperty(newKey)) {
-            const newValue = prompt('Event data:');
-            if (newValue !== null) {
-                eventDataObj[newKey] = newValue;
-                populateTable();
-            }
-        } else {
-            alert('Wrong event host');
         }
     }
 
@@ -753,20 +757,6 @@
         }
     }
 
-    function editEntry(key) {
-        const newKey = prompt(`Edit the event host name "${key}":`, key);
-        if (newKey !== null) {
-            const newValue = prompt(`Edit the event data for host "${newKey}":`, eventDataObj[key]);
-            if (newValue !== null) {
-                eventDataObj[newKey] = newValue;
-                if (newKey !== key) {
-                    delete eventDataObj[key];
-                }
-                populateTable();
-            }
-        }
-    }
-
     function removeEntry(key) {
         if (confirm(`Are you sure you want to remove the event "${key}"?`)) {
             delete eventDataObj[key];
@@ -779,6 +769,7 @@
     const hostInput = document.getElementById("eventHost");
     const addNewEventButton = document.getElementById("addNewEvent");
     const eventsFormatWarn = document.getElementById("eventsFormatWarn");
+    const eventsAlreadyExistWarn = document.getElementById("eventAlreadyExist");
 
     document.getElementsByName("eventType").forEach(e => e.addEventListener("input", (el) => {
         switch (el.target.value) {
@@ -801,16 +792,16 @@
                 hostInput.value = "";
                 break;
         }
-
-        checkFormValidity()
-        console.log(el.target.value)
+        checkFormValidity();
     }))
+
+    document.getElementById("eventJsonFormat").addEventListener("change", () => {
+        checkFormValidity();
+    })
 
     hostInput.addEventListener("input", () => {
         checkFormValidity();
     });
-
-    document.getElementById("eventJsonFormat").addEventListener("change", () => { checkFormValidity() })
 
     eventData.addEventListener("input", () => {
         if (document.getElementById("eventJsonFormat").checked) {
@@ -820,11 +811,11 @@
     });
 
     function checkFormValidity() {
-        console.log('[checkFormValidity]')
         let isValid;
         isValid = hostInput.value && eventData.value !== "";
-
+        const eventAlreadyExist = hostInput.value && eventDataObj.hasOwnProperty(hostInput.value);
         eventsFormatWarn.style.visibility = 'hidden';
+        eventsAlreadyExistWarn.style.visibility = eventAlreadyExist && !entryKeyToEdit ? 'visible' : 'hidden';
         eventData.classList.remove("--not-valid-event");
 
         if (document.getElementById("eventJsonFormat").checked) {
@@ -836,11 +827,10 @@
                 isValid = false;
             }
         }
-        addNewEventButton.disabled = !isValid;
+        addNewEventButton.disabled = !isValid || eventAlreadyExist;
     }
 
     function autoFormatEventData() {
-        console.log('[autoFormatEventData]')
         try {
             const obj = JSON.parse(eventData.value);
             eventData.value = JSON.stringify(obj, undefined, 4);
@@ -858,7 +848,7 @@
         try {
             addEventEntry(hostInput.value, data);
             /**reset controls*/
-            if(document.getElementById("customType").checked){
+            if (document.getElementById("customType").checked) {
                 eventData.value = "";
                 hostInput.value = "";
             } else {
@@ -869,30 +859,49 @@
             alert(e);
         }
         closeEditor();
-
-        console.log(hostInput.value, data);
     }
 
     function openEditor() {
         checkFormValidity();
-        document.getElementById('editor').style.visibility = 'visible'
+        document.getElementById('editor').showModal();
     }
 
     function closeEditor() {
         resetControls();
-        document.getElementById('editor').style.visibility = 'hidden';
+        entryKeyToEdit = null;
+        document.getElementById('editor').close();
     }
 
-    function resetControls(){
+    function resetControls() {
         eventData.value = "";
         hostInput.value = "";
+        document.getElementById("editThisEvent").classList.add('--hidden');
+        addNewEventButton.classList.remove('--display-none');
         document.getElementById("customType").click();
         document.getElementById("eventJsonFormat").checked = false;
         checkFormValidity();
     }
 
-    function openEditSingleEventModal() {
-        document.getElementById('edtEventDialog').showModal();
+    function openEditSingleEventModal(key) {
+        document.getElementById('editor').showModal();
+        if (key) {
+            entryKeyToEdit = key;
+            eventData.value = eventDataObj[key];
+            hostInput.value = key;
+
+            const editEventButton = document.getElementById("editThisEvent");
+            editEventButton.classList.remove('--hidden');
+            addNewEventButton.classList.add('--display-none');
+        }
+    }
+
+    function editEvent() {
+        if (hostInput.value !== null && eventData.value !== null) {
+            delete eventDataObj[entryKeyToEdit];
+            eventDataObj[hostInput.value] = eventData.value;
+            populateTable();
+        }
+        closeEditor();
     }
 
     showSaved();
