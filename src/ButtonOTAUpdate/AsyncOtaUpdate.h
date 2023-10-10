@@ -18,7 +18,7 @@
 #include "FS.h"
 
 #include "UpdateWebPage.h"
-#include "GlobalConfig.hpp"
+#include "Global/Global.hpp"
 
 class AsyncOtaUpdate{
 

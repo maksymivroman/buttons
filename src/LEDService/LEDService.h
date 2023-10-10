@@ -2,7 +2,7 @@
 #define EVENT_BUTTON_LEDSERVICE_H
 
 
-#include "GlobalConfig.hpp"
+#include "Global/Global.hpp"
 
 class LEDService {
 public:

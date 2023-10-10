@@ -2,17 +2,17 @@
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
 
-#include "AsyncOtaUpdate.h"
-#include "GlobalConfig.hpp"
-#include "html-page.hpp"
-#include "LEDService.h"
-#include "SettingsService.h"
-#include "NetworkService.h"
-#include "HTMLComponentBuilder.h"
-#include "EventsService.h"
-#include "SoundService.h"
-#include "TelegramIntegration.h"
-#include "Tasks/ButtonTask.h"
+#include "ButtonOTAUpdate/AsyncOtaUpdate.h"
+#include "Global/Global.hpp"
+#include "HTMLPage/html-page.hpp"
+#include "LEDService/LEDService.h"
+#include "SettingsService/SettingsService.h"
+#include "NetworkService/NetworkService.h"
+#include "HTMLComponentBuilder/HTMLComponentBuilder.h"
+#include "EventsService/EventsService.h"
+#include "SoundService/SoundService.h"
+#include "TelegramIntegration/TelegramIntegration.h"
+#include "TasksHandler/ButtonTask.h"
 
 const int bluePin = 12;
 const int greenPin = 13;
