@@ -3,8 +3,8 @@
 //
 #pragma once
 
-#ifndef EVENT_BUTTON_GLOBALCONFIG_HPP
-#define EVENT_BUTTON_GLOBALCONFIG_HPP
+#ifndef EVENT_BUTTON_GLOBAL_HPP
+#define EVENT_BUTTON_GLOBAL_HPP
 
 #include <Arduino.h>
 
@@ -48,4 +48,4 @@ struct INTEGRATIONSETTINGS {
     String tSuffix;
 };
 
-#endif //EVENT_BUTTON_GLOBALCONFIG_HPP
+#endif //EVENT_BUTTON_GLOBAL_HPP

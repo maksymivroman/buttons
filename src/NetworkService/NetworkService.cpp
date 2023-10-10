@@ -5,7 +5,7 @@
 #include "NetworkService.h"
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include "GlobalConfig.hpp"
+#include "Global/Global.hpp"
 
 void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
     WiFi.mode(WIFI_STA);
