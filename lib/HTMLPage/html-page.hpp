@@ -120,6 +120,18 @@ const char index_html[] PROGMEM = R"rawliteral(
             width: -webkit-fill-available;
         }
 
+        .--hidden {
+            visibility: hidden;
+        }
+
+        .--display-none {
+            display: none !important;
+        }
+
+        .--not-valid-event {
+            border: 1px solid red;
+        }
+
         table {
             background: inherit;
             width: 100vw;
@@ -135,7 +147,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
 
         .mt-m {
-            margin-top: 24px;
+            margin-top: 16px;
         }
 
         .control {
@@ -186,6 +198,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             border: 1px solid #165c9f;
         }
 
+        .small-btn {
+            max-height: 24px;
+            padding: 0 10px;
+        }
+
         .btn-red:hover:not(:disabled) {
             background-color: #a6132f;
         }
@@ -204,6 +221,12 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         input[type=checkbox]:disabled + label {
             color: darkgray;
+        }
+
+        input:disabled {
+            color: dimgray;
+            background-color: lightgray;
+            user-select: none;
         }
 
         input[type=checkbox]:not(:checked) + label + input {
@@ -244,6 +267,29 @@ const char index_html[] PROGMEM = R"rawliteral(
             align-content: space-between;
         }
 
+        .max-w {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .flexbox-column-centered {
+            display: flex;
+            flex-flow: column;
+            /*justify-content: center;*/
+            align-items: center
+        }
+
+        .flexbox-column-start {
+            display: flex;
+            flex-flow: column;
+        }
+
+        .flexbox-raw-centered {
+            display: flex;
+            justify-content: center;
+            align-items: center
+        }
+
         @media screen and (max-width: 800px) {
             .wifi-credentials {
                 flex-direction: column;
@@ -254,7 +300,6 @@ const char index_html[] PROGMEM = R"rawliteral(
             }
         }
     </style>
-
 </head>
 <body>
 
@@ -268,7 +313,9 @@ const char index_html[] PROGMEM = R"rawliteral(
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="find()">Find me</button>
-            <button id="updateBtn" style="align-self: flex-end;" type="button" class="btn btn-red" onclick="location.href='/update'">FW Update</button>
+            <button id="updateBtn" style="align-self: flex-end;" type="button" class="btn btn-red"
+                    onclick="location.href='/update'">FW Update
+            </button>
         </div>
     </div>
 
@@ -288,61 +335,39 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
 
         </div>
-        %EVENTINFO%
+
         <div style="display: flex; flex: 1; align-items: center; justify-content: space-between">
             <h2 class="section-header">Assigned events</h2>
-            <button style="padding: 0 10px" type="button" class="btn btn-blue" onclick="openEditor(true)">edit</button>
+            <button style="display: flex; padding: 0 10px; align-self: flex-end; margin-bottom: 16px; align-items: center; gap: 4px;"
+                    type="button" class="btn btn-red" onclick="openEditor()"><h1
+                    style="margin: 0; line-height: normal; font-weight: 200;">+</h1> Add new event
+            </button>
+
         </div>
         <div class="event-data border">
-            <table>
+
+            <table id="dataTable">
                 <thead>
                 <tr>
-                    <th colspan="1">Host</th>
-                    <th style="width: 70%;" colspan="2">Data</th>
+                    <th>host</th>
+                    <th style="width: 70%;">event data</th>
+                    <th>actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr id="event" style="">
-                    <td><h5 style="margin: 5px" id="eventHost"></h5></td>
-                    <td><h6 id="eventData" style="margin: 5px 20px"></h6></td>
-                </tr>
+                <!-- Table data -->
                 </tbody>
             </table>
+
         </div>
 
         <h2 class="section-header">General settings</h2>
 
-        <div class="modal" id="editor">
-            <h2 style="color: white; font-weight: 200; align-self: center;">Edit events</h2>
-            <h5 style="color: #b9b9b9;">Events should be valid JSON and host cannot be duplicated!</h5>
-            <h5 style="color: #b9b9b9; margin: 10px 0;">If you want to use JSON as event data please use escape
-                characters '\"'</h5>
-            <h5 style="color: #91a9ff;"> Example:
-                { \"eventName\":\"DYNAMIC_EVENT\",\"eventData\":[{\"name\":\"user_check\",\"value\":\"yes\"}] }</h5>
-            <h5 style="color: #91a9ff;"> Telegram event example:
-                { "telegram": "Hello world!" }</h5>
-            <textarea id="events" cols=120 rows=20 class="control"
-                      style="margin-bottom: 0.5rem; background-color: #e0dddd"></textarea>
-            <h5 id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal">events format not
-                    valid</h5>
-            <div style="display: flex; justify-content: space-between">
-                <div style="align-self: flex-end">
-                    <input type="checkbox" id="editorAutoFormat" name="dnsName" value="1" checked>
-                    <label style="margin-left: 8px; color: white" for="editorAutoFormat">Automatically format</label>
-                </div>
-                <div style="align-self: flex-end">
-                    <button id="saveEvensFromEditor" type="button" class="btn btn-red" onclick="saveEvensFromEditor()">
-                        Save
-                    </button>
-                    <button type="button" class="btn btn-blue" onclick="openEditor(false)">Cancel</button>
-                </div>
-            </div>
-        </div>
-
         <div class="modal" id="successModel">
             <div style="display: flex; align-items: center; flex-flow: column">
                 <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
-                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take a while</h4>
+                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take
+                    a while</h4>
                 <button type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
             </div>
         </div>
@@ -371,34 +396,36 @@ const char index_html[] PROGMEM = R"rawliteral(
         <h2 class="section-header">Remote triggering</h2>
 
         <div class="border" style="padding: 24px">
-                <div class="item">
-                    <input type="checkbox" id="remoteTriggering">
-                    <label for="remoteTriggering" style="margin: 0 8px;">Remote button triggering</label>
-                </div>
-
-                <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                    <h5 class="item" style="margin: 0">Trigger button using POST request:</h5>
-                </div>
-                <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-                    <h5 class="item" style="margin: 0">Content-Type: </h5>
-                    <h5 class="item" style="font-weight: normal; margin: 0">application/form-data</h5>
-                </div>
-                <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-                    <h5 class="item" style="margin: 0">Key/Value: </h5>
-                    <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
-                </div>
+            <div class="item">
+                <input type="checkbox" id="remoteTriggering">
+                <label for="remoteTriggering" style="margin: 0 8px;">Remote button triggering</label>
             </div>
-            <h2 class="section-header">Integration</h2>
-            <div class="border" style="padding: 24px">
+
+            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+                <h5 class="item" style="margin: 0">Trigger button using POST request:</h5>
+            </div>
+            <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
+                <h5 class="item" style="margin: 0">Content-Type: </h5>
+                <h5 class="item" style="font-weight: normal; margin: 0">application/form-data</h5>
+            </div>
+            <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
+                <h5 class="item" style="margin: 0">Key/Value: </h5>
+                <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
+            </div>
+        </div>
+        <h2 class="section-header">Integration</h2>
+        <div class="border" style="padding: 24px">
             <div class="item">
                 <input type="checkbox" id="useTelegramIntegration">
-                <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message forwarding)</label>
+                <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message
+                    forwarding)</label>
             </div>
 
             <div id="telegramIntegration" class="item" style="margin-bottom: 20px; flex-wrap: wrap">
                 <div class="item --vertical" style="flex: 1; max-width: 400px;">
                     <label for="tToken" style="margin: 0 8px;">Token</label>
-                    <input maxlength="50" type="text" id="tToken" class="control --fill" style="max-width: 375px; font-size: 0.75rem;">
+                    <input maxlength="50" type="text" id="tToken" class="control --fill"
+                           style="max-width: 375px; font-size: 0.75rem;">
                 </div>
                 <div class="item --vertical">
                     <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
@@ -437,7 +464,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     <div style="display: flex; justify-content: flex-start; align-items: center; width: 100vw; background: lightgray;">
         <div class="flexbox-wrap max-h">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Firmware version:</h5>
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">FW version:</h5>
             <h5 style="margin: 5px">%FWVERSION% </h5>
         </div>
         <div class="flexbox-wrap max-h">
@@ -455,6 +482,68 @@ const char index_html[] PROGMEM = R"rawliteral(
     </div>
 
 </div>
+
+<dialog id="editor" style="background-color: #444444;">
+    <div class="flexbox-column-centered">
+        <h1 style="color: white; font-weight: 200; margin-bottom: 64px;">Add new event</h1>
+        <div class="flexbox-column-centered" style="align-items: flex-start; gap: 8px;">
+            <div class="flexbox-raw-centered" style="align-items: flex-start; gap: 24px; margin-bottom: 64px;">
+                <div class="flexbox-raw-centered" style="gap: 8px;">
+                    <input id="nsType" type="radio" name="eventType" value="ns-event">
+                    <label for="nsType" style="color: white;">NoviSign event</label>
+                </div>
+
+                <div class="flexbox-raw-centered" style="gap: 8px;">
+                    <input id="telegramType" type="radio" name="eventType" value="telegram-event">
+                    <label for="telegramType" style="color: white;">telegram event</label>
+                </div>
+
+                <div class="flexbox-raw-centered" style="gap: 8px;">
+                    <input id="customType" type="radio" name="eventType" value="custom-event" checked>
+                    <label for="customType" style="color: white;">Custom event</label>
+                </div>
+            </div>
+
+            <div class="flexbox-wrap max-w">
+                <div class="flexbox-column-start">
+                    <label style="color: white; margin-bottom: 8px;" for="eventHost">Event host/integration type</label>
+                    <input type="text" id="eventHost" class="control" style="min-width: 300px;">
+                </div>
+                <div id="nsType-eventType" class="flexbox-column-start --hidden">
+                    <label style="color: white; margin-bottom: 8px;" for="eventType">Event type</label>
+                    <input type="text" id="eventType" class="control" style="min-width: 300px;" value="DYNAMIC_EVENT">
+                </div>
+            </div>
+            <label style="color: white; margin-top: 16px;" for="events">Event data</label>
+            <textarea id="events" cols=75 rows=10></textarea>
+            <span id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal;">Events data not
+                valid</span>
+            <span id="eventAlreadyExist" style="color: red; visibility: hidden; line-height: normal;">Event already exists for this host</span>
+            <div style="margin-top: 24px;">
+                <input type="checkbox" id="eventJsonFormat" name="dnsName" value="1">
+                <label style="margin-left: 8px; color: white" for="eventJsonFormat">Format as JSON</label>
+            </div>
+        </div>
+
+        <div class="flexbox-wrap" style="gap: 32px; align-self: flex-end;">
+            <button id="editThisEvent" type="button" class="btn btn-red --hidden"
+                    style="min-width: 100px; margin-top: 32px;"
+                    onclick="editEvent()">Edit
+            </button>
+            <button id="addNewEvent" type="button" class="btn btn-red" style="min-width: 100px; margin-top: 32px;"
+                    disabled
+                    onclick="addToEventList()">Add
+            </button>
+            <button type="button" class="btn btn-red" style="min-width: 100px; margin-top: 32px;"
+                    onclick="closeEditor()">Cancel
+            </button>
+        </div>
+    </div>
+</dialog>
+
+</div>
+<div id="body"></div>
+
 </body>
 </html>
 
@@ -481,7 +570,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         httpPOST("CLEAR_EEPROM", "EEPROM cleared!");
     }
 
-    //deprecated
     function find() {
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
         const httpRequest = new XMLHttpRequest();
@@ -497,7 +585,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         const name = document.getElementById('wifiname').value;
         const pass = document.getElementById('wifipass').value;
         const hSsid = document.getElementById('hotspotSsid').value;
-
         const clientWebAccess = document.getElementById('clientWebAccess')? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
         const enableOtaUpdate = document.getElementById('enableOtaUpdate')? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
         const useDnsName = Number(document.getElementById('useDnsName').checked);
@@ -533,7 +620,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             tSuffix
         })
 
-        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + eventSettings + '}}';
+        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + JSON.stringify(eventDataObj) + '}}';
         data.replace(/" /g, '');
         data.replace(/ "/g, '');
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
@@ -554,11 +641,14 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function showSaved() {
         config = %CONFIGURATION% ;
+
+        eventDataObj = %EVENTINFO% ;
+
         try {
             document.getElementById('clientWebAccess').checked = config.clientWebAccess;
             document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
         } catch (e) {
-            console.warn('some options restricted in client mode');
+            console.warn('some options are restricted in client mode');
         }
 
         if (!config.enableOtaUpdate && !document.getElementById('enableOtaUpdate')) {
@@ -574,39 +664,20 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('remoteTriggering').checked = config.remoteTriggering;
 
         integrationConfig = %INTEGRATION% ;
+
         document.getElementById('tToken').value = integrationConfig.tToken;
         document.getElementById('tChanelID').value = integrationConfig.tChanelID;
         document.getElementById('tPrefix').value = integrationConfig.tPrefix;
         document.getElementById('tSuffix').value = integrationConfig.tSuffix;
 
-        let data, jsonEvents;
         try {
-            jsonEvents = document.getElementById('savedJSON').innerHTML;
-            data = JSON.parse(jsonEvents);
+            JSON.parse('"' + eventDataObj + '"');
         } catch (e) {
-            jsonEvents = '{"sample_event_host" : "sample_event_data"}';
+            eventDataObj = {"sample_event_host": "sample_event_data"};
+            console.warn('no saved events found');
         }
-        document.getElementById('events').value = JSON.stringify(data, undefined, 4);
-        eventSettings = jsonEvents;
-        buildTable();
 
         integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
-    }
-
-    function buildTable() {
-        const item = document.querySelector('#event');
-        let i = 0;
-        JSON.parse(eventSettings, (key, value) => {
-            if (typeof value !== "object") {
-                const clone = item.cloneNode(true);
-                clone.id = `event-item${i}`;
-                item.before(clone);
-                const newItem = document.getElementById(`event-item${i}`);
-                newItem.querySelector('h5').innerHTML = key;
-                newItem.querySelector('h6').innerHTML = value;
-            }
-            i++;
-        });
     }
 
     function update() {
@@ -615,71 +686,206 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('wifiname').value = option.value;
     }
 
-    function openEditor(open) {
-        const editor = document.getElementById('editor');
-        if (open === true) {
-            document.getElementById('events').value = JSON.stringify(JSON.parse(eventSettings), undefined, 4);
-            editor.style.visibility = 'visible'
-        } else {
-            eventsFormatWarn.style.visibility = 'hidden';
-            eventsTextarea.style.border = '1px solid white';
-            editor.style.visibility = 'hidden';
-        }
-    }
-
-    function saveEvensFromEditor() {
-        eventSettings = document.getElementById('events').value;
-        const matches = document.querySelectorAll(`[id*='event-item']`);
-        matches.forEach(item => item.remove());
-        buildTable();
-        openEditor(false);
-    }
-
-    const eventsTextarea = document.getElementById("events");
-    const eventsFormatWarn = document.getElementById("eventsFormatWarn");
-    const autoFormat = document.getElementById('editorAutoFormat');
-    const saveBtn = document.getElementById("saveEvensFromEditor");
-
     const tPrefixValue = document.getElementById('tPrefix');
     const tSuffixValue = document.getElementById('tSuffix');
     const integrationResult = document.getElementById('integrationResult');
 
+    let config, integrationConfig, eventDataObj;
 
-    let eventSettings;
-    let config, integrationConfig;
+    let entryKeyToEdit;
 
-    eventsTextarea.addEventListener("input", () => {
-        eventsFormatWarn.style.visibility = 'hidden';
-        eventsTextarea.style.border = '1px solid white';
-        try {
-            const obj = JSON.parse(eventsTextarea.value);
-            if (autoFormat.checked) {
-                eventsTextarea.value = JSON.stringify(obj, undefined, 4);
-            }
-            saveBtn.disabled = false;
-        } catch (e) {
-            eventsFormatWarn.style.visibility = 'visible';
-            eventsTextarea.style.border = '3px solid red';
-            saveBtn.disabled = true;
-        }
+    tPrefixValue.addEventListener("input", () => {
+        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
     });
 
-    autoFormat.addEventListener("input", () => {
-        if (autoFormat.checked) {
-            const obj = JSON.parse(eventsTextarea.value);
-            eventsTextarea.value = JSON.stringify(obj, undefined, 4);
+    tSuffixValue.addEventListener("input", () => {
+        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
+    });
+
+    const dataTable = document.getElementById('dataTable');
+    const tbody = dataTable.querySelector('tbody');
+
+    function populateTable() {
+        tbody.innerHTML = '';
+        for (const key in eventDataObj) {
+            const row = `
+                        <tr>
+                          <td>${key}</td>
+                          <td >${eventDataObj[key]}</td>
+                          <td style="display: flex; justify-content: flex-end; gap: 8px;">
+                            <button class="btn btn-blue small-btn" onclick="openEditSingleEventModal('${key}')">Edit</button>
+                            <button class="btn btn-red small-btn" onclick="removeEntry('${key}')">Remove</button>
+                          </td>
+                        </tr>
+                      `;
+            tbody.insertAdjacentHTML('beforeend', row);
         }
+    }
+
+    function addEventEntry(host, data) {
+        const eventExist = host && eventDataObj.hasOwnProperty(host);
+        if (!eventExist) {
+            if (data) {
+                eventDataObj[host] = data;
+                populateTable();
+            } else {
+                throw new Error("event data is empty");
+            }
+        } else {
+            throw new Error("event already exist");
+        }
+    }
+
+    function removeEntry(key) {
+        if (confirm(`Are you sure you want to remove the event "${key}"?`)) {
+            delete eventDataObj[key];
+            populateTable();
+        }
+    }
+
+    const eventData = document.getElementById("events");
+    const nsEventTypeContainer = document.getElementById("nsType-eventType");
+    const hostInput = document.getElementById("eventHost");
+    const addNewEventButton = document.getElementById("addNewEvent");
+    const eventsFormatWarn = document.getElementById("eventsFormatWarn");
+    const eventsAlreadyExistWarn = document.getElementById("eventAlreadyExist");
+
+    document.getElementsByName("eventType").forEach(e => e.addEventListener("input", (el) => {
+        switch (el.target.value) {
+            case "ns-event":
+                eventData.value = "[{\"name\":\"propName_1\",\"value\":\"val_forProp_1\"}]";
+                hostInput.value = "";
+                hostInput.disabled = false;
+                nsEventTypeContainer.classList.remove("--hidden");
+                break;
+            case "telegram-event":
+                nsEventTypeContainer.classList.add("--hidden");
+                hostInput.disabled = true;
+                eventData.value = "";
+                hostInput.value = "telegram";
+                break;
+            case "custom-event":
+                nsEventTypeContainer.classList.add("--hidden");
+                hostInput.disabled = false;
+                eventData.value = "";
+                hostInput.value = "";
+                break;
+        }
+        checkFormValidity();
+    }))
+
+    document.getElementById("eventJsonFormat").addEventListener("change", () => {
+        checkFormValidity();
     })
 
-    tPrefixValue.addEventListener("input", () =>{
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
+    hostInput.addEventListener("input", () => {
+        checkFormValidity();
     });
 
-    tSuffixValue.addEventListener("input", () =>{
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
+    eventData.addEventListener("input", () => {
+        if (document.getElementById("eventJsonFormat").checked) {
+            autoFormatEventData();
+        }
+        checkFormValidity();
     });
 
-    window.onload = showSaved;
+    function checkFormValidity() {
+        let isValid;
+        isValid = hostInput.value && eventData.value !== "";
+        const eventAlreadyExist = hostInput.value && eventDataObj.hasOwnProperty(hostInput.value);
+        eventsFormatWarn.style.visibility = 'hidden';
+        eventsAlreadyExistWarn.style.visibility = eventAlreadyExist && !entryKeyToEdit ? 'visible' : 'hidden';
+        eventData.classList.remove("--not-valid-event");
+
+        if (document.getElementById("eventJsonFormat").checked) {
+            try {
+                JSON.parse(eventData.value);
+            } catch (e) {
+                eventsFormatWarn.style.visibility = 'visible';
+                eventData.classList.add("--not-valid-event");
+                isValid = false;
+            }
+        }
+        addNewEventButton.disabled = !isValid || eventAlreadyExist;
+    }
+
+    function autoFormatEventData() {
+        try {
+            const obj = JSON.parse(eventData.value);
+            eventData.value = JSON.stringify(obj, undefined, 4);
+        } catch (e) {
+        }
+    }
+
+    function addToEventList() {
+        let data = eventData.value;
+        if (document.getElementById("nsType").checked) {
+            const type = document.getElementById("eventType").value;
+            const obj = JSON.parse(eventData.value);
+            data = `{'eventName':'${type}','eventData':${JSON.stringify(obj, undefined, null)}}`;
+        }
+        try {
+            addEventEntry(hostInput.value, data);
+            /**reset controls*/
+            if (document.getElementById("customType").checked) {
+                eventData.value = "";
+                hostInput.value = "";
+            } else {
+                document.getElementById("customType").click();
+            }
+
+        } catch (e) {
+            alert(e);
+        }
+        closeEditor();
+    }
+
+    function openEditor() {
+        checkFormValidity();
+        document.getElementById('editor').showModal();
+    }
+
+    function closeEditor() {
+        resetControls();
+        entryKeyToEdit = null;
+        document.getElementById('editor').close();
+    }
+
+    function resetControls() {
+        eventData.value = "";
+        hostInput.value = "";
+        document.getElementById("editThisEvent").classList.add('--hidden');
+        addNewEventButton.classList.remove('--display-none');
+        document.getElementById("customType").click();
+        document.getElementById("eventJsonFormat").checked = false;
+        checkFormValidity();
+    }
+
+    function openEditSingleEventModal(key) {
+        document.getElementById('editor').showModal();
+        if (key) {
+            entryKeyToEdit = key;
+            eventData.value = eventDataObj[key];
+            hostInput.value = key;
+
+            const editEventButton = document.getElementById("editThisEvent");
+            editEventButton.classList.remove('--hidden');
+            addNewEventButton.classList.add('--display-none');
+        }
+    }
+
+    function editEvent() {
+        if (hostInput.value !== null && eventData.value !== null) {
+            delete eventDataObj[entryKeyToEdit];
+            eventDataObj[hostInput.value] = eventData.value;
+            populateTable();
+        }
+        closeEditor();
+    }
+
+    showSaved();
+    populateTable();
+
 </script>)rawliteral";
 
 #endif //EVENT_BUTTON_HTML_PAGE_HPP
