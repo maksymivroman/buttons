@@ -20,13 +20,14 @@ const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
 
-bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton;
+bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS;
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
 const char *SAVE_SETTINGS = "SAVE";
 const char *CLEAR_EEPROM = "CLEAR_EEPROM";
 const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
+const char *FORMAT_FS = "FORMAT_FS";
 
 String integrationMessageToSend = "";
 
@@ -42,7 +43,7 @@ EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
 
-ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true);
+ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true), FormatFSTask;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -112,6 +113,10 @@ void setup() {
             } else if (paramName == SAVE_SETTINGS) {
                 buttonSettings.saveSettings(paramMessage);
                 requiredRestart = true;
+            } else if (paramName == FORMAT_FS) {
+                //TODO handle diff params value to start different system tools. Rename FORMAT_FS
+                requiredToFormatFS = true;
+                requiredRestart = true;
             } else {
                 responseCode = 418;
             }
@@ -172,7 +177,11 @@ void loop() {
         requiredRestart = true;
     });
 
-    RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+    FormatFSTask(requiredToFormatFS, [](){
+        ledService.lightOnRed(true);
+        buttonSettings.formatFS();
+    });
+
 
     IntegrationTask(integrationMessageToSend.length() != 0, [](){
         notifier.onIntegrationMessage();
@@ -186,5 +195,7 @@ void loop() {
             [](){ Serial.println("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); },
             networkService.isAPMode()
             );
+
+    RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
 
 }

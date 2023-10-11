@@ -106,8 +106,8 @@ void SettingsService::writeButtonEepromSettings(String &config) {
 
     char ssid[256], pass[256], hSsid[32];
 
-    wiFiName.toCharArray(ssid,256);
-    wiFiPassword.toCharArray(pass,256);
+    wiFiName.toCharArray(ssid, 256);
+    wiFiPassword.toCharArray(pass, 256);
     hotspotSsid.toCharArray(hSsid, 32);
 
     strcpy(settings.wifiSsid, ssid);
@@ -168,14 +168,14 @@ void SettingsService::clearEeprom() {
     Serial.println("Done!");
 }
 
-char * SettingsService::customHotspotSsid() {
+char *SettingsService::customHotspotSsid() {
     String espDefaultName = "eButton-";
     const String mac = WiFi.macAddress();
     espDefaultName += mac.substring(mac.length() - 6, mac.length());
-    espDefaultName.replace(':','x');
+    espDefaultName.replace(':', 'x');
 
     const bool useCustomSsid = buttonEepromSettings.hotspotSsid[0] != '\0';
-    if (useCustomSsid && buttonEepromSettings.useCustomHSsid ) {
+    if (useCustomSsid && buttonEepromSettings.useCustomHSsid) {
         return buttonEepromSettings.hotspotSsid;
     }
     char *name = new char[espDefaultName.length() + 1];
@@ -184,7 +184,7 @@ char * SettingsService::customHotspotSsid() {
     return const_cast<char *>(name);
 }
 
-String SettingsService::dataFromFS(const String& fileName) {
+String SettingsService::dataFromFS(const String &fileName) {
     String data;
     const char *file = fileName.c_str();
 
@@ -200,17 +200,43 @@ String SettingsService::dataFromFS(const String& fileName) {
     if (!dataFile) {
         Serial.println("[SPIFFS] Error opening dataFile for writing. Creating new");
         File fileWrite = SPIFFS.open(file, "w");
-        [[maybe_unused]] int bytesWritten = fileWrite.print("");
+        [[maybe_unused]] int bytesWritten = fileWrite.print("{}");
         fileWrite.close();
+        return "{}";
     } else {
         while (dataFile.available()) {
             data += char(dataFile.read());
         }
-        Serial.print("[SPIFFS] File name: "); Serial.println(file);
-        Serial.print("[SPIFFS] File data: "); Serial.println(data);
+        Serial.print("[SPIFFS] File name: ");
+        Serial.println(file);
+        Serial.print("[SPIFFS] File data: ");
+        Serial.println(data);
         dataFile.close();
+        return data;
     }
+}
 
-    return data;
+void SettingsService::formatFS() {
+    Serial.println("[SPIFFS] Prepare to Format FS");
+    bool success = SPIFFS.begin();
+    if (success) {
+        Serial.println("[SPIFFS] File system mounted with success");
+
+        Dir root = SPIFFS.openDir("/");
+        Serial.println("[SPIFFS] Try to open...");
+
+        while (root.next()) {
+            Serial.print("[SPIFFS] File: ");
+            Serial.println(root.fileName());
+        }
+
+        Serial.print("[SPIFFS] Formatting FS...");
+        bool formatted = SPIFFS.format();
+        formatted ? Serial.println("DONE") : Serial.println("FAILED!");
+        SPIFFS.end();
+    } else {
+        Serial.println("[SPIFFS] Error mounting the dataFile system");
+    }
+    Serial.println("[SPIFFS] Exit Format FS");
 }
 
