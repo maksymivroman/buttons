@@ -19,6 +19,7 @@ public:
     void saveSettings(String settings);
     void loadButtonEepromSettings();
     void clearEeprom();
+    void formatFS();
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
     bool useTelegramIntegration() const;
