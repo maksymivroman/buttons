@@ -16,6 +16,9 @@ public:
     template<typename T>
     void log(const T &message);
 
+    template<typename T>
+    void append(const T &message);
+
     void start();
 
     void stop();
@@ -43,6 +46,13 @@ template<typename T>
 void Logger::log(const T &message) {
     if (this->canLog()) {
         Serial.println(message);
+    }
+}
+
+template<typename T>
+void Logger::append(const T &message) {
+    if (this->canLog()) {
+        Serial.print(message);
     }
 }
 

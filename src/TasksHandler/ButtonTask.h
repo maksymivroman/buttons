@@ -6,6 +6,9 @@
 #define EVENT_BUTTON_BUTTONTASK_H
 
 #include <Arduino.h>
+#include "Logger/Logger.h"
+
+extern Logger logger;
 
 class ButtonTask {
 
@@ -16,18 +19,18 @@ public:
     };
 
     template<typename FnTrue>
-    void operator()(bool truthHandler, FnTrue execute, bool skipTask = false){
-        if ((truthHandler != this->distinctChangeFlag) & !skipTask) {
-            Serial.println("[ButtonTask]-> truth handler");
-            this->distinctChangeFlag = truthHandler;
-            if (truthHandler) execute();
+    void operator()(bool handler, FnTrue execute, bool skipTask = false){
+        if ((handler != this->distinctChangeFlag) & !skipTask) {
+            logger.log("[ButtonTask] Handle to execute (single)");
+            this->distinctChangeFlag = handler;
+            if (handler) execute();
         }
     };
 
     template<typename FnTrue, typename FnFalse>
     void operator()(bool handler, FnTrue executeOnTrue, FnFalse executeOnFalse, bool skipTask = false){
         if ((handler != this->distinctChangeFlag) & !skipTask) {
-            Serial.println("[ButtonTask]-> distinct handler");
+            logger.log("[ButtonTask] Handle to execute (conditional)");
             this->distinctChangeFlag = handler;
             handler ? executeOnTrue() : executeOnFalse();
         }

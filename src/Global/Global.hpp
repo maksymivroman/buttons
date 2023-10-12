@@ -8,7 +8,7 @@
 
 #include <Arduino.h>
 
-const String currentFirmwareVersion = String("1.0.0 - build date: ") + __DATE__;
+const String currentFirmwareVersion = String("1.0.1 - build date: ") + __DATE__;
 
 struct WiFiCONFIG {
     String ssid;

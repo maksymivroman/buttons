@@ -10,7 +10,7 @@
 
 
 void EventsService::SendEvents() {
-    Serial.print("[EventsService]"); Serial.println(events);
+    logger.log("[EventsService] ", events);
 
     StaticJsonDocument<900> doc;
     deserializeJson(doc, events);
@@ -23,8 +23,8 @@ void EventsService::SendEvents() {
 
         String requestData = data[keyValue.key().c_str()];
 
-        Serial.print("[EventsService] request data: ");  Serial.println(requestData);
-        Serial.print("[EventsService] request URL: ");  Serial.println(requestUrl);
+        logger.log("[EventsService] request data: ", requestData);
+        logger.log("[EventsService] request URL: ", requestUrl);
 
         if (requestUrl == "telegram") {
             SendMessageToTelegram(requestData);
@@ -39,25 +39,24 @@ void EventsService::SetEvents(String eventsData) {
 }
 
 void EventsService::SendMessageToTelegram(String message) {
-    Serial.print("[EventsService] SendMessageToTelegram: "); Serial.println(message);
+    logger.log("[EventsService] SendMessageToTelegram: ", message);
 
     if (telegramBotRef != nullptr) {
-        Serial.println("[EventsService] SendMessageToTelegram: Integration Enabled. Sending message...");
+        logger.log("[EventsService] SendMessageToTelegram: Integration Enabled. Sending message...");
         telegramBotRef->sendMessage(message);
     } else {
-        Serial.println("[EventsService] SendMessageToTelegram: Integration Disabled");
+        logger.log("[EventsService] SendMessageToTelegram: Integration Disabled");
     }
 
 }
 
 void EventsService::SendHttpEvent(String &host, String &payload) {
-    Serial.println("[EventsService] HTTP request");
-
-    Serial.print("[EventsService] HOST: "); Serial.println(host);
-    Serial.print("[EventsService] PAYLOAD: "); Serial.println(payload);
+    logger.log("[EventsService] HTTP request");
+    logger.log("[EventsService] HOST: ", host);
+    logger.log("[EventsService] PAYLOAD: ", payload);
     const bool isSecure = host.substring(4,5) == "s";
 
-    Serial.print("[EventsService] HTTPS: "); Serial.println(isSecure);
+    logger.log("[EventsService] HTTPS: ", isSecure);
 
     //Skip secure connection
     if (!isSecure) {
@@ -73,7 +72,7 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
         http.addHeader("Content-Type", "application/json");
         http.setUserAgent("eButton");
         int httpCode = http.POST(payload);
-        Serial.print("[EventsService] Response status code: "); Serial.println(httpCode);
+        logger.log("[EventsService] Response status code: ", httpCode);
 
         http.end();
     }

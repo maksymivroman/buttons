@@ -8,7 +8,7 @@
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 
 void TelegramIntegration::sendMessage(const String& message) {
-    Serial.print("[TelegramIntegration] -> Start sendMessage: "); Serial.println(message);
+    logger.log("[TelegramIntegration] -> Start sendMessage: ", message);
 
     BearSSL::WiFiClientSecure client;
     BearSSL::Session session;
@@ -24,7 +24,7 @@ void TelegramIntegration::sendMessage(const String& message) {
 
     tBot.setTelegramToken(settings.tToken.c_str());
 
-    tBot.begin() ? Serial.print("[TelegramIntegration] -> Init OK ") : Serial.print("[TelegramIntegration] -> Failed to start");
+    tBot.begin() ? logger.log("[TelegramIntegration] -> Init OK ") : logger.log("[TelegramIntegration] -> Failed to start");
 
     tBot.sendTo(settings.tChanelID , message);
 }

@@ -8,6 +8,9 @@
 #include <Arduino.h>
 
 #include "TelegramIntegration/TelegramIntegration.h"
+#include "Logger/Logger.h"
+
+extern Logger logger;
 
 class EventsService {
 

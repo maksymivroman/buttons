@@ -13,6 +13,7 @@
 #include "SoundService/SoundService.h"
 #include "TelegramIntegration/TelegramIntegration.h"
 #include "TasksHandler/ButtonTask.h"
+#include "Logger/Logger.h"
 
 const int bluePin = 12;
 const int greenPin = 13;
@@ -42,6 +43,7 @@ SoundService notifier(buzzerPin);
 EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
+Logger logger;
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true), FormatFSTask;
 
@@ -57,9 +59,8 @@ String components(const String &ref) {
 }
 
 void setup() {
-    Serial.begin(115200);
-    Serial.println();
-    Serial.println( "BUTTON CURRENT FW: " + currentFirmwareVersion);
+    logger.start();
+    logger.log("BUTTON CURRENT FW: " , currentFirmwareVersion);
     ledService.pinConfig(redPin, greenPin, bluePin);
     pinMode(buttonPin, INPUT);
     ledService.blinkDone();
@@ -93,16 +94,20 @@ void setup() {
         request->send_P(200, "text/html", index_html, components);
     });
 
+    server.on("/logs", HTTP_POST, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", "sample of log item");
+    });
+
     server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
         unsigned int params = request->params();
-        Serial.print("[MAIN->HTTP_POST] params count: "); Serial.println(params);
+        logger.log("[MAIN->HTTP_POST] params count: ", params);
         int responseCode = 200;
         if (params > 0) {
             AsyncWebParameter *param = request->getParam(0);
             String paramName = param->name().c_str();
             String paramMessage = param->value().c_str();
 
-            Serial.print("[MAIN->HTTP_POST] "); Serial.print(paramName); Serial.print(": "); Serial.println(paramMessage);
+            logger.log("[MAIN->HTTP_POST] ", paramName, ": ", paramMessage);
 
             if (paramName == FIND_ME) {
                 requiredToFind = true;
@@ -121,7 +126,7 @@ void setup() {
                 responseCode = 418;
             }
         }
-        Serial.print("[MAIN->HTTP_POST->STATUS] "); Serial.println(responseCode);
+        logger.log("[MAIN->HTTP_POST->STATUS] ", responseCode);
         request->send(responseCode, "text/html", "done");
     });
 
@@ -133,9 +138,9 @@ void setup() {
                 integrationMessageToSend += buttonSettings.integrationSettings().tPrefix;
                 integrationMessageToSend += request->getParam("data")->value();
                 integrationMessageToSend += buttonSettings.integrationSettings().tSuffix;
-                Serial.print("[HTTP GET -> integration]: "); Serial.println(integrationMessageToSend);
+                logger.log("[HTTP GET -> integration]: ", integrationMessageToSend);
             }
-            else {Serial.print("[HTTP GET -> integration]: "); Serial.println("wrong GET data");}
+            else {logger.log("[HTTP GET -> integration]: wrong GET data");}
             request->send_P(200, "text/html", "OK");
         });
     }
@@ -191,8 +196,8 @@ void loop() {
 
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
-            [](){ Serial.println("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
-            [](){ Serial.println("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); },
+            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
+            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); },
             networkService.isAPMode()
             );
 

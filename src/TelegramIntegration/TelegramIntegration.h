@@ -14,6 +14,9 @@
 #include "tg_certificate.h"
 
 #include "Global/Global.hpp"
+#include "Logger/Logger.h"
+
+extern Logger logger;
 
 class TelegramIntegration {
 
