@@ -6,9 +6,6 @@
 #define INDEX_HTML_SOUNDSERVICE_H
 
 #include <Arduino.h>
-#include "Logger/Logger.h"
-
-extern Logger logger;
 
 class SoundService {
 

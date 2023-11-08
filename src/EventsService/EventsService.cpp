@@ -7,7 +7,7 @@
 #include "EventsService.h"
 #include <Arduino.h>
 #include <ESP8266HTTPClient.h>
-
+#include "Global/Global.hpp"
 
 void EventsService::SendEvents() {
     logger.log("[EventsService] ", events);

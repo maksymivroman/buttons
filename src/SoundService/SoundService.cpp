@@ -3,6 +3,7 @@
 //
 
 #include "SoundService.h"
+#include "Global/Global.hpp"
 
 void SoundService::onFindMe() {
     logger.log("[SoundService] useSound onFindMe: ", useSound);

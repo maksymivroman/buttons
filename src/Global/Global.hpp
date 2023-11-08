@@ -7,6 +7,9 @@
 #define EVENT_BUTTON_GLOBAL_HPP
 
 #include <Arduino.h>
+#include "Logger/Logger.h"
+
+extern Logger logger;
 
 const String currentFirmwareVersion = String("1.0.1 - build date: ") + __DATE__;
 
