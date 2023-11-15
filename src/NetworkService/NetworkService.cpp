@@ -12,12 +12,13 @@ void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
     wifi_station_set_hostname("Event button");
     WiFi.setAutoConnect(false);
     logger.log("[NetworkService] Hostname: ", WiFi.hostname().c_str());
+    logger.log("[NetworkService] Connecting to", ssid, " ...");
     WiFi.begin(ssid, pass);
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
-        logger.log("[NetworkService] Connecting to ", ssid, " / ", pass);
+        logger.logSerial("[NetworkService] Connecting to ", ssid, " / ", pass);
     }
-    logger.log("[NetworkService] IP: ", WiFi.localIP(), " Hostname: ", WiFi.hostname().c_str());
+    logger.log("[NetworkService] IP: ", WiFi.localIP().toString(), " Hostname: ", WiFi.hostname().c_str());
 }
 
 void NetworkService::ButtonHotspot(bool isOn, const char* ssid, const char* pass) {
@@ -25,7 +26,7 @@ void NetworkService::ButtonHotspot(bool isOn, const char* ssid, const char* pass
         WiFi.mode(WIFI_STA);
         WiFi.softAP(ssid, pass);
         IPAddress IP = WiFi.softAPIP();
-        logger.log("[NetworkService] Set AP: ", ssid, " IP address: ", IP);
+        logger.log("[NetworkService] Set AP: ", ssid, " IP address: ", IP.toString());
     } else {
         WiFi.softAPdisconnect(isOn);
         logger.log("[NetworkService] AP is off.");
@@ -40,7 +41,7 @@ NETWORKLIST NetworkService::WiFiList() {
     logger.log("[NetworkService] Networks found: ", list.size);
 
     for (int i = 0 ; i < list.size; i++) {
-        logger.log("[NetworkService] SSID: ", WiFi.SSID(i));
+        logger.logSerial("[NetworkService] SSID: ", WiFi.SSID(i).c_str());
         list.arr[i] = WiFi.SSID(i);
     }
 

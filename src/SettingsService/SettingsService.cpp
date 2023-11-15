@@ -41,14 +41,16 @@ INTEGRATIONSETTINGS SettingsService::integrationSettings() {
 }
 
 void SettingsService::saveEvents(String events) {
-    logger.log("[SettingsService] saveEvents: ", events);
+    logger.log("[SettingsService] Save Events");
+    logger.logSerial("[SettingsService] saveEvents: ", events);
     File file = SPIFFS.open("/post.json", "w");
     [[maybe_unused]] int bytesWritten = file.print(events);
     file.close();
 }
 
 void SettingsService::saveIntegrationSettings(String settings) {
-    logger.log("[SettingsService] saveIntegrationSettings: ", settings);
+    logger.log("[SettingsService] Save Integration Settings");
+    logger.logSerial("[SettingsService] saveIntegrationSettings: ", settings);
     File file = SPIFFS.open("/integration.json", "w");
     [[maybe_unused]] int bytesWritten = file.print(settings);
     file.close();
@@ -59,7 +61,8 @@ void SettingsService::saveSettings(String settings) {
     DynamicJsonDocument jsonDoc(4096);
     deserializeJson(jsonDoc, settings);
     JsonObject data = jsonDoc["inputdata"];
-    logger.log("[SettingsService] events data json: ", data);
+    logger.log("[SettingsService] Save Settings data (json)");
+    logger.logSerial("[SettingsService] events data json: ", data);
 
     WiFiCONFIG wiFiSett;
 
@@ -72,14 +75,14 @@ void SettingsService::saveSettings(String settings) {
 
     String integrationData = data["integration"];
 
-    logger.log("[SettingsService] 'eventdata' data json: ",events);
-    logger.log("[SettingsService] 'configuration' data json: ", config);
+    logger.logSerial("[SettingsService] 'eventdata' data json: ",events);
+    logger.logSerial("[SettingsService] 'configuration' data json: ", config);
 
     wiFiSett.password = wiFiPassword;
     wiFiSett.ssid = wiFiName;
 
     logger.log("[SettingsService] data json large: ", data.size());
-    logger.log("[SettingsService] 'eventData' data json: ", events);
+    logger.logSerial("[SettingsService] 'eventData' data json: ", events);
 
     saveEvents(events);
     saveIntegrationSettings(integrationData);
@@ -163,7 +166,7 @@ void SettingsService::clearEeprom() {
     }
     EEPROM.commit();
     EEPROM.end();
-    logger.append("Done!");
+    logger.log("Done!");
 }
 
 char *SettingsService::customHotspotSsid() {
@@ -207,7 +210,7 @@ String SettingsService::dataFromFS(const String &fileName) {
             data += char(dataFile.read());
         }
         logger.log("[SettingsService][SPIFFS] File name: ", file);
-        logger.log("[SettingsService][SPIFFS] File data: ", data);
+        logger.logSerial("[SettingsService][SPIFFS] File data: ", data);
         dataFile.close();
         return data;
     }
@@ -228,7 +231,7 @@ void SettingsService::formatFS() {
 
         logger.log("[SettingsService][SPIFFS] Formatting FS...");
         bool formatted = SPIFFS.format();
-        formatted ? logger.append("DONE") : logger.append("FAILED!");
+        formatted ? logger.log("DONE") : logger.log("FAILED!");
         SPIFFS.end();
     } else {
         logger.log("[SettingsService][SPIFFS] Error mounting the dataFile system");

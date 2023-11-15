@@ -10,7 +10,8 @@
 #include "Global/Global.hpp"
 
 void EventsService::SendEvents() {
-    logger.log("[EventsService] ", events);
+    logger.log("[EventsService] SendEvents");
+    logger.logSerial("[EventsService] SendEvents", events);
 
     StaticJsonDocument<900> doc;
     deserializeJson(doc, events);
@@ -23,8 +24,8 @@ void EventsService::SendEvents() {
 
         String requestData = data[keyValue.key().c_str()];
 
-        logger.log("[EventsService] request data: ", requestData);
-        logger.log("[EventsService] request URL: ", requestUrl);
+        logger.logSerial("[EventsService] request data: ", requestData);
+        logger.logSerial("[EventsService] request URL: ", requestUrl);
 
         if (requestUrl == "telegram") {
             SendMessageToTelegram(requestData);
@@ -39,24 +40,22 @@ void EventsService::SetEvents(String eventsData) {
 }
 
 void EventsService::SendMessageToTelegram(String message) {
-    logger.log("[EventsService] SendMessageToTelegram: ", message);
+    logger.logSerial("[EventsService] SendMessageToTelegram: ", message);
 
     if (telegramBotRef != nullptr) {
-        logger.log("[EventsService] SendMessageToTelegram: Integration Enabled. Sending message...");
+        logger.log("[EventsService] Telegram: Integration Enabled. Sending message...");
         telegramBotRef->sendMessage(message);
     } else {
-        logger.log("[EventsService] SendMessageToTelegram: Integration Disabled");
+        logger.log("[EventsService] Telegram: Integration Disabled");
     }
 
 }
 
 void EventsService::SendHttpEvent(String &host, String &payload) {
     logger.log("[EventsService] HTTP request");
-    logger.log("[EventsService] HOST: ", host);
-    logger.log("[EventsService] PAYLOAD: ", payload);
+    logger.logSerial("[EventsService] HOST: ", host);
+    logger.logSerial("[EventsService] PAYLOAD: ", payload);
     const bool isSecure = host.substring(4,5) == "s";
-
-    logger.log("[EventsService] HTTPS: ", isSecure);
 
     //Skip secure connection
     if (!isSecure) {
@@ -75,5 +74,7 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
         logger.log("[EventsService] Response status code: ", httpCode);
 
         http.end();
+    } else {
+        logger.log("[EventsService] Skip secure connection!");
     }
 }

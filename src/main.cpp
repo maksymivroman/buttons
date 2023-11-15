@@ -15,6 +15,9 @@
 #include "TasksHandler/ButtonTask.h"
 #include "Logger/Logger.h"
 
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
+
 const int bluePin = 12;
 const int greenPin = 13;
 const int redPin = 14;
@@ -43,7 +46,7 @@ SoundService notifier(buzzerPin);
 EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
-Logger logger;
+Logger logger(115200, 100);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true), FormatFSTask;
 
@@ -94,13 +97,20 @@ void setup() {
         request->send_P(200, "text/html", index_html, components);
     });
 
-    server.on("/logs", HTTP_POST, [](AsyncWebServerRequest *request) {
-        request->send_P(200, "text/html", "sample of log item");
+    server.on("/logsData", HTTP_GET, [](AsyncWebServerRequest *request) {
+        auto * response = new AsyncJsonResponse(false, 8192);
+        JsonObject root = response->getRoot();
+        const unsigned int logsCount = logger.logs().size();
+        for (size_t i = 0; i < logsCount; ++i) {
+            root[std::to_string(i)] = logger.logs()[i];
+        }
+        response->setLength();
+        request->send(response);
     });
 
     server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
         unsigned int params = request->params();
-        logger.log("[MAIN->HTTP_POST] params count: ", params);
+        logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
         int responseCode = 200;
         if (params > 0) {
             AsyncWebParameter *param = request->getParam(0);
