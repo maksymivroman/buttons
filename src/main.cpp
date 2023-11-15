@@ -62,7 +62,7 @@ String components(const String &ref) {
 }
 
 void setup() {
-    logger.start();
+    logger.start(SERIAL_AND_LOCAL);
     logger.log("BUTTON CURRENT FW: " , currentFirmwareVersion);
     ledService.pinConfig(redPin, greenPin, bluePin);
     pinMode(buttonPin, INPUT);

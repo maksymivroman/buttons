@@ -8,6 +8,10 @@
 #include <Arduino.h>
 #include "ArduinoJson.h"
 
+enum LoggerLevel {
+    LOGGER_SERIAL, LOGGER_LOCAL, SERIAL_AND_LOCAL
+};
+
 class Logger {
 
 public:
@@ -25,7 +29,7 @@ public:
     template<typename T>
     void logSerial(const T &message);
 
-    void start();
+    void start(LoggerLevel mode);
 
     void stop();
 
@@ -36,6 +40,9 @@ private:
     bool enabled{false};
     const unsigned long bound;
     const uint itemsCount;
+    LoggerLevel loggerLevel;
+    bool canUseSerial();
+    bool canUseLocal();
 
     [[nodiscard]] bool canLog() const;
 
@@ -70,7 +77,7 @@ void Logger::log(const T &messageItem) {
 
 template<typename T, typename... Args>
 void Logger::logSerial(const T &messageItem, const Args &... arguments) {
-    if (this->canLog()) {
+    if (this->canLog() && this->canUseSerial()) {
         Serial.print(messageItem);
         logSerial(arguments...);
     }
@@ -78,7 +85,7 @@ void Logger::logSerial(const T &messageItem, const Args &... arguments) {
 
 template<typename T>
 void Logger::logSerial(const T &messageItem) {
-    if (this->canLog()) {
+    if (this->canLog() && this->canUseSerial()) {
         Serial.println(messageItem);
     }
 }

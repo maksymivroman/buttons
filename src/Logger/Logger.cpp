@@ -9,16 +9,27 @@ Logger::Logger(unsigned long serialBound, uint maxLogItems) :
         bound(serialBound), itemsCount(maxLogItems) {
 }
 
-void Logger::start() {
-    Serial.begin(this->bound);
-    Serial.println();
-    Serial.println("[Init logger]");
+void Logger::start(LoggerLevel mode) {
+    this->loggerLevel = mode;
+    if (canUseSerial()) {
+        Serial.begin(this->bound);
+        Serial.println();
+        Serial.println("[Init logger]");
+    }
     this->enabled = true;
 }
 
 void Logger::stop() {
     Serial.end();
     this->enabled = false;
+}
+
+bool Logger::canUseSerial() {
+    return this->loggerLevel == SERIAL_AND_LOCAL || this->loggerLevel == LOGGER_SERIAL;
+}
+
+bool Logger::canUseLocal() {
+    return this->loggerLevel == SERIAL_AND_LOCAL || this->loggerLevel == LOGGER_LOCAL;
 }
 
 bool Logger::canLog() const {
@@ -32,12 +43,10 @@ std::vector<String> Logger::logs() const {
 void Logger::logMessage(const String &s, bool append) {
     String str = s;
     this->normalizeLogItem(str);
-    if (append) {
-        this->messageBuffer += str;
-    } else {
-        this->messageBuffer += str;
-        Serial.println(this->messageBuffer);
-        this->addMessageToLog(this->messageBuffer);
+    this->messageBuffer += str;
+    if (!append) {
+        logSerial(this->messageBuffer);
+        if (this->canUseLocal()) this->addMessageToLog(this->messageBuffer);
         this->messageBuffer = "";
     }
 }
@@ -45,12 +54,10 @@ void Logger::logMessage(const String &s, bool append) {
 void Logger::logMessage(const char *str, bool append) {
     String s = str;
     this->normalizeLogItem(s);
-    if (append) {
-        this->messageBuffer += s;
-    } else {
-        this->messageBuffer += s;
-        Serial.println(this->messageBuffer);
-        this->addMessageToLog(this->messageBuffer);
+    this->messageBuffer += s;
+    if (!append) {
+        logSerial(this->messageBuffer);
+        if (this->canUseLocal()) this->addMessageToLog(this->messageBuffer);
         this->messageBuffer = "";
     }
 }
@@ -58,24 +65,20 @@ void Logger::logMessage(const char *str, bool append) {
 void Logger::logMessage(const int &i, bool append) {
     String s = std::to_string(i).c_str();
     this->normalizeLogItem(s);
-    if (append) {
-        this->messageBuffer += s;
-    } else {
-        this->messageBuffer += s;
-        Serial.println(this->messageBuffer);
-        this->addMessageToLog(this->messageBuffer);
+    this->messageBuffer += s;
+    if (!append) {
+        logSerial(this->messageBuffer);
+        if (this->canUseLocal()) this->addMessageToLog(this->messageBuffer);
         this->messageBuffer = "";
     }
 }
 
 void Logger::logMessage(const JsonObject &j, bool append) {
     String s = "<unsupported log type(JsonObject)>";
-    if (append) {
-        this->messageBuffer += s;
-    } else {
-        this->messageBuffer += s;
-        Serial.println(this->messageBuffer);
-        this->addMessageToLog(this->messageBuffer);
+    this->messageBuffer += s;
+    if (!append) {
+        logSerial(this->messageBuffer);
+        if (this->canUseLocal()) this->addMessageToLog(this->messageBuffer);
         this->messageBuffer = "";
     }
 }
@@ -84,8 +87,7 @@ void Logger::addMessageToLog(String &message) {
     if (this->logsData.size() == this->itemsCount) {
         this->logsData.erase(this->logsData.begin());
     }
-
-    String messageToStore = "> ";
+    String messageToStore = "";
     messageToStore.concat(micros());
     messageToStore.concat(" : ");
     messageToStore.concat(message);
@@ -99,4 +101,3 @@ void Logger::normalizeLogItem(String &message) {
     message.replace("{", "|");
     message.replace("}", "|");
 }
-
