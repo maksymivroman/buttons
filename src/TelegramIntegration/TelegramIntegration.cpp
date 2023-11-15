@@ -8,7 +8,8 @@
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 
 void TelegramIntegration::sendMessage(const String& message) {
-    logger.log("[TelegramIntegration] -> Start sendMessage: ", message);
+    logger.log("[TelegramIntegration] -> Start sendMessage: ");
+    logger.logSerial("[TelegramIntegration] -> Start sendMessage: ", message);
 
     BearSSL::WiFiClientSecure client;
     BearSSL::Session session;

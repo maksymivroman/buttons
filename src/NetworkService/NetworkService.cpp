@@ -12,7 +12,7 @@ void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
     wifi_station_set_hostname("Event button");
     WiFi.setAutoConnect(false);
     logger.log("[NetworkService] Hostname: ", WiFi.hostname().c_str());
-    logger.log("[NetworkService] Connecting to", ssid, " ...");
+    logger.log("[NetworkService] Connecting to ", ssid, " ...");
     WiFi.begin(ssid, pass);
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);

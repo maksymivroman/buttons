@@ -97,6 +97,10 @@ void setup() {
         request->send_P(200, "text/html", index_html, components);
     });
 
+    server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", logs_page);
+    });
+
     server.on("/logsData", HTTP_GET, [](AsyncWebServerRequest *request) {
         auto * response = new AsyncJsonResponse(false, 8192);
         JsonObject root = response->getRoot();
