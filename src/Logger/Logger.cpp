@@ -87,8 +87,12 @@ void Logger::addMessageToLog(String &message) {
     if (this->logsData.size() == this->itemsCount) {
         this->logsData.erase(this->logsData.begin());
     }
+
+    char formattedTime[9];
+    millisToHMS(millis(), formattedTime);
+
     String messageToStore = "";
-    messageToStore.concat(micros());
+    messageToStore.concat(formattedTime);
     messageToStore.concat(" : ");
     messageToStore.concat(message);
     this->logsData.push_back(messageToStore);
@@ -101,3 +105,13 @@ void Logger::normalizeLogItem(String &message) {
     message.replace("{", "|");
     message.replace("}", "|");
 }
+
+void Logger::millisToHMS(unsigned long millisValue, char *formattedTime) {
+    unsigned long seconds = millisValue / 1000;
+    unsigned long minutes = seconds / 60;
+    unsigned long hours = minutes / 60;
+    seconds %= 60;
+    minutes %= 60;
+    sprintf(formattedTime, "%02lu:%02lu:%02lu", hours, minutes, seconds);
+}
+

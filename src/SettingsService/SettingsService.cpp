@@ -120,12 +120,13 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
 
-    settings.serialEnabled = jsonSettings["serialEnabled"].as<bool>() | false;
+    settings.loggerEnabled = jsonSettings["loggerEnabled"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
     settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
+    settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
 
     logger.log("[SettingsService] -> EEPROM config size: ", sizeof settings);
 
@@ -156,6 +157,14 @@ bool SettingsService::otaUpdateOnClientMode() const {
 
 bool SettingsService::remoteButtonTriggering() const {
     return buttonEepromSettings.remoteTriggering | false;
+}
+
+bool SettingsService::loggerEnabled() const {
+    return buttonEepromSettings.loggerEnabled | false;
+}
+
+LoggerLevel SettingsService::loggerLevel() const {
+    return static_cast<LoggerLevel>(buttonEepromSettings.loggerLevel);
 }
 
 void SettingsService::clearEeprom() {

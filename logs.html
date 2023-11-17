@@ -153,8 +153,12 @@
                         while (logsTbody.rows.length > 0) {
                             logsTbody.deleteRow(0)
                         }
+                        if (Object.entries(httpRequest.response).length === 0) {
+                            const row = `<tr><td>-</td><td>No logs available</td></tr>`;
+                            logsTbody.insertAdjacentHTML('beforeend', row);
+                        }
                         for (const key in httpRequest.response) {
-                            const row = `<tr><td>${key}</td><td>${httpRequest.response[key]}</td></tr>`;
+                            const row = `<tr><td>${key}-</td><td>${httpRequest.response[key]}</td></tr>`;
                             logsTbody.insertAdjacentHTML('beforeend', row);
                         }
                     } catch (e) {

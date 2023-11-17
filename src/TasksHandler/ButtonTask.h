@@ -21,7 +21,7 @@ public:
     template<typename FnTrue>
     void operator()(bool handler, FnTrue execute, bool skipTask = false){
         if ((handler != this->distinctChangeFlag) & !skipTask) {
-            logger.log("[ButtonTask] Handle to execute (single)");
+            logger.log("[ButtonTask] Execute task handler (one time)");
             this->distinctChangeFlag = handler;
             if (handler) execute();
         }
@@ -30,7 +30,7 @@ public:
     template<typename FnTrue, typename FnFalse>
     void operator()(bool handler, FnTrue executeOnTrue, FnFalse executeOnFalse, bool skipTask = false){
         if ((handler != this->distinctChangeFlag) & !skipTask) {
-            logger.log("[ButtonTask] Handle to execute (conditional)");
+            logger.log("[ButtonTask] Execute task handler (conditional)");
             this->distinctChangeFlag = handler;
             handler ? executeOnTrue() : executeOnFalse();
         }

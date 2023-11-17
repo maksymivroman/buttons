@@ -6,7 +6,7 @@
 #include "Global/Global.hpp"
 
 void SoundService::onFindMe() {
-    logger.log("[SoundService] useSound onFindMe: ", useSound);
+    logger.log("[SoundService] onFindMe. Enabled: ", useSound);
     if (useSound) {
         for (int i = 0; i < 10; i++) {
             tone(buzzerPin, 800 * i, 200);
@@ -17,7 +17,7 @@ void SoundService::onFindMe() {
 }
 
 void SoundService::onRestart() {
-    logger.log("[SoundService] useSound onRestart: ", useSound);
+    logger.log("[SoundService] onRestart. Enabled: ", useSound);
     if (useSound) {
         for (int i = 0; i < 5; i++) {
             tone(buzzerPin, 500 * i, 50);
@@ -28,7 +28,7 @@ void SoundService::onRestart() {
 }
 
 void SoundService::onIntegrationMessage() {
-    logger.log("[SoundService] useSound onIntegrationMessage: ", useSound);
+    logger.log("[SoundService] onIntegrationMessage. Enabled: ", useSound);
     if (useSound) {
         for (int i = 0; i < 3; i++) {
             tone(buzzerPin, 150 * i, 150);
@@ -39,7 +39,7 @@ void SoundService::onIntegrationMessage() {
 }
 
 void SoundService::onRemoteTrigger() {
-    logger.log("[SoundService] useSound onRemoteTrigger: ", useSound);
+    logger.log("[SoundService] onRemoteTrigger. Enabled: ", useSound);
     if (useSound) {
         for (int i = 0; i < 3; i++) {
             tone(buzzerPin, 350 * i, 100);

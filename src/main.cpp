@@ -18,6 +18,8 @@
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
 
+//#define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
+
 const int bluePin = 12;
 const int greenPin = 13;
 const int redPin = 14;
@@ -46,7 +48,7 @@ SoundService notifier(buzzerPin);
 EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
-Logger logger(115200, 100);
+Logger logger(115200, 50);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true), FormatFSTask;
 
@@ -62,14 +64,18 @@ String components(const String &ref) {
 }
 
 void setup() {
-    logger.start(SERIAL_AND_LOCAL);
-    logger.log("BUTTON CURRENT FW: " , currentFirmwareVersion);
-    ledService.pinConfig(redPin, greenPin, bluePin);
     pinMode(buttonPin, INPUT);
+    ledService.pinConfig(redPin, greenPin, bluePin);
     ledService.blinkDone();
 
-    String eventsData = buttonSettings.loadEvents();
     buttonSettings.loadButtonEepromSettings();
+
+    if (buttonSettings.loggerEnabled()) {
+        logger.start(buttonSettings.loggerLevel());
+        logger.log("BUTTON CURRENT FW: " , currentFirmwareVersion);
+    }
+
+    String eventsData = buttonSettings.loadEvents();
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
@@ -121,7 +127,8 @@ void setup() {
             String paramName = param->name().c_str();
             String paramMessage = param->value().c_str();
 
-            logger.log("[MAIN->HTTP_POST] ", paramName, ": ", paramMessage);
+            logger.log("[MAIN->HTTP_POST] ", paramName);
+            logger.logSerial("[MAIN->HTTP_POST] ", paramName, ": ", paramMessage);
 
             if (paramName == FIND_ME) {
                 requiredToFind = true;
@@ -140,7 +147,7 @@ void setup() {
                 responseCode = 418;
             }
         }
-        logger.log("[MAIN->HTTP_POST->STATUS] ", responseCode);
+        logger.log("[MAIN->HTTP_POST]-> Return response code: ", responseCode);
         request->send(responseCode, "text/html", "done");
     });
 
@@ -152,9 +159,10 @@ void setup() {
                 integrationMessageToSend += buttonSettings.integrationSettings().tPrefix;
                 integrationMessageToSend += request->getParam("data")->value();
                 integrationMessageToSend += buttonSettings.integrationSettings().tSuffix;
-                logger.log("[HTTP GET -> integration]: ", integrationMessageToSend);
+                logger.log("[MAIN->HTTP GET -> integration]");
+                logger.logSerial("[HTTP GET -> integration message]: ", integrationMessageToSend);
             }
-            else {logger.log("[HTTP GET -> integration]: wrong GET data");}
+            else {logger.log("[MAIN->HTTP GET -> integration]: wrong GET data");}
             request->send_P(200, "text/html", "OK");
         });
     }

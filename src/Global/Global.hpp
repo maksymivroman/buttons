@@ -30,7 +30,7 @@ struct RGBCONFIG {
 };
 
 struct EEPROMSETTINGS {
-    bool serialEnabled = false;
+    bool loggerEnabled = false;
     bool clientWebAccess = false;
     bool enableOtaUpdate = false;
     bool useDnsName = false;
@@ -38,6 +38,7 @@ struct EEPROMSETTINGS {
     bool useCustomHSsid = false;
     bool useTelegramIntegration = false;
     bool remoteTriggering = false;
+    unsigned int loggerLevel = 0;
     unsigned int fwVersion = 0;
     char wifiSsid[256]{};
     char wifiPass[256]{};

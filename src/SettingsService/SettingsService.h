@@ -25,6 +25,8 @@ public:
     bool useTelegramIntegration() const;
     bool otaUpdateOnClientMode() const;
     bool remoteButtonTriggering() const;
+    bool loggerEnabled() const;
+    LoggerLevel loggerLevel() const;
     char * customHotspotSsid();
 
 private:

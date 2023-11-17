@@ -223,6 +223,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             color: darkgray;
         }
 
+        #loggerEnabled:not(:checked) ~ #loggerLevel {
+            color: darkgray;
+            pointer-events: none;
+        }
+
         input:disabled {
             color: dimgray;
             background-color: lightgray;
@@ -375,13 +380,18 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="extras-container border">
 
             <div class="item">
-                <input type="checkbox" id="useDnsName" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
+                <input type="checkbox" id="loggerEnabled">
+                <label style="margin-left: 8px; margin-right: 8px;" for="loggerEnabled">Logger</label>
+                <select class="control" style="height: auto; min-width: auto;" id="loggerLevel">
+                    <option value="0">Serial & Local</option>
+                    <option value="1">Serial (115200 8-N-1)</option>
+                    <option value="2">Local log (/logs)</option>
+                </select>
             </div>
 
             <div class="item">
-                <input type="checkbox" id="serialEnabled" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="serialEnabled">Debug data via serial (115200 8-N-1)</label>
+                <input type="checkbox" id="useDnsName" name="dnsName" disabled>
+                <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
             </div>
 
             <div class="item">
@@ -588,7 +598,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         const clientWebAccess = document.getElementById('clientWebAccess')? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
         const enableOtaUpdate = document.getElementById('enableOtaUpdate')? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
         const useDnsName = Number(document.getElementById('useDnsName').checked);
-        const serialEnabled = Number(document.getElementById('serialEnabled').checked);
+        const loggerEnabled = Number(document.getElementById('loggerEnabled').checked);
+        const loggerLevel = Number(document.getElementById('loggerLevel').selectedIndex);
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
@@ -597,7 +608,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         const extrasConfig = JSON.stringify({
             clientWebAccess,
             useDnsName,
-            serialEnabled,
+            loggerEnabled,
+            loggerLevel,
             useSound,
             useTelegramIntegration,
             customHSsid,
@@ -656,7 +668,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
 
         document.getElementById('useDnsName').checked = config.useDnsName;
-        document.getElementById('serialEnabled').checked = config.serialEnabled;
+        document.getElementById('loggerEnabled').checked = config.loggerEnabled;
+        document.getElementById('loggerLevel').selectedIndex = config.loggerLevel;
         document.getElementById('useSound').checked = config.useSound;
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
@@ -1031,8 +1044,12 @@ const char logs_page[] PROGMEM = R"rawliteral(
                         while (logsTbody.rows.length > 0) {
                             logsTbody.deleteRow(0)
                         }
+                        if (Object.entries(httpRequest.response).length === 0) {
+                            const row = `<tr><td>-</td><td>No logs available</td></tr>`;
+                            logsTbody.insertAdjacentHTML('beforeend', row);
+                        }
                         for (const key in httpRequest.response) {
-                            const row = `<tr><td>${key}</td><td>${httpRequest.response[key]}</td></tr>`;
+                            const row = `<tr><td>${key}-</td><td>${httpRequest.response[key]}</td></tr>`;
                             logsTbody.insertAdjacentHTML('beforeend', row);
                         }
                     } catch (e) {

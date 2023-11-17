@@ -9,7 +9,7 @@
 #include "ArduinoJson.h"
 
 enum LoggerLevel {
-    LOGGER_SERIAL, LOGGER_LOCAL, SERIAL_AND_LOCAL
+    SERIAL_AND_LOCAL, LOGGER_SERIAL, LOGGER_LOCAL
 };
 
 class Logger {
@@ -54,6 +54,7 @@ private:
     void addMessageToLog(String &message);
 
     void normalizeLogItem(String &message);
+    void millisToHMS(unsigned long millisValue, char* formattedTime);
 
     std::vector<String> logsData;
 
