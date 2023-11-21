@@ -9,7 +9,7 @@
 #include "SettingsService.h"
 
 WiFiCONFIG SettingsService::getWiFiConnDetails() {
-    Serial.println("[SettingsService] -> getWiFiConnDetails");
+    logger.log("[SettingsService] Get WiFi credentials from settings");
     WiFiCONFIG eepromWiFiConfig;
 
     eepromWiFiConfig.ssid = buttonEepromSettings.wifiSsid;
@@ -41,16 +41,16 @@ INTEGRATIONSETTINGS SettingsService::integrationSettings() {
 }
 
 void SettingsService::saveEvents(String events) {
-    Serial.print("[SettingsService] saveEvents: ");
-    Serial.println(events);
+    logger.log("[SettingsService] Save Events");
+    logger.logSerial("[SettingsService] saveEvents: ", events);
     File file = SPIFFS.open("/post.json", "w");
     [[maybe_unused]] int bytesWritten = file.print(events);
     file.close();
 }
 
 void SettingsService::saveIntegrationSettings(String settings) {
-    Serial.print("[SettingsService] saveIntegrationSettings: ");
-    Serial.println(settings);
+    logger.log("[SettingsService] Save Integration Settings");
+    logger.logSerial("[SettingsService] saveIntegrationSettings: ", settings);
     File file = SPIFFS.open("/integration.json", "w");
     [[maybe_unused]] int bytesWritten = file.print(settings);
     file.close();
@@ -61,7 +61,8 @@ void SettingsService::saveSettings(String settings) {
     DynamicJsonDocument jsonDoc(4096);
     deserializeJson(jsonDoc, settings);
     JsonObject data = jsonDoc["inputdata"];
-    Serial.print("[SettingsService] events data json: "); Serial.println(data);
+    logger.log("[SettingsService] Save Settings data (json)");
+    logger.logSerial("[SettingsService] events data json: ", data);
 
     WiFiCONFIG wiFiSett;
 
@@ -74,21 +75,21 @@ void SettingsService::saveSettings(String settings) {
 
     String integrationData = data["integration"];
 
-    Serial.print("[SettingsService] 'eventdata' data json: "); Serial.println(events);
-    Serial.print("[SettingsService] 'configuration' data json: "); Serial.println(config);
+    logger.logSerial("[SettingsService] 'eventdata' data json: ",events);
+    logger.logSerial("[SettingsService] 'configuration' data json: ", config);
 
     wiFiSett.password = wiFiPassword;
     wiFiSett.ssid = wiFiName;
 
-    Serial.print("[SettingsService] data json large: "); Serial.println(data.size());
-    Serial.print("[SettingsService] 'eventData' data json: "); Serial.println(events);
+    logger.log("[SettingsService] data json large: ", data.size());
+    logger.logSerial("[SettingsService] 'eventData' data json: ", events);
 
     saveEvents(events);
     saveIntegrationSettings(integrationData);
 }
 
 void SettingsService::loadButtonEepromSettings() {
-    Serial.println("[SettingsService] -> EEPROM Read");
+    logger.log("[SettingsService] Read EEPROM");
     EEPROM.begin(1024);
     EEPROM.get(0, buttonEepromSettings);
     EEPROM.end();
@@ -119,14 +120,15 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
 
-    settings.serialEnabled = jsonSettings["serialEnabled"].as<bool>() | false;
+    settings.loggerEnabled = jsonSettings["loggerEnabled"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
     settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
+    settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
 
-    Serial.print("[SettingsService] -> EEPROM config size: "); Serial.println(sizeof settings);
+    logger.log("[SettingsService] -> EEPROM config size: ", sizeof settings);
 
     EEPROM.begin(1024);
     EEPROM.put(0, settings);
@@ -157,15 +159,23 @@ bool SettingsService::remoteButtonTriggering() const {
     return buttonEepromSettings.remoteTriggering | false;
 }
 
+bool SettingsService::loggerEnabled() const {
+    return buttonEepromSettings.loggerEnabled | false;
+}
+
+LoggerLevel SettingsService::loggerLevel() const {
+    return static_cast<LoggerLevel>(buttonEepromSettings.loggerLevel);
+}
+
 void SettingsService::clearEeprom() {
-    Serial.print("[SettingsService] -> Start clear EEPROM [1024] ...");
+    logger.log("[SettingsService] Start clear EEPROM [1024] ...");
     EEPROM.begin(1024);
     for (int i = 0; i < 1024; ++i) {
         EEPROM.write(i, 0);
     }
     EEPROM.commit();
     EEPROM.end();
-    Serial.println("Done!");
+    logger.log("Done!");
 }
 
 char *SettingsService::customHotspotSsid() {
@@ -190,15 +200,16 @@ String SettingsService::dataFromFS(const String &fileName) {
 
     bool success = SPIFFS.begin();
     if (success) {
-        Serial.println("[SPIFFS] File system mounted with success");
+        logger.log("[SettingsService][SPIFFS] File system mounted with success");
+
     } else {
-        Serial.println("[SPIFFS] Error mounting the dataFile system");
+        logger.log("[SettingsService][SPIFFS] Error mounting the dataFile system");
     }
 
     File dataFile = SPIFFS.open(file, "r");
 
     if (!dataFile) {
-        Serial.println("[SPIFFS] Error opening dataFile for writing. Creating new");
+        logger.log("[SettingsService][SPIFFS] Error opening dataFile for writing. Creating new");
         File fileWrite = SPIFFS.open(file, "w");
         [[maybe_unused]] int bytesWritten = fileWrite.print("{}");
         fileWrite.close();
@@ -207,36 +218,32 @@ String SettingsService::dataFromFS(const String &fileName) {
         while (dataFile.available()) {
             data += char(dataFile.read());
         }
-        Serial.print("[SPIFFS] File name: ");
-        Serial.println(file);
-        Serial.print("[SPIFFS] File data: ");
-        Serial.println(data);
+        logger.log("[SettingsService][SPIFFS] File name: ", file);
+        logger.logSerial("[SettingsService][SPIFFS] File data: ", data);
         dataFile.close();
         return data;
     }
 }
 
 void SettingsService::formatFS() {
-    Serial.println("[SPIFFS] Prepare to Format FS");
+    logger.log("[SettingsService][SPIFFS] Prepare to Format FS");
     bool success = SPIFFS.begin();
     if (success) {
-        Serial.println("[SPIFFS] File system mounted with success");
+        logger.log("[SettingsService][SPIFFS] File system mounted with success");
 
         Dir root = SPIFFS.openDir("/");
-        Serial.println("[SPIFFS] Try to open...");
+        logger.log("[SettingsService][SPIFFS] Try to open...");
 
         while (root.next()) {
-            Serial.print("[SPIFFS] File: ");
-            Serial.println(root.fileName());
+            logger.log("[SettingsService][SPIFFS] File: ", root.fileName());
         }
 
-        Serial.print("[SPIFFS] Formatting FS...");
+        logger.log("[SettingsService][SPIFFS] Formatting FS...");
         bool formatted = SPIFFS.format();
-        formatted ? Serial.println("DONE") : Serial.println("FAILED!");
+        formatted ? logger.log("DONE") : logger.log("FAILED!");
         SPIFFS.end();
     } else {
-        Serial.println("[SPIFFS] Error mounting the dataFile system");
+        logger.log("[SettingsService][SPIFFS] Error mounting the dataFile system");
     }
-    Serial.println("[SPIFFS] Exit Format FS");
+    logger.log("[SettingsService][SPIFFS] Exit Format FS");
 }
-

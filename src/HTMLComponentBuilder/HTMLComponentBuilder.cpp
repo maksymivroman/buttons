@@ -87,7 +87,8 @@ String HTMLComponentBuilder::wiFiList() {
 
 String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     String configObj = R"({
-            serialEnabled: <serialEnabled>,
+            loggerEnabled: <loggerEnabled>,
+            loggerLevel: <loggerLevel>,
             clientWebAccess: <clientWebAccess>,
             enableOtaUpdate: <enableOtaUpdate>,
             useDnsName: <useDnsName>,
@@ -99,7 +100,8 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             hotspotSsid: "<hotspotSsid>"
         })";
 
-    configObj.replace("<serialEnabled>", String(data.serialEnabled));
+    configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
+    configObj.replace("<loggerLevel>", String(data.loggerLevel));
     configObj.replace("<clientWebAccess>", String(data.clientWebAccess));
     configObj.replace("<enableOtaUpdate>", String(data.enableOtaUpdate));
     configObj.replace("<useDnsName>", String(data.useDnsName));

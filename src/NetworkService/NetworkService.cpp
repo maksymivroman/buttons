@@ -11,15 +11,14 @@ void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
     WiFi.mode(WIFI_STA);
     wifi_station_set_hostname("Event button");
     WiFi.setAutoConnect(false);
-    Serial.printf("[NetworkService] hostname: %s\n", WiFi.hostname().c_str());
+    logger.log("[NetworkService] Hostname: ", WiFi.hostname().c_str());
+    logger.log("[NetworkService] Connecting to ", ssid, " ...");
     WiFi.begin(ssid, pass);
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
-        Serial.print("[NetworkService] Connecting to ");
-        Serial.print(ssid); Serial.print(" / "); Serial.println(pass);
+        logger.logSerial("[NetworkService] Connecting to ", ssid, " / ", pass);
     }
-    Serial.println(WiFi.localIP());
-    Serial.printf("hostname: %s\n", WiFi.hostname().c_str());
+    logger.log("[NetworkService] IP: ", WiFi.localIP().toString(), " Hostname: ", WiFi.hostname().c_str());
 }
 
 void NetworkService::ButtonHotspot(bool isOn, const char* ssid, const char* pass) {
@@ -27,11 +26,10 @@ void NetworkService::ButtonHotspot(bool isOn, const char* ssid, const char* pass
         WiFi.mode(WIFI_STA);
         WiFi.softAP(ssid, pass);
         IPAddress IP = WiFi.softAPIP();
-        Serial.print("[NetworkService] Set AP: ");Serial.print(ssid);Serial.print(". IP address: ");
-        Serial.println(IP);
+        logger.log("[NetworkService] Set AP: ", ssid, " IP address: ", IP.toString());
     } else {
         WiFi.softAPdisconnect(isOn);
-        Serial.println("[NetworkService] AP is off.");
+        logger.log("[NetworkService] AP is off.");
     }
 }
 
@@ -40,10 +38,10 @@ NETWORKLIST NetworkService::WiFiList() {
     list.size = WiFi.scanNetworks();
     list.arr = new String[list.size];
 
-    Serial.print("[NetworkService] Networks found: "); Serial.println(list.size);
+    logger.log("[NetworkService] Networks found: ", list.size);
 
     for (int i = 0 ; i < list.size; i++) {
-        Serial.print("[NetworkService] SSID: "); Serial.println(WiFi.SSID(i));
+        logger.logSerial("[NetworkService] SSID: ", WiFi.SSID(i).c_str());
         list.arr[i] = WiFi.SSID(i);
     }
 

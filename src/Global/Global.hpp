@@ -7,8 +7,11 @@
 #define EVENT_BUTTON_GLOBAL_HPP
 
 #include <Arduino.h>
+#include "Logger/Logger.h"
 
-const String currentFirmwareVersion = String("1.0.0 - build date: ") + __DATE__;
+extern Logger logger;
+
+const String currentFirmwareVersion = String("1.1.0 - build date: ") + __DATE__;
 
 struct WiFiCONFIG {
     String ssid;
@@ -27,7 +30,7 @@ struct RGBCONFIG {
 };
 
 struct EEPROMSETTINGS {
-    bool serialEnabled = false;
+    bool loggerEnabled = false;
     bool clientWebAccess = false;
     bool enableOtaUpdate = false;
     bool useDnsName = false;
@@ -35,6 +38,7 @@ struct EEPROMSETTINGS {
     bool useCustomHSsid = false;
     bool useTelegramIntegration = false;
     bool remoteTriggering = false;
+    unsigned int loggerLevel = 0;
     unsigned int fwVersion = 0;
     char wifiSsid[256]{};
     char wifiPass[256]{};

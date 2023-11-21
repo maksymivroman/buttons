@@ -223,6 +223,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             color: darkgray;
         }
 
+        #loggerEnabled:not(:checked) ~ #loggerLevel {
+            color: darkgray;
+            pointer-events: none;
+        }
+
         input:disabled {
             color: dimgray;
             background-color: lightgray;
@@ -375,13 +380,18 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="extras-container border">
 
             <div class="item">
-                <input type="checkbox" id="useDnsName" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
+                <input type="checkbox" id="loggerEnabled">
+                <label style="margin-left: 8px; margin-right: 8px;" for="loggerEnabled">Logger</label>
+                <select class="control" style="height: auto; min-width: auto;" id="loggerLevel">
+                    <option value="0">Serial & Local</option>
+                    <option value="1">Serial (115200 8-N-1)</option>
+                    <option value="2">Local log (/logs)</option>
+                </select>
             </div>
 
             <div class="item">
-                <input type="checkbox" id="serialEnabled" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="serialEnabled">Debug data via serial (115200 8-N-1)</label>
+                <input type="checkbox" id="useDnsName" name="dnsName" disabled>
+                <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
             </div>
 
             <div class="item">
@@ -588,7 +598,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         const clientWebAccess = document.getElementById('clientWebAccess')? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
         const enableOtaUpdate = document.getElementById('enableOtaUpdate')? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
         const useDnsName = Number(document.getElementById('useDnsName').checked);
-        const serialEnabled = Number(document.getElementById('serialEnabled').checked);
+        const loggerEnabled = Number(document.getElementById('loggerEnabled').checked);
+        const loggerLevel = Number(document.getElementById('loggerLevel').selectedIndex);
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
@@ -597,7 +608,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         const extrasConfig = JSON.stringify({
             clientWebAccess,
             useDnsName,
-            serialEnabled,
+            loggerEnabled,
+            loggerLevel,
             useSound,
             useTelegramIntegration,
             customHSsid,
@@ -656,7 +668,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
 
         document.getElementById('useDnsName').checked = config.useDnsName;
-        document.getElementById('serialEnabled').checked = config.serialEnabled;
+        document.getElementById('loggerEnabled').checked = config.loggerEnabled;
+        document.getElementById('loggerLevel').selectedIndex = config.loggerLevel;
         document.getElementById('useSound').checked = config.useSound;
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
@@ -887,5 +900,177 @@ const char index_html[] PROGMEM = R"rawliteral(
     populateTable();
 
 </script>)rawliteral";
+
+const char logs_page[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Event button | Logs</title>
+    <style>
+        html {
+            font-size: 16px;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            background: #eeeaea;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        .header {
+            max-height: 50px;
+            background-color: #1e5e9d;
+            width: 100vw;
+            padding: 0 20px 0 20px;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            justify-content: space-between;
+        }
+        .content {
+            display: flex;
+            flex-flow: column;
+            width: 100vw;
+            padding: 16px;
+            overflow: auto;
+        }
+        .btn {
+            color: #fff;
+            display: inline-block;
+            font-weight: 400;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            padding: .375rem .75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: .25rem;
+            transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+        .btn-red {
+            background-color: #cb1d38;
+            border: 1px solid #cb1d38;
+        }
+        .btn-red:hover:not(:disabled) {
+            background-color: #a6132f;
+        }
+        button, input, optgroup, select, textarea {
+            margin: 0;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+        *, ::after, ::before {
+            box-sizing: border-box;
+        }
+        button, select {
+            text-transform: none;
+        }
+        table {
+            background: inherit;
+            width: 100vw;
+            height: fit-content;
+        }
+        th {
+            border-bottom: 1px solid gray;
+        }
+        td {
+            border-bottom: 1px solid lightgray;
+        }
+        @media screen and (max-width: 800px) {
+            .setup-logo {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div style="display: flex; flex-flow: column; overflow: auto;">
+    <div class="header">
+        <div style="display: flex; align-items: baseline;">
+            <h2 style="color: white; font-weight: 200;">event button</h2>
+            <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
+            <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Logs</h4>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button style="align-self: flex-end;" type="button" class="btn btn-red"
+                    onclick="location.href='/'">Back
+            </button>
+        </div>
+    </div>
+    <div class="content">
+        <div style="overflow: auto">
+            <table id="logsTable" style="width: auto; font-family: monospace;">
+                <thead>
+                <tr>
+                    <th colspan="1">#</th>
+                    <th colspan="1" style="display: flex; justify-content: flex-end; padding: 4px">
+                        <button style="padding: 0 8px;" type="button" class="btn btn-red"
+                                onclick="getLogs()">refresh
+                        </button>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<script>
+    const logsTbody = document.querySelector('#logsTable').querySelector('tbody');
+    function getLogs() {
+        const srvURL = window.location.protocol + "//" + window.location.host + "/logsData";
+        const httpRequest = new XMLHttpRequest();
+        httpRequest.open("GET", srvURL, true);
+        httpRequest.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+        httpRequest.send();
+        httpRequest.responseType = 'json';
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.status === 200) {
+                if (httpRequest.response) {
+                    try {
+                        while (logsTbody.rows.length > 0) {
+                            logsTbody.deleteRow(0)
+                        }
+                        if (Object.entries(httpRequest.response).length === 0) {
+                            const row = `<tr><td>-</td><td>No logs available</td></tr>`;
+                            logsTbody.insertAdjacentHTML('beforeend', row);
+                        }
+                        for (const key in httpRequest.response) {
+                            const row = `<tr><td>${key}-</td><td>${httpRequest.response[key]}</td></tr>`;
+                            logsTbody.insertAdjacentHTML('beforeend', row);
+                        }
+                    } catch (e) {
+                        showError(`Wrong logsData: ${e}`)
+                    }
+                }
+            } else {
+                showError(httpRequest.status);
+            }
+        };
+    }
+    getLogs();
+    function showError(text) {
+        console.error('Error:', text);
+        while (logsTbody.rows.length > 0) {
+            logsTbody.deleteRow(0)
+        }
+        const row = `<tr><td>Error:</td><td>failed to load logs!</td></tr>`;
+        logsTbody.insertAdjacentHTML('beforeend', row);
+    }
+</script>
+)rawliteral";
 
 #endif //EVENT_BUTTON_HTML_PAGE_HPP
