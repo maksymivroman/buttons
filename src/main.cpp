@@ -34,6 +34,7 @@ const char *SAVE_SETTINGS = "SAVE";
 const char *CLEAR_EEPROM = "CLEAR_EEPROM";
 const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
 const char *FORMAT_FS = "FORMAT_FS";
+const char *ID = "ID";
 
 String integrationMessageToSend = "";
 
@@ -122,6 +123,7 @@ void setup() {
         unsigned int params = request->params();
         logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
         int responseCode = 200;
+        String responseData = "done";
         if (params > 0) {
             AsyncWebParameter *param = request->getParam(0);
             String paramName = param->name().c_str();
@@ -143,12 +145,14 @@ void setup() {
                 //TODO handle diff params value to start different system tools. Rename FORMAT_FS
                 requiredToFormatFS = true;
                 requiredRestart = true;
+            } else if (paramName == ID) {
+                responseData = WiFi.macAddress().c_str();
             } else {
                 responseCode = 418;
             }
         }
         logger.log("[MAIN->HTTP_POST]-> Return response code: ", responseCode);
-        request->send(responseCode, "text/html", "done");
+        request->send(responseCode, "text/html", responseData);
     });
 
     if(buttonSettings.useTelegramIntegration()) {
