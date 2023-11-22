@@ -18,8 +18,6 @@
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
 
-//#define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
-
 const int bluePin = 12;
 const int greenPin = 13;
 const int redPin = 14;
@@ -48,7 +46,9 @@ SoundService notifier(buzzerPin);
 EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
-Logger logger(115200, 50);
+/**Do not set max logs items more than 20,
+ * it will cause heap overflow when using Telegram integration (BearSSL requires more than 12k of RAM) */
+Logger logger(115200, 20);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true), FormatFSTask;
 
