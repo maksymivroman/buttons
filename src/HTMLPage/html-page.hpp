@@ -993,7 +993,7 @@ const char logs_page[] PROGMEM = R"rawliteral(
             max-height: 50px;
             background-color: #1e5e9d;
             width: 100vw;
-            padding: 0 20px 0 20px;
+            padding: 0 12px 0 12px;
             display: flex;
             align-items: center;
             flex: 1;
@@ -1063,10 +1063,18 @@ const char logs_page[] PROGMEM = R"rawliteral(
 <body>
 <div style="display: flex; flex-flow: column; overflow: auto;">
     <div class="header">
-        <div style="display: flex; align-items: baseline;">
-            <h2 style="color: white; font-weight: 200;">event button</h2>
-            <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
-            <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Logs</h4>
+        <div style="display: flex; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="36px" height="36px" viewBox="0 3 24 24">
+                <g> <polygon style="fill:#FFFFFF" points="12.08,6.53 23.67,10.2 12.12,14.49 0.36,10.11 12.08,6.53 12.08,6.35 0,10.08 0,14.35 11.99,18.85 23.98,14.35 23.98,10.19 12.08,6.35 "/>
+                    <polygon style="fill:#FFFFFF" points="11.99,21.71 0.02,17.12 0.02,19.41 12.01,24 24,19.42 24,17.13 "/>
+                    <polygon style="fill:#FFFFFF " points="0.36,10.11 12.12,14.49 23.67,10.2 12.08,6.53 "/>
+                </g>
+            </svg>
+            <div style="display: flex; align-items: baseline; margin-left: 12px;">
+                <h2 style="color: white; font-weight: 200;">event button</h2>
+                <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
+                <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Setup</h4>
+            </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button style="align-self: flex-end;" type="button" class="btn btn-red"
