@@ -696,6 +696,10 @@
 
         eventDataObj = {"sample_event_host": "sample_event_data"}; // %EVENTINFO%
 
+        if (eventDataObj === null) {
+            eventDataObj = {};
+        }
+
         try {
             document.getElementById('clientWebAccess').checked = config.clientWebAccess;
             document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;

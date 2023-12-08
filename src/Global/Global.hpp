@@ -11,7 +11,7 @@
 
 extern Logger logger;
 
-const String currentFirmwareVersion = String("1.2.0 - build date: ") + __DATE__;
+const String currentFirmwareVersion = String("1.2.1 - build date: ") + __DATE__;
 
 struct WiFiCONFIG {
     String ssid;
