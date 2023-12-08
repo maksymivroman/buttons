@@ -675,6 +675,10 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         eventDataObj = %EVENTINFO% ;
 
+        if (eventDataObj === null) {
+            eventDataObj = {};
+        }
+
         try {
             document.getElementById('clientWebAccess').checked = config.clientWebAccess;
             document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
