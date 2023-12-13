@@ -6,7 +6,7 @@
 #define EVENT_BUTTON_HTMLCOMPONENTBUILDER_H
 
 #include <Arduino.h>
-#include "GlobalConfig.hpp"
+#include "Global/Global.hpp"
 #include <ESP8266WiFi.h>
 
 class HTMLComponentBuilder {

@@ -29,7 +29,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             max-height: 50px;
             background-color: #1e5e9d;
             width: 100vw;
-            padding: 0 20px 0 20px;
+            padding: 0 12px 0 12px;
             display: flex;
             align-items: center;
             flex: 1;
@@ -223,6 +223,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             color: darkgray;
         }
 
+        #loggerEnabled:not(:checked) ~ #loggerLevel {
+            color: darkgray;
+            pointer-events: none;
+        }
+
         input:disabled {
             color: dimgray;
             background-color: lightgray;
@@ -306,10 +311,18 @@ const char index_html[] PROGMEM = R"rawliteral(
 <div style="display: flex; flex-flow: column; overflow: auto;">
 
     <div class="header">
-        <div style="display: flex; align-items: baseline;">
-            <h2 style="color: white; font-weight: 200;">event button</h2>
-            <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
-            <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Setup</h4>
+        <div style="display: flex; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="36px" height="36px" viewBox="0 3 24 24">
+                <g> <polygon style="fill:#FFFFFF" points="12.08,6.53 23.67,10.2 12.12,14.49 0.36,10.11 12.08,6.53 12.08,6.35 0,10.08 0,14.35 11.99,18.85 23.98,14.35 23.98,10.19 12.08,6.35 "/>
+                    <polygon style="fill:#FFFFFF" points="11.99,21.71 0.02,17.12 0.02,19.41 12.01,24 24,19.42 24,17.13 "/>
+                    <polygon style="fill:#FFFFFF " points="0.36,10.11 12.12,14.49 23.67,10.2 12.08,6.53 "/>
+                </g>
+            </svg>
+            <div style="display: flex; align-items: baseline; margin-left: 12px;">
+                <h2 style="color: white; font-weight: 200;">event button</h2>
+                <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
+                <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Setup</h4>
+            </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="find()">Find me</button>
@@ -365,23 +378,38 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         <div class="modal" id="successModel">
             <div style="display: flex; align-items: center; flex-flow: column">
+                <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200px" height="200px" style="fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200">
+                    <g id="Layer_x0020_1">
+                        <polygon fill="#5B5A50" points="193.05,122.02 198.24,124.05 99.92,161.86 2.62,124.46 7.84,122.52 5.7,121.72 0.16,123.79 0.16,142.69 100.09,180.95 200,142.76 200,123.79 194.3,121.66 "/>
+                        <polygon fill="#5B5B5B" points="100.7,54.44 197.22,85.03 101.01,120.73 2.98,84.29 100.7,54.44 100.7,52.91 0,83.98 0,119.58 99.92,157.05 199.85,119.58 199.85,84.91 100.7,52.91 "/>
+                        <polygon id="upload-box_1" fill="#E53324" points="99.92,180.91 0.16,142.69 0.16,161.73 100.09,200 200,161.81 200,142.77 "/>
+                        <polygon fill="#898989" points="2.98,84.29 101.01,120.73 197.22,85.03 100.7,54.44 "/>
+                    </g>
+                </svg>
+
                 <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
                 <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take
                     a while</h4>
-                <button type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
+                <h4 style="color: #b9b9b9; font-weight: 200">If the Button was connected to Wi-Fi during setup, you can refresh the page to continue</h4>
+                <button disabled id="refreshBtn" type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
             </div>
         </div>
 
         <div class="extras-container border">
 
             <div class="item">
-                <input type="checkbox" id="useDnsName" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
+                <input type="checkbox" id="loggerEnabled">
+                <label style="margin-left: 8px; margin-right: 8px;" for="loggerEnabled">Logger</label>
+                <select class="control" style="height: auto; min-width: auto;" id="loggerLevel">
+                    <option value="0">Serial & Local</option>
+                    <option value="1">Serial (115200 8-N-1)</option>
+                    <option value="2">Local log (/logs)</option>
+                </select>
             </div>
 
             <div class="item">
-                <input type="checkbox" id="serialEnabled" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="serialEnabled">Debug data via serial (115200 8-N-1)</label>
+                <input type="checkbox" id="useDnsName" name="dnsName" disabled>
+                <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
             </div>
 
             <div class="item">
@@ -588,7 +616,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         const clientWebAccess = document.getElementById('clientWebAccess')? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
         const enableOtaUpdate = document.getElementById('enableOtaUpdate')? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
         const useDnsName = Number(document.getElementById('useDnsName').checked);
-        const serialEnabled = Number(document.getElementById('serialEnabled').checked);
+        const loggerEnabled = Number(document.getElementById('loggerEnabled').checked);
+        const loggerLevel = Number(document.getElementById('loggerLevel').selectedIndex);
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
@@ -597,7 +626,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         const extrasConfig = JSON.stringify({
             clientWebAccess,
             useDnsName,
-            serialEnabled,
+            loggerEnabled,
+            loggerLevel,
             useSound,
             useTelegramIntegration,
             customHSsid,
@@ -634,6 +664,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                 if (httpRequest.status === 200) {
                     const successModel = document.getElementById('successModel');
                     successModel.style.visibility = 'visible';
+                    handleSuccessSave();
                 }
             }
         }
@@ -643,6 +674,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         config = %CONFIGURATION% ;
 
         eventDataObj = %EVENTINFO% ;
+
+        if (eventDataObj === null) {
+            eventDataObj = {};
+        }
 
         try {
             document.getElementById('clientWebAccess').checked = config.clientWebAccess;
@@ -656,7 +691,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
 
         document.getElementById('useDnsName').checked = config.useDnsName;
-        document.getElementById('serialEnabled').checked = config.serialEnabled;
+        document.getElementById('loggerEnabled').checked = config.loggerEnabled;
+        document.getElementById('loggerLevel').selectedIndex = config.loggerLevel;
         document.getElementById('useSound').checked = config.useSound;
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
@@ -886,6 +922,235 @@ const char index_html[] PROGMEM = R"rawliteral(
     showSaved();
     populateTable();
 
+    function handleSuccessSave() {
+        if (window.location.host === '192.168.4.1') {
+            changeButtonColor(()=>{
+                document.querySelector('#refreshBtn').disabled = false;
+            });
+        } else {
+            setTimeout(()=>{
+                document.querySelector('#upload-box_1').style.fill = '#3c5dd7';
+            }, 4000);
+            setTimeout(startCheckRestart, 2000);
+        }
+    }
+
+    function changeButtonColor(fn) {
+        setTimeout(()=>{
+            document.querySelector('#upload-box_1').style.fill = '#3c5dd7';
+        }, 4000);
+        setTimeout(()=>{
+            document.querySelector('#upload-box_1').style.fill = '#66B65F';
+            fn();
+        }, 8000);
+    }
+
+    function checkButtonRestart() {
+        return new Promise((resolve, reject) => {
+            const srvURL = window.location.protocol + "//" + window.location.host + "/";
+            const httpRequest = new XMLHttpRequest();
+            httpRequest.onreadystatechange = function () {
+                if (httpRequest.readyState === 4) {
+                    if (httpRequest.status === 200) {
+                        resolve(httpRequest.responseText);
+                    } else {
+                        reject('err');}
+                }
+            };
+            httpRequest.timeout = 1000;
+            httpRequest.responseType = 'text';
+            httpRequest.open("POST", srvURL, true);
+            httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+            httpRequest.send("ID=id");
+        });
+    }
+
+    function startCheckRestart() {
+        checkButtonRestart().then(
+            _ => window.location.reload()
+        ).catch(_=> setTimeout(startCheckRestart,2000));
+    }
+
 </script>)rawliteral";
+
+const char logs_page[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Event button | Logs</title>
+    <style>
+        html {
+            font-size: 16px;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            background: #eeeaea;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        .header {
+            max-height: 50px;
+            background-color: #1e5e9d;
+            width: 100vw;
+            padding: 0 12px 0 12px;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            justify-content: space-between;
+        }
+        .content {
+            display: flex;
+            flex-flow: column;
+            width: 100vw;
+            padding: 16px;
+            overflow: auto;
+        }
+        .btn {
+            color: #fff;
+            display: inline-block;
+            font-weight: 400;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            padding: .375rem .75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: .25rem;
+            transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+        .btn-red {
+            background-color: #cb1d38;
+            border: 1px solid #cb1d38;
+        }
+        .btn-red:hover:not(:disabled) {
+            background-color: #a6132f;
+        }
+        button, input, optgroup, select, textarea {
+            margin: 0;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+        *, ::after, ::before {
+            box-sizing: border-box;
+        }
+        button, select {
+            text-transform: none;
+        }
+        table {
+            background: inherit;
+            width: 100vw;
+            height: fit-content;
+        }
+        th {
+            border-bottom: 1px solid gray;
+        }
+        td {
+            border-bottom: 1px solid lightgray;
+        }
+        @media screen and (max-width: 800px) {
+            .setup-logo {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div style="display: flex; flex-flow: column; overflow: auto;">
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="36px" height="36px" viewBox="0 3 24 24">
+                <g> <polygon style="fill:#FFFFFF" points="12.08,6.53 23.67,10.2 12.12,14.49 0.36,10.11 12.08,6.53 12.08,6.35 0,10.08 0,14.35 11.99,18.85 23.98,14.35 23.98,10.19 12.08,6.35 "/>
+                    <polygon style="fill:#FFFFFF" points="11.99,21.71 0.02,17.12 0.02,19.41 12.01,24 24,19.42 24,17.13 "/>
+                    <polygon style="fill:#FFFFFF " points="0.36,10.11 12.12,14.49 23.67,10.2 12.08,6.53 "/>
+                </g>
+            </svg>
+            <div style="display: flex; align-items: baseline; margin-left: 12px;">
+                <h2 style="color: white; font-weight: 200;">event button</h2>
+                <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
+                <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Setup</h4>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button style="align-self: flex-end;" type="button" class="btn btn-red"
+                    onclick="location.href='/'">Back
+            </button>
+        </div>
+    </div>
+    <div class="content">
+        <div style="overflow: auto">
+            <table id="logsTable" style="width: auto; font-family: monospace;">
+                <thead>
+                <tr>
+                    <th colspan="1">#</th>
+                    <th colspan="1" style="display: flex; justify-content: flex-end; padding: 4px">
+                        <button style="padding: 0 8px;" type="button" class="btn btn-red"
+                                onclick="getLogs()">refresh
+                        </button>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<script>
+    const logsTbody = document.querySelector('#logsTable').querySelector('tbody');
+    function getLogs() {
+        const srvURL = window.location.protocol + "//" + window.location.host + "/logsData";
+        const httpRequest = new XMLHttpRequest();
+        httpRequest.open("GET", srvURL, true);
+        httpRequest.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+        httpRequest.send();
+        httpRequest.responseType = 'json';
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.status === 200) {
+                if (httpRequest.response) {
+                    try {
+                        while (logsTbody.rows.length > 0) {
+                            logsTbody.deleteRow(0)
+                        }
+                        if (Object.entries(httpRequest.response).length === 0) {
+                            const row = `<tr><td>-</td><td>No logs available</td></tr>`;
+                            logsTbody.insertAdjacentHTML('beforeend', row);
+                        }
+                        for (const key in httpRequest.response) {
+                            const row = `<tr><td>${key}-</td><td>${httpRequest.response[key]}</td></tr>`;
+                            logsTbody.insertAdjacentHTML('beforeend', row);
+                        }
+                    } catch (e) {
+                        showError(`Wrong logsData: ${e}`)
+                    }
+                }
+            } else {
+                showError(httpRequest.status);
+            }
+        };
+    }
+    getLogs();
+    function showError(text) {
+        console.error('Error:', text);
+        while (logsTbody.rows.length > 0) {
+            logsTbody.deleteRow(0)
+        }
+        const row = `<tr><td>Error:</td><td>failed to load logs!</td></tr>`;
+        logsTbody.insertAdjacentHTML('beforeend', row);
+    }
+</script>
+)rawliteral";
 
 #endif //EVENT_BUTTON_HTML_PAGE_HPP

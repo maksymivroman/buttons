@@ -2,17 +2,21 @@
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
 
-#include "AsyncOtaUpdate.h"
-#include "GlobalConfig.hpp"
-#include "html-page.hpp"
-#include "LEDService.h"
-#include "SettingsService.h"
-#include "NetworkService.h"
-#include "HTMLComponentBuilder.h"
-#include "EventsService.h"
-#include "SoundService.h"
-#include "TelegramIntegration.h"
-#include "Tasks/ButtonTask.h"
+#include "ButtonOTAUpdate/AsyncOtaUpdate.h"
+#include "Global/Global.hpp"
+#include "HTMLPage/html-page.hpp"
+#include "LEDService/LEDService.h"
+#include "SettingsService/SettingsService.h"
+#include "NetworkService/NetworkService.h"
+#include "HTMLComponentBuilder/HTMLComponentBuilder.h"
+#include "EventsService/EventsService.h"
+#include "SoundService/SoundService.h"
+#include "TelegramIntegration/TelegramIntegration.h"
+#include "TasksHandler/ButtonTask.h"
+#include "Logger/Logger.h"
+
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
 
 const int bluePin = 12;
 const int greenPin = 13;
@@ -20,13 +24,15 @@ const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
 
-bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton;
+bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS;
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
 const char *SAVE_SETTINGS = "SAVE";
 const char *CLEAR_EEPROM = "CLEAR_EEPROM";
 const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
+const char *FORMAT_FS = "FORMAT_FS";
+const char *ID = "ID";
 
 String integrationMessageToSend = "";
 
@@ -41,8 +47,11 @@ SoundService notifier(buzzerPin);
 EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
+/**Do not set max logs items more than 20,
+ * it will cause heap overflow when using Telegram integration (BearSSL requires more than 12k of RAM) */
+Logger logger(115200, 20);
 
-ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true);
+ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true), FormatFSTask;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -56,15 +65,18 @@ String components(const String &ref) {
 }
 
 void setup() {
-    Serial.begin(115200);
-    Serial.println();
-    Serial.println( "BUTTON CURRENT FW: " + currentFirmwareVersion);
-    ledService.pinConfig(redPin, greenPin, bluePin);
     pinMode(buttonPin, INPUT);
+    ledService.pinConfig(redPin, greenPin, bluePin);
     ledService.blinkDone();
 
-    String eventsData = buttonSettings.loadEvents();
     buttonSettings.loadButtonEepromSettings();
+
+    if (buttonSettings.loggerEnabled()) {
+        logger.start(buttonSettings.loggerLevel());
+        logger.log("BUTTON CURRENT FW: " , currentFirmwareVersion);
+    }
+
+    String eventsData = buttonSettings.loadEvents();
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
@@ -92,16 +104,33 @@ void setup() {
         request->send_P(200, "text/html", index_html, components);
     });
 
+    server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", logs_page);
+    });
+
+    server.on("/logsData", HTTP_GET, [](AsyncWebServerRequest *request) {
+        auto * response = new AsyncJsonResponse(false, 8192);
+        JsonObject root = response->getRoot();
+        const unsigned int logsCount = logger.logs().size();
+        for (size_t i = 0; i < logsCount; ++i) {
+            root[std::to_string(i)] = logger.logs()[i];
+        }
+        response->setLength();
+        request->send(response);
+    });
+
     server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
         unsigned int params = request->params();
-        Serial.print("[MAIN->HTTP_POST] params count: "); Serial.println(params);
+        logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
         int responseCode = 200;
+        String responseData = "done";
         if (params > 0) {
             AsyncWebParameter *param = request->getParam(0);
             String paramName = param->name().c_str();
             String paramMessage = param->value().c_str();
 
-            Serial.print("[MAIN->HTTP_POST] "); Serial.print(paramName); Serial.print(": "); Serial.println(paramMessage);
+            logger.log("[MAIN->HTTP_POST] ", paramName);
+            logger.logSerial("[MAIN->HTTP_POST] ", paramName, ": ", paramMessage);
 
             if (paramName == FIND_ME) {
                 requiredToFind = true;
@@ -112,12 +141,18 @@ void setup() {
             } else if (paramName == SAVE_SETTINGS) {
                 buttonSettings.saveSettings(paramMessage);
                 requiredRestart = true;
+            } else if (paramName == FORMAT_FS) {
+                //TODO handle diff params value to start different system tools. Rename FORMAT_FS
+                requiredToFormatFS = true;
+                requiredRestart = true;
+            } else if (paramName == ID) {
+                responseData = WiFi.macAddress().c_str();
             } else {
                 responseCode = 418;
             }
         }
-        Serial.print("[MAIN->HTTP_POST->STATUS] "); Serial.println(responseCode);
-        request->send(responseCode, "text/html", "done");
+        logger.log("[MAIN->HTTP_POST]-> Return response code: ", responseCode);
+        request->send(responseCode, "text/html", responseData);
     });
 
     if(buttonSettings.useTelegramIntegration()) {
@@ -128,9 +163,10 @@ void setup() {
                 integrationMessageToSend += buttonSettings.integrationSettings().tPrefix;
                 integrationMessageToSend += request->getParam("data")->value();
                 integrationMessageToSend += buttonSettings.integrationSettings().tSuffix;
-                Serial.print("[HTTP GET -> integration]: "); Serial.println(integrationMessageToSend);
+                logger.log("[MAIN->HTTP GET -> integration]");
+                logger.logSerial("[HTTP GET -> integration message]: ", integrationMessageToSend);
             }
-            else {Serial.print("[HTTP GET -> integration]: "); Serial.println("wrong GET data");}
+            else {logger.log("[MAIN->HTTP GET -> integration]: wrong GET data");}
             request->send_P(200, "text/html", "OK");
         });
     }
@@ -172,7 +208,11 @@ void loop() {
         requiredRestart = true;
     });
 
-    RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+    FormatFSTask(requiredToFormatFS, [](){
+        ledService.lightOnRed(true);
+        buttonSettings.formatFS();
+    });
+
 
     IntegrationTask(integrationMessageToSend.length() != 0, [](){
         notifier.onIntegrationMessage();
@@ -182,9 +222,11 @@ void loop() {
 
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
-            [](){ Serial.println("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
-            [](){ Serial.println("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); },
+            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
+            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); },
             networkService.isAPMode()
             );
+
+    RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
 
 }

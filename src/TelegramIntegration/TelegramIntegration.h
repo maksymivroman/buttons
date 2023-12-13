@@ -13,7 +13,7 @@
 #include <AsyncTelegram2.h>
 #include "tg_certificate.h"
 
-#include "GlobalConfig.hpp"
+#include "Global/Global.hpp"
 
 class TelegramIntegration {
 

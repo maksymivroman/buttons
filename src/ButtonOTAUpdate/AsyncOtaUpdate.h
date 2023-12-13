@@ -18,7 +18,10 @@
 #include "FS.h"
 
 #include "UpdateWebPage.h"
-#include "GlobalConfig.hpp"
+#include "Global/Global.hpp"
+#include "Logger/Logger.h"
+
+extern Logger logger;
 
 class AsyncOtaUpdate{
 
@@ -65,7 +68,7 @@ public:
         });
 
         _server->on("/update", HTTP_POST, [&](AsyncWebServerRequest *request) {
-            Serial.println("[UPDATE - POST]");
+            logger.log("[UPDATE - POST]");
             if(_authRequired){
                 if(!request->authenticate(_username.c_str(), _password.c_str())){
                     return request->requestAuthentication();
@@ -125,7 +128,7 @@ public:
 }
 
 void restart() {
-    Serial.println("[UPDATE - restart]");
+    logger.log("[UPDATE - restart]");
     requireToRestart = true;
 }
 

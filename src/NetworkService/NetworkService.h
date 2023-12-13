@@ -6,7 +6,7 @@
 #define EVENT_BUTTON_NETWORKSERVICE_H
 
 #include <Arduino.h>
-#include "GlobalConfig.hpp"
+#include "Global/Global.hpp"
 
 class NetworkService {
 

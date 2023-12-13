@@ -6,8 +6,7 @@
 #define EVENT_BUTTON_EVENTSSERVICE_H
 
 #include <Arduino.h>
-
-#include "TelegramIntegration.h"
+#include "TelegramIntegration/TelegramIntegration.h"
 
 class EventsService {
 

@@ -3,9 +3,10 @@
 //
 
 #include "SoundService.h"
+#include "Global/Global.hpp"
 
 void SoundService::onFindMe() {
-    Serial.print("[SoundService] useSound onFindMe: "); Serial.println(useSound);
+    logger.log("[SoundService] onFindMe. Enabled: ", useSound);
     if (useSound) {
         for (int i = 0; i < 10; i++) {
             tone(buzzerPin, 800 * i, 200);
@@ -16,7 +17,7 @@ void SoundService::onFindMe() {
 }
 
 void SoundService::onRestart() {
-    Serial.print("[SoundService] useSound onRestart: "); Serial.println(useSound);
+    logger.log("[SoundService] onRestart. Enabled: ", useSound);
     if (useSound) {
         for (int i = 0; i < 5; i++) {
             tone(buzzerPin, 500 * i, 50);
@@ -27,7 +28,7 @@ void SoundService::onRestart() {
 }
 
 void SoundService::onIntegrationMessage() {
-    Serial.print("[SoundService] useSound onIntegrationMessage: "); Serial.println(useSound);
+    logger.log("[SoundService] onIntegrationMessage. Enabled: ", useSound);
     if (useSound) {
         for (int i = 0; i < 3; i++) {
             tone(buzzerPin, 150 * i, 150);
@@ -38,7 +39,7 @@ void SoundService::onIntegrationMessage() {
 }
 
 void SoundService::onRemoteTrigger() {
-    Serial.print("[SoundService] useSound onRemoteTrigger: "); Serial.println(useSound);
+    logger.log("[SoundService] onRemoteTrigger. Enabled: ", useSound);
     if (useSound) {
         for (int i = 0; i < 3; i++) {
             tone(buzzerPin, 350 * i, 100);

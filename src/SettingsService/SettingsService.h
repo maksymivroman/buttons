@@ -6,7 +6,7 @@
 #define EVENT_BUTTON_SETTINGSSERVICE_H
 
 #include <Arduino.h>
-#include "GlobalConfig.hpp"
+#include "Global/Global.hpp"
 
 class SettingsService {
 public:
@@ -19,11 +19,14 @@ public:
     void saveSettings(String settings);
     void loadButtonEepromSettings();
     void clearEeprom();
+    void formatFS();
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
     bool useTelegramIntegration() const;
     bool otaUpdateOnClientMode() const;
     bool remoteButtonTriggering() const;
+    bool loggerEnabled() const;
+    LoggerLevel loggerLevel() const;
     char * customHotspotSsid();
 
 private:

@@ -2,11 +2,11 @@
 
 ### EEPROM struct configuration 
 #### _reserved 1024 bytes_
-#### _used 556 bytes_
+#### _used 560 bytes_
 
 ```c++
 struct EEPROMSETTINGS {
-    bool serialEnabled;
+    bool loggerEnabled;
     bool clientWebAccess;
     bool enableOtaUpdate;
     bool useDnsName ;
@@ -14,12 +14,18 @@ struct EEPROMSETTINGS {
     bool useCustomHSsid;
     bool useTelegramIntegration;
     bool remoteTriggering;
+    unsigned int loggerLevel;
     unsigned int fwVersion;
     char wifiSsid[256]{};
     char wifiPass[256]{};
     char hotspotSsid[32]{};
 };
 ```
+
+> To format EEPROM: connect to button hotspot and send POST request to 192.168.4.1 
+> with Content-Type:application/form-data: 
+> Key/Value: CLEAR_EEPROM: CLEAR_EEPROM
+
 > ### Receiving configuration data via POST request
 ### Data structure (JSON)
 
@@ -38,7 +44,8 @@ struct EEPROMSETTINGS {
       },
       
       "configuration" : {
-        "serialEnabled": "1-true, 0-false",
+        "loggerEnabled": "1-true, 0-false",
+        "loggerLevel": "unsigned int: 0 | 1 | 2",
         "clientWebAccess":"1-true, 0-false",
         "enableOtaUpdate": "1-true, 0-false",
         "useDnsName": "1-true, 0-false",
