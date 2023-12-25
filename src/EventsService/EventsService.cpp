@@ -10,6 +10,14 @@
 #include "Global/Global.hpp"
 
 void EventsService::SendEvents() {
+    ProcessToSend();
+}
+
+void EventsService::SendEventsOnKeystoreChange() {
+    ProcessToSend(true);
+}
+
+void EventsService::ProcessToSend(boolean onlyFromKeystore) {
     logger.log("[EventsService] SendEvents");
     logger.logSerial("[EventsService] SendEvents", events);
 
@@ -27,10 +35,17 @@ void EventsService::SendEvents() {
         logger.logSerial("[EventsService] request data: ", requestData);
         logger.logSerial("[EventsService] request URL: ", requestUrl);
 
-        if (requestUrl == "telegram") {
+        UpdateEventDataWithKeystore(requestData, this->keystoreProp);
+
+        if (requestUrl == "telegram" && !onlyFromKeystore) {
             SendMessageToTelegram(requestData);
-        } else {
+        } else if (onlyFromKeystore && requestUrl.substring(0, 1) == "$") {
+            requestUrl.remove(0, 1);
             SendHttpEvent(requestUrl, requestData);
+        } else {
+            if(requestUrl.substring(0, 1) != "$" && !onlyFromKeystore) {
+                SendHttpEvent(requestUrl, requestData);
+            }
         }
     }
 }
@@ -78,3 +93,14 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
         logger.log("[EventsService] Skip secure connection!");
     }
 }
+
+void EventsService::UpdateEventProp(String prop) {
+    logger.log("[EventsService] Update event Prop: ", prop);
+    this->keystoreProp = std::move(prop);
+}
+
+void EventsService::UpdateEventDataWithKeystore(String &eventData, String &replaceWith) {
+    eventData.replace(this->propPattern, replaceWith);
+}
+
+

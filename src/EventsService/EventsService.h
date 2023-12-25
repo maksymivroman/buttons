@@ -13,14 +13,21 @@ class EventsService {
 public:
     void SendEvents();
     void SetEvents(String eventsData);
+    void UpdateEventProp(String prop);
+    void SendEventsOnKeystoreChange();
 
     TelegramIntegration *telegramBotRef = nullptr;
 
 private:
     void SendMessageToTelegram(String message);
     void SendHttpEvent(String &host, String &payload);
+    void UpdateEventDataWithKeystore(String &eventData, String &replaceWith);
+    void ProcessToSend(boolean onlyFromKeystore = false);
 
     String events;
+
+    String keystoreProp;
+    const char *propPattern = "$prop$";
 
 };
 
