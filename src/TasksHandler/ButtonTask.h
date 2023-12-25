@@ -13,14 +13,14 @@ extern Logger logger;
 class ButtonTask {
 
 public:
-    ButtonTask()= default;
+    ButtonTask() = default;
     explicit ButtonTask(bool startWith) {
         this->distinctChangeFlag = startWith;
     };
 
     template<typename FnTrue>
     void operator()(bool handler, FnTrue execute, bool skipTask = false){
-        if ((handler != this->distinctChangeFlag) & !skipTask) {
+        if ((handler != this->distinctChangeFlag) && !skipTask) {
             logger.log("[ButtonTask] Execute task handler (one time)");
             this->distinctChangeFlag = handler;
             if (handler) execute();
@@ -29,8 +29,18 @@ public:
 
     template<typename FnTrue, typename FnFalse>
     void operator()(bool handler, FnTrue executeOnTrue, FnFalse executeOnFalse, bool skipTask = false){
-        if ((handler != this->distinctChangeFlag) & !skipTask) {
+        if ((handler != this->distinctChangeFlag) && !skipTask) {
             logger.log("[ButtonTask] Execute task handler (conditional)");
+            this->distinctChangeFlag = handler;
+            handler ? executeOnTrue() : executeOnFalse();
+        }
+    };
+
+    template<typename FnTrue, typename FnFalse, typename FnSkip>
+    void operator()(bool handler, FnTrue executeOnTrue, FnFalse executeOnFalse, FnSkip skipTaskFn){
+        const bool skip = skipTaskFn();
+        if ((handler != this->distinctChangeFlag) && !skip) {
+            logger.log("[ButtonTask] Execute task handler (conditional, skip task)");
             this->distinctChangeFlag = handler;
             handler ? executeOnTrue() : executeOnFalse();
         }

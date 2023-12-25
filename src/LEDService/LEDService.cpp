@@ -17,6 +17,12 @@ void LEDService::switchPin(int pin, int state) const {
     digitalWrite(pin, state);
 }
 
+void LEDService::switchPin(RGBCONFIG pinsState) const {
+    digitalWrite(pinRed, pinsState.r);
+    digitalWrite(pinGreen, pinsState.g);
+    digitalWrite(pinBlue, pinsState.b);
+}
+
 void LEDService::blink(int pin, int count) {
     for (int i = 0; i < count * 2; ++i) {
         int state = digitalRead(pin);
@@ -39,6 +45,11 @@ void LEDService::lightOnBlue(bool on) {
 void LEDService::lightOnGreen(bool on) {
     const int state = on ? 1 : 0;
     switchPin(pinGreen, state);
+}
+
+void LEDService::lightOnPurple(bool on) {
+    const int state = on ? 1 : 0;
+    switchPin({state, 0, state});
 }
 
 void LEDService::blinkWarn() {
@@ -74,6 +85,15 @@ void LEDService::eventsSendInProgress(bool on) {
     if (on) {
         saveCurrentRGBState();
         lightOnBlue(true);
+    } else {
+        restoreCurrentRGBState();
+    }
+}
+
+void LEDService::updateKeystoreProgress(bool on) {
+    if (on) {
+        saveCurrentRGBState();
+        lightOnPurple(true);
     } else {
         restoreCurrentRGBState();
     }

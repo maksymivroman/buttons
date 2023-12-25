@@ -24,7 +24,7 @@ const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
 
-bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS;
+bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS, keystoreUpdated;
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
@@ -35,6 +35,8 @@ const char *FORMAT_FS = "FORMAT_FS";
 const char *ID = "ID";
 
 String integrationMessageToSend = "";
+
+unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
@@ -51,7 +53,9 @@ AsyncOtaUpdate ButtonOTAUpdate;
  * it will cause heap overflow when using Telegram integration (BearSSL requires more than 12k of RAM) */
 Logger logger(115200, 20);
 
-ButtonTask RestartTask, EepromClearTask, RequiredToFindTask, SendEventsTask, IntegrationTask, CheckConnectionTask(true), FormatFSTask;
+ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
+        SendEventsTask, IntegrationTask, CheckConnectionTask(true),
+        FormatFSTask, OnKeystoreUpdateTask;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -155,6 +159,30 @@ void setup() {
         request->send(responseCode, "text/html", responseData);
     });
 
+    server.on("/keystore", HTTP_GET, [](AsyncWebServerRequest *request) {
+        const bool hasPropParam = request->hasParam("prop");
+        const bool hasDelayParam = request->hasParam("delay");
+
+        if (hasPropParam) {
+            keystoreUpdated = true;
+            String paramData = request->getParam("prop")->value();
+            eventService.UpdateEventProp(paramData);
+
+            if(hasDelayParam) {
+                String delayParam = request->getParam("delay")->value();
+                timeToExecuteTask = millis() + std::stoi(delayParam.c_str());
+                logger.log("[MAIN->HTTP GET][keystore] Set task delay: ", timeToExecuteTask);
+            }
+
+            logger.log("[MAIN->HTTP GET][keystore]: Update Keystore: ", paramData);
+            request->send_P(200, "text/html", "OK");
+        }
+        else {
+            logger.log("[MAIN->HTTP GET][keystore]: no parameter");
+            request->send_P(400, "text/html", "Bad Request");
+        }
+    });
+
     if(buttonSettings.useTelegramIntegration()) {
         telegramBot.configureTelegramIntegration(buttonSettings.integrationSettings());
         eventService.telegramBotRef = &telegramBot;
@@ -219,6 +247,18 @@ void loop() {
         telegramBot.sendMessage(integrationMessageToSend);
         integrationMessageToSend = "";
     });
+
+    OnKeystoreUpdateTask(
+            keystoreUpdated, []() {
+                ledService.updateKeystoreProgress(true);
+                eventService.SendEventsOnKeystoreChange();
+                keystoreUpdated = !keystoreUpdated;
+                timeToExecuteTask = 0;
+                ledService.updateKeystoreProgress(false);
+            },
+            [](){},
+            []() -> bool { return millis() < timeToExecuteTask; }
+    );
 
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
