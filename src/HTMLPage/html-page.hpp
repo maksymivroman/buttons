@@ -146,6 +146,17 @@ const char index_html[] PROGMEM = R"rawliteral(
             border-bottom: 1px solid lightgray;
         }
 
+        .hashed {
+            color: #858181;
+            background: repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(0, 0, 0, 0.04) 10px,
+                    rgba(0, 0, 0, 0.04) 20px
+            );
+        }
+
         .mt-m {
             margin-top: 16px;
         }
@@ -372,6 +383,23 @@ const char index_html[] PROGMEM = R"rawliteral(
                 </tbody>
             </table>
 
+        </div>
+
+        <h2 class="section-header">Keystore</h2>
+
+        <div class="border" style="padding: 24px">
+            <div class="item">
+                <input type="checkbox" id="keystoreEnabled" disabled checked>
+                <label for="keystoreEnabled" style="margin: 0 8px;">Enable keystore (store custom keys and use it in event data)</label>
+            </div>
+            <div class="item">
+                <input type="checkbox" id="keystoreSendEvent" disabled checked>
+                <label for="keystoreSendEvent" style="margin: 0 8px;">Send events on keystore update (event host should be marked by $)</label>
+            </div>
+            <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
+                <h5 class="item" style="margin: 0">Update keystore URL: </h5>
+                <h5 class="item" style="font-weight: normal; margin: 0">http://%IP%/keystore?prop=DATA&delay=DELAY</h5>
+            </div>
         </div>
 
         <h2 class="section-header">General settings</h2>
@@ -745,7 +773,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         tbody.innerHTML = '';
         for (const key in eventDataObj) {
             const row = `
-                        <tr>
+                        <tr ${key.startsWith("$",0) ? 'class="hashed"' : ''}>
                           <td>${key}</td>
                           <td >${eventDataObj[key]}</td>
                           <td style="display: flex; justify-content: flex-end; gap: 8px;">
