@@ -44,3 +44,8 @@ String Keystore::itemValue(String &key) {
     return this->emptyReturnValue;
 }
 
+Keystore::KeystoreItems Keystore::keystoreItems() const {
+    return this->items;
+}
+
+

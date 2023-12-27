@@ -11,13 +11,14 @@
 class SettingsService {
 public:
     WiFiCONFIG getWiFiConnDetails();
-    String loadEvents();
+    const String *events();
     INTEGRATIONSETTINGS integrationSettings();
     EEPROMSETTINGS getButtonConfig();
 
     void saveEvents(String events);
     void saveSettings(String settings);
     void loadButtonEepromSettings();
+    void loadEvents();
     void clearEeprom();
     void formatFS();
     bool clientWebAccessEnabled() const;
@@ -34,6 +35,7 @@ private:
     void saveIntegrationSettings(String settings);
 
     String dataFromFS(const String& fileName);
+    String eventsData;
 
     EEPROMSETTINGS buttonEepromSettings;
 };

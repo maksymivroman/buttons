@@ -18,8 +18,12 @@ WiFiCONFIG SettingsService::getWiFiConnDetails() {
     return eepromWiFiConfig;
 }
 
-String SettingsService::loadEvents() {
-    return dataFromFS("/post.json");
+void SettingsService::loadEvents() {
+    this->eventsData = dataFromFS("/post.json");
+}
+
+const String *SettingsService::events() {
+    return &this->eventsData;
 }
 
 INTEGRATIONSETTINGS SettingsService::integrationSettings() {

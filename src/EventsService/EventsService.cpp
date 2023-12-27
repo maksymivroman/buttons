@@ -19,10 +19,10 @@ void EventsService::SendEventsOnKeystoreChange() {
 
 void EventsService::ProcessToSend(boolean onlyFromKeystore) {
     logger.log("[EventsService] SendEvents");
-    logger.logSerial("[EventsService] SendEvents", events);
+    logger.logSerial("[EventsService] SendEvents", this->events);
 
     StaticJsonDocument<900> doc;
-    deserializeJson(doc, events);
+    deserializeJson(doc, this->events);
     JsonObject data = doc.as<JsonObject>();
 
     String requestUrl;
@@ -34,8 +34,6 @@ void EventsService::ProcessToSend(boolean onlyFromKeystore) {
 
         logger.logSerial("[EventsService] request data: ", requestData);
         logger.logSerial("[EventsService] request URL: ", requestUrl);
-
-        UpdateEventDataWithKeystore(requestData, this->keystoreProp);
 
         if (requestUrl == "telegram" && !onlyFromKeystore) {
             SendMessageToTelegram(requestData);
@@ -63,7 +61,6 @@ void EventsService::SendMessageToTelegram(String message) {
     } else {
         logger.log("[EventsService] Telegram: Integration Disabled");
     }
-
 }
 
 void EventsService::SendHttpEvent(String &host, String &payload) {
@@ -94,13 +91,5 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
     }
 }
 
-void EventsService::UpdateEventProp(String prop) {
-    logger.log("[EventsService] Update event Prop: ", prop);
-    this->keystoreProp = std::move(prop);
-}
-
-void EventsService::UpdateEventDataWithKeystore(String &eventData, String &replaceWith) {
-    eventData.replace(this->propPattern, replaceWith);
-}
 
 

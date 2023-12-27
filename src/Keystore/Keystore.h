@@ -10,6 +10,7 @@
 #include "Global/Global.hpp"
 
 class Keystore {
+    typedef std::map<String, String> KeystoreItems;
 
 public:
     explicit Keystore(unsigned int maxKeystoreItemsToStore);
@@ -19,6 +20,8 @@ public:
 
     bool removeItem(String &key);
     String itemValue(String &key);
+
+    KeystoreItems keystoreItems() const;
 
 private:
     std::map<String, String> items;

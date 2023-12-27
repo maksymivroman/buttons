@@ -14,6 +14,7 @@
 #include "TelegramIntegration/TelegramIntegration.h"
 #include "TasksHandler/ButtonTask.h"
 #include "Logger/Logger.h"
+#include "Keystore/Keystore.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -24,7 +25,7 @@ const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
 
-bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS, keystoreUpdated;
+bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS, sendEventsOnKeystoreChange, requiredToUpdateEvents;
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
@@ -49,13 +50,14 @@ SoundService notifier(buzzerPin);
 EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
+Keystore keystore(20);
 /**Do not set max logs items more than 20,
  * it will cause heap overflow when using Telegram integration (BearSSL requires more than 12k of RAM) */
 Logger logger(115200, 20);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
         SendEventsTask, IntegrationTask, CheckConnectionTask(true),
-        FormatFSTask, OnKeystoreUpdateTask;
+        FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -74,13 +76,14 @@ void setup() {
     ledService.blinkDone();
 
     buttonSettings.loadButtonEepromSettings();
+    buttonSettings.loadEvents();
 
     if (buttonSettings.loggerEnabled()) {
         logger.start(buttonSettings.loggerLevel());
         logger.log("BUTTON CURRENT FW: " , currentFirmwareVersion);
     }
 
-    String eventsData = buttonSettings.loadEvents();
+    String eventsData = *buttonSettings.events();
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
@@ -160,25 +163,26 @@ void setup() {
     });
 
     server.on("/keystore", HTTP_GET, [](AsyncWebServerRequest *request) {
-        const bool hasPropParam = request->hasParam("prop");
-        const bool hasDelayParam = request->hasParam("delay");
-
-        if (hasPropParam) {
-            keystoreUpdated = true;
-            String paramData = request->getParam("prop")->value();
-            eventService.UpdateEventProp(paramData);
-
-            if(hasDelayParam) {
-                String delayParam = request->getParam("delay")->value();
-                timeToExecuteTask = millis() + std::stoi(delayParam.c_str());
-                logger.log("[MAIN->HTTP GET][keystore] Set task delay: ", timeToExecuteTask);
+        unsigned int paramsCount = request->params();
+        if (paramsCount != 0) {
+            for (unsigned int i = 0; i < paramsCount; i++) {
+                String paramName = request->getParam(i)->name();
+                String paramValue = request->getParam(i)->value();
+                logger.logSerial("[MAIN->HTTP GET][/keystore] receive param - ", paramName,": ", paramValue);
+                if (paramName == "delay") {
+                    const unsigned int delayMs = std::stoi(paramValue.c_str());
+                    timeToExecuteTask = millis() + delayMs;
+                    logger.log("[MAIN->HTTP GET][/keystore] Set task delay(ms): ", delayMs);
+                } else {
+                    keystore.addItem(paramName, paramValue);
+                }
             }
-
-            logger.log("[MAIN->HTTP GET][keystore]: Update Keystore: ", paramData);
+            sendEventsOnKeystoreChange = true;
+            requiredToUpdateEvents = true;
+            logger.log("[MAIN->HTTP GET][/keystore]: Update Keystore, total items - ", paramsCount);
             request->send_P(200, "text/html", "OK");
-        }
-        else {
-            logger.log("[MAIN->HTTP GET][keystore]: no parameter");
+        } else {
+            logger.log("[MAIN->HTTP GET][/keystore]: no parameters received");
             request->send_P(400, "text/html", "Bad Request");
         }
     });
@@ -215,6 +219,22 @@ void setup() {
 void loop() {
     delay(100);
 
+    UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){
+        ledService.updateKeystoreProgress(true);
+        auto items = keystore.keystoreItems();
+        String events = *buttonSettings.events();
+        for (auto &item: items) {
+            const auto &key = item.first;
+            const auto &value = item.second;
+            String constructKey = "$";
+            constructKey.concat(key); constructKey.concat("$");
+            events.replace(constructKey,value);
+        }
+        eventService.SetEvents(events);
+        ledService.updateKeystoreProgress(false);
+        requiredToUpdateEvents = false;
+    });
+
     SendEventsTask((digitalRead(buttonPin) == 1 || requiredToTriggerButton), [](){
         if (requiredToTriggerButton) {
             requiredToTriggerButton =!requiredToTriggerButton;
@@ -241,7 +261,6 @@ void loop() {
         buttonSettings.formatFS();
     });
 
-
     IntegrationTask(integrationMessageToSend.length() != 0, [](){
         notifier.onIntegrationMessage();
         telegramBot.sendMessage(integrationMessageToSend);
@@ -249,10 +268,10 @@ void loop() {
     });
 
     OnKeystoreUpdateTask(
-            keystoreUpdated, []() {
+            sendEventsOnKeystoreChange, []() {
                 ledService.updateKeystoreProgress(true);
                 eventService.SendEventsOnKeystoreChange();
-                keystoreUpdated = !keystoreUpdated;
+                sendEventsOnKeystoreChange = !sendEventsOnKeystoreChange;
                 timeToExecuteTask = 0;
                 ledService.updateKeystoreProgress(false);
             },
