@@ -239,6 +239,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             pointer-events: none;
         }
 
+        #sendEventOnKeystoreUpdate:not(:checked) ~ #delaySendEventsContainer {
+            opacity: .5;
+            pointer-events: none;
+            user-select: none;
+        }
+
         input:disabled {
             color: dimgray;
             background-color: lightgray;
@@ -389,17 +395,26 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         <div class="border" style="padding: 24px">
             <div class="item">
-                <input type="checkbox" id="keystoreEnabled" disabled checked>
-                <label for="keystoreEnabled" style="margin: 0 8px;">Enable keystore (store custom keys and use it in event data)</label>
+                <input type="checkbox" id="keystoreEnabled" checked>
+                <label for="keystoreEnabled" style="margin: 0 8px;">Enable keystore</label>
             </div>
-            <div class="item">
-                <input type="checkbox" id="keystoreSendEvent" disabled checked>
-                <label for="keystoreSendEvent" style="margin: 0 8px;">Send events on keystore update (event host should be marked by $)</label>
+            <div class="item" style="flex-wrap: wrap;">
+                <input type="checkbox" id="sendEventOnKeystoreUpdate" checked>
+                <label for="sendEventOnKeystoreUpdate" style="margin: 0 8px;">Send events on keystore update (marked with $) </label>
+
+                <div id="delaySendEventsContainer" class="item" style="margin-left: 32px;">
+                    <input type="checkbox" id="delaySendEvents" checked>
+                    <label for="delaySendEvents" style="margin: 0 8px;">Handle delay to send events ('delay' param)</label>
+                </div>
             </div>
-            <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
+            <div class="item" style="margin-left: 32px;">
+            </div>
+            <div style="display: flex; flex-flow: row; align-items: center; flex-wrap: wrap;">
                 <h5 class="item" style="margin: 0">Update keystore URL: </h5>
-                <h5 class="item" style="font-weight: normal; margin: 0">http://%IP%/keystore?prop=DATA&delay=DELAY</h5>
+                <h5 class="item" style="margin: 0">http://%IP%/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
             </div>
+            <h5 class="item" style="font-weight: normal; margin: 0">delay - if provided, send events will be initiated after delay, ms</h5>
+            <h5 class="item" style="font-weight: normal; margin: 0">Use $key$ expression for event data, and it will be replaced by corresponding value</h5>
         </div>
 
         <h2 class="section-header">General settings</h2>
@@ -535,6 +550,10 @@ const char index_html[] PROGMEM = R"rawliteral(
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
             <h5 style="margin: 5px">%HEAP% </h5>
         </div>
+        <div class="flexbox-wrap max-h">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Keystore keys:</h5>
+            <h5 style="margin: 5px">%KSKEYS%</h5>
+        </div>
     </div>
 
 </div>
@@ -649,7 +668,9 @@ const char index_html[] PROGMEM = R"rawliteral(
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
-        const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
+        const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);        const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
+        const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
+        const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
 
         const extrasConfig = JSON.stringify({
             clientWebAccess,
@@ -661,6 +682,9 @@ const char index_html[] PROGMEM = R"rawliteral(
             customHSsid,
             enableOtaUpdate,
             remoteTriggering,
+            keystoreEnabled,
+            sendEventOnKeystoreUpdate,
+            delaySendEvents,
             wifiSsid: name,
             wifiPass: pass,
             hotspotSsid: hSsid
@@ -726,6 +750,9 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
         document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
         document.getElementById('remoteTriggering').checked = config.remoteTriggering;
+        document.getElementById('keystoreEnabled').checked = config.keystoreEnabled;
+        document.getElementById('sendEventOnKeystoreUpdate').checked = config.sendEventOnKeystoreUpdate;
+        document.getElementById('delaySendEvents').checked = config.delaySendEvents;
 
         integrationConfig = %INTEGRATION% ;
 

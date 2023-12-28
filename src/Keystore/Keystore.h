@@ -23,8 +23,10 @@ public:
 
     KeystoreItems keystoreItems() const;
 
+    unsigned int currentItemsCount() const;
+
 private:
-    std::map<String, String> items;
+    KeystoreItems items;
 
     const String emptyReturnValue = "";
     unsigned int maxKeystoreItems;

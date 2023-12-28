@@ -48,4 +48,6 @@ Keystore::KeystoreItems Keystore::keystoreItems() const {
     return this->items;
 }
 
-
+unsigned int Keystore::currentItemsCount() const {
+    return this->items.size();;
+}

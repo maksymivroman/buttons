@@ -57,6 +57,9 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "HEAP") {
         data += ESP.getFreeHeap();
         return data;
+    } else if (ref == "KSKEYS") {
+        data += keystore.currentItemsCount();
+        return data;
     } else if (ref == "IP") {
         switch (WiFi.getMode()) {
             case WIFI_STA:
@@ -98,9 +101,9 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             remoteTriggering:<remoteTriggering>,
             fwVersion: <fwVersion>,
             hotspotSsid: "<hotspotSsid>",
-            keystoreEnabled: "<keystoreEnabled>",
-            sendEventOnKeystoreUpdate: "<sendEventOnKeystoreUpdate>",
-            delaySendEvents: "<delaySendEvents>"
+            keystoreEnabled: <keystoreEnabled>,
+            sendEventOnKeystoreUpdate: <sendEventOnKeystoreUpdate>,
+            delaySendEvents: <delaySendEvents>
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
