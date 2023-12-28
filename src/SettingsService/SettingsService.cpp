@@ -132,6 +132,10 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
 
+    settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
+    settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
+    settings.delaySendEvents = jsonSettings["delaySendEvents"].as<bool>() | false;
+
     logger.log("[SettingsService] -> EEPROM config size: ", sizeof settings);
 
     EEPROM.begin(1024);

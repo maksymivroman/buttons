@@ -97,7 +97,10 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             useTelegramIntegration: <useTelegramIntegration>,
             remoteTriggering:<remoteTriggering>,
             fwVersion: <fwVersion>,
-            hotspotSsid: "<hotspotSsid>"
+            hotspotSsid: "<hotspotSsid>",
+            keystoreEnabled: "<keystoreEnabled>",
+            sendEventOnKeystoreUpdate: "<sendEventOnKeystoreUpdate>",
+            delaySendEvents: "<delaySendEvents>"
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
@@ -111,6 +114,9 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     configObj.replace("<fwVersion>", String(data.fwVersion));
     configObj.replace("<hotspotSsid>", String(data.hotspotSsid));
     configObj.replace("<useCustomHSsid>", String(data.useCustomHSsid));
+    configObj.replace("<keystoreEnabled>", String(data.keystoreEnabled));
+    configObj.replace("<sendEventOnKeystoreUpdate>", String(data.sendEventOnKeystoreUpdate));
+    configObj.replace("<delaySendEvents>", String(data.delaySendEvents));
 
     return configObj;
 }
