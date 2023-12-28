@@ -395,15 +395,15 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         <div class="border" style="padding: 24px">
             <div class="item">
-                <input type="checkbox" id="keystoreEnabled" checked>
+                <input type="checkbox" id="keystoreEnabled">
                 <label for="keystoreEnabled" style="margin: 0 8px;">Enable keystore</label>
             </div>
             <div class="item" style="flex-wrap: wrap;">
-                <input type="checkbox" id="sendEventOnKeystoreUpdate" checked>
+                <input type="checkbox" id="sendEventOnKeystoreUpdate">
                 <label for="sendEventOnKeystoreUpdate" style="margin: 0 8px;">Send events on keystore update (marked with $) </label>
 
                 <div id="delaySendEventsContainer" class="item" style="margin-left: 32px;">
-                    <input type="checkbox" id="delaySendEvents" checked>
+                    <input type="checkbox" id="delaySendEvents">
                     <label for="delaySendEvents" style="margin: 0 8px;">Handle delay to send events ('delay' param)</label>
                 </div>
             </div>
@@ -1132,7 +1132,7 @@ const char logs_page[] PROGMEM = R"rawliteral(
             <div style="display: flex; align-items: baseline; margin-left: 12px;">
                 <h2 style="color: white; font-weight: 200;">event button</h2>
                 <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
-                <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Setup</h4>
+                <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Logs</h4>
             </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">

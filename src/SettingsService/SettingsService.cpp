@@ -255,3 +255,12 @@ void SettingsService::formatFS() {
     }
     logger.log("[SettingsService][SPIFFS] Exit Format FS");
 }
+
+KEYSTORESETTINGS SettingsService::keystoreSettings() const {
+    KEYSTORESETTINGS settings = {
+            buttonEepromSettings.keystoreEnabled,
+            buttonEepromSettings.sendEventOnKeystoreUpdate,
+            buttonEepromSettings.delaySendEvents
+    };
+    return settings;
+}

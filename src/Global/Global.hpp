@@ -11,7 +11,7 @@
 
 extern Logger logger;
 
-const String currentFirmwareVersion = String("1.3.0 dev - build date: ") + __DATE__;
+const String currentFirmwareVersion = String("1.3.0 - build date: ") + __DATE__;
 
 struct WiFiCONFIG {
     String ssid;
@@ -48,6 +48,12 @@ struct EEPROMSETTINGS {
     char wifiSsid[256]{};
     char wifiPass[256]{};
     char hotspotSsid[32]{};
+};
+
+struct KEYSTORESETTINGS {
+    bool enabled;
+    bool sendEventsOnUpdate;
+    bool delayEvent;
 };
 
 struct INTEGRATIONSETTINGS {

@@ -29,6 +29,7 @@ public:
     bool loggerEnabled() const;
     LoggerLevel loggerLevel() const;
     char * customHotspotSsid();
+    KEYSTORESETTINGS keystoreSettings() const;
 
 private:
     void writeButtonEepromSettings(String& config);

@@ -88,6 +88,7 @@ void setup() {
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
     INTEGRATIONSETTINGS integrationConfig = buttonSettings.integrationSettings();
+    KEYSTORESETTINGS keystoreSettings = buttonSettings.keystoreSettings();
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
     notifier.useSound = buttonSettings.useSoundNotification();
@@ -162,28 +163,33 @@ void setup() {
         request->send(responseCode, "text/html", responseData);
     });
 
-    server.on("/keystore", HTTP_GET, [](AsyncWebServerRequest *request) {
-        unsigned int paramsCount = request->params();
-        if (paramsCount != 0) {
-            for (unsigned int i = 0; i < paramsCount; i++) {
-                String paramName = request->getParam(i)->name();
-                String paramValue = request->getParam(i)->value();
-                logger.logSerial("[MAIN->HTTP GET][/keystore] receive param - ", paramName,": ", paramValue);
-                if (paramName == "delay") {
-                    const unsigned int delayMs = std::stoi(paramValue.c_str());
-                    timeToExecuteTask = millis() + delayMs;
-                    logger.log("[MAIN->HTTP GET][/keystore] Set task delay(ms): ", delayMs);
-                } else {
-                    keystore.addItem(paramName, paramValue);
+    server.on("/keystore", HTTP_GET, [keystoreSettings](AsyncWebServerRequest *request) {
+        if (keystoreSettings.enabled) {
+            unsigned int paramsCount = request->params();
+            if (paramsCount != 0) {
+                for (unsigned int i = 0; i < paramsCount; i++) {
+                    String paramName = request->getParam(i)->name();
+                    String paramValue = request->getParam(i)->value();
+                    logger.logSerial("[MAIN->HTTP GET][/keystore] receive param - ", paramName,": ", paramValue);
+                    if (paramName == "delay" && keystoreSettings.delayEvent) {
+                        const unsigned int delayMs = std::stoi(paramValue.c_str());
+                        timeToExecuteTask = millis() + delayMs;
+                        logger.log("[MAIN->HTTP GET][/keystore] Set task delay(ms): ", delayMs);
+                    } else {
+                        keystore.addItem(paramName, paramValue);
+                    }
                 }
+                if (keystoreSettings.sendEventsOnUpdate) sendEventsOnKeystoreChange = true;
+                requiredToUpdateEvents = true;
+                logger.log("[MAIN->HTTP GET][/keystore]: Update Keystore, total items - ", paramsCount);
+                request->send_P(200, "text/html", "OK");
+            } else {
+                logger.log("[MAIN->HTTP GET][/keystore]: no parameters received");
+                request->send_P(400, "text/html", "Bad Request");
             }
-            sendEventsOnKeystoreChange = true;
-            requiredToUpdateEvents = true;
-            logger.log("[MAIN->HTTP GET][/keystore]: Update Keystore, total items - ", paramsCount);
-            request->send_P(200, "text/html", "OK");
         } else {
-            logger.log("[MAIN->HTTP GET][/keystore]: no parameters received");
-            request->send_P(400, "text/html", "Bad Request");
+            logger.log("[MAIN->HTTP GET][/keystore]: Keystore disabled. Forbidden.");
+            request->send_P(403, "text/html", "Forbidden");
         }
     });
 
