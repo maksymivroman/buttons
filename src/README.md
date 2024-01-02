@@ -1,8 +1,8 @@
 > ### Pin state for button is `0` by default (pulled down)
 
-### EEPROM struct configuration 
+### EEPROM configuration 
 #### _reserved 1024 bytes_
-#### _used 560 bytes_
+#### _used 564 bytes_
 
 ```c++
 struct EEPROMSETTINGS {
@@ -14,6 +14,11 @@ struct EEPROMSETTINGS {
     bool useCustomHSsid;
     bool useTelegramIntegration;
     bool remoteTriggering;
+    
+    bool keystoreEnabled = false;
+    bool sendEventOnKeystoreUpdate = false;
+    bool delaySendEvents = false; 
+    
     unsigned int loggerLevel;
     unsigned int fwVersion;
     char wifiSsid[256]{};
@@ -23,10 +28,10 @@ struct EEPROMSETTINGS {
 ```
 
 > To format EEPROM: connect to button hotspot and send POST request to 192.168.4.1 
-> with Content-Type:application/form-data: 
+> with Content-Type:application/x-form-data: 
 > Key/Value: CLEAR_EEPROM: CLEAR_EEPROM
 
-> ### Receiving configuration data via POST request
+> ### Receiving configuration data with POST request
 ### Data structure (JSON)
 
 

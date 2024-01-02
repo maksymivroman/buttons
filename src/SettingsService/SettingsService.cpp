@@ -18,8 +18,12 @@ WiFiCONFIG SettingsService::getWiFiConnDetails() {
     return eepromWiFiConfig;
 }
 
-String SettingsService::loadEvents() {
-    return dataFromFS("/post.json");
+void SettingsService::loadEvents() {
+    this->eventsData = dataFromFS("/post.json");
+}
+
+const String *SettingsService::events() {
+    return &this->eventsData;
 }
 
 INTEGRATIONSETTINGS SettingsService::integrationSettings() {
@@ -127,6 +131,10 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
+
+    settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
+    settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
+    settings.delaySendEvents = jsonSettings["delaySendEvents"].as<bool>() | false;
 
     logger.log("[SettingsService] -> EEPROM config size: ", sizeof settings);
 
@@ -246,4 +254,13 @@ void SettingsService::formatFS() {
         logger.log("[SettingsService][SPIFFS] Error mounting the dataFile system");
     }
     logger.log("[SettingsService][SPIFFS] Exit Format FS");
+}
+
+KEYSTORESETTINGS SettingsService::keystoreSettings() const {
+    KEYSTORESETTINGS settings = {
+            buttonEepromSettings.keystoreEnabled,
+            buttonEepromSettings.sendEventOnKeystoreUpdate,
+            buttonEepromSettings.delaySendEvents
+    };
+    return settings;
 }

@@ -8,6 +8,9 @@
 #include <Arduino.h>
 #include "Global/Global.hpp"
 #include <ESP8266WiFi.h>
+#include "Keystore/Keystore.h"
+
+extern Keystore keystore;
 
 class HTMLComponentBuilder {
 public:

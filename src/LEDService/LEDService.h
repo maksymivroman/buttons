@@ -11,11 +11,13 @@ public:
     void lightOnRed(bool on);
     void lightOnGreen(bool on);
     void lightOnBlue(bool on);
+    void lightOnPurple(bool on);
     void blinkWarn();
     void blinkPrimary();
     void blinkDone();
     void findMe();
     void eventsSendInProgress(bool on);
+    void updateKeystoreProgress(bool on);
     void idle();
 
 private:
@@ -24,6 +26,7 @@ private:
     int pinBlue;
     RGBCONFIG rgbCurrentState;
 
+    void switchPin(RGBCONFIG pinsState = {0,0,0}) const;
     void switchPin(int pin, int state) const;
     void blink(int pin, int count);
     void saveCurrentRGBState();

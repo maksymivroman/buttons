@@ -10,11 +10,19 @@
 #include "Global/Global.hpp"
 
 void EventsService::SendEvents() {
+    ProcessToSend();
+}
+
+void EventsService::SendEventsOnKeystoreChange() {
+    ProcessToSend(true);
+}
+
+void EventsService::ProcessToSend(boolean onlyFromKeystore) {
     logger.log("[EventsService] SendEvents");
-    logger.logSerial("[EventsService] SendEvents", events);
+    logger.logSerial("[EventsService] SendEvents", this->events);
 
     StaticJsonDocument<900> doc;
-    deserializeJson(doc, events);
+    deserializeJson(doc, this->events);
     JsonObject data = doc.as<JsonObject>();
 
     String requestUrl;
@@ -27,10 +35,15 @@ void EventsService::SendEvents() {
         logger.logSerial("[EventsService] request data: ", requestData);
         logger.logSerial("[EventsService] request URL: ", requestUrl);
 
-        if (requestUrl == "telegram") {
+        if (requestUrl == "telegram" && !onlyFromKeystore) {
             SendMessageToTelegram(requestData);
-        } else {
+        } else if (onlyFromKeystore && requestUrl.substring(0, 1) == "$") {
+            requestUrl.remove(0, 1);
             SendHttpEvent(requestUrl, requestData);
+        } else {
+            if(requestUrl.substring(0, 1) != "$" && !onlyFromKeystore) {
+                SendHttpEvent(requestUrl, requestData);
+            }
         }
     }
 }
@@ -48,7 +61,6 @@ void EventsService::SendMessageToTelegram(String message) {
     } else {
         logger.log("[EventsService] Telegram: Integration Disabled");
     }
-
 }
 
 void EventsService::SendHttpEvent(String &host, String &payload) {
@@ -78,3 +90,6 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
         logger.log("[EventsService] Skip secure connection!");
     }
 }
+
+
+
