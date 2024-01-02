@@ -9,8 +9,10 @@
 #include "Global/Global.hpp"
 #include <ESP8266WiFi.h>
 #include "Keystore/Keystore.h"
+#include "Global/Version.h"
 
 extern Keystore keystore;
+extern Version currentFWVersion;
 
 class HTMLComponentBuilder {
 public:

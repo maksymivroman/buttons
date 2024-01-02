@@ -27,13 +27,17 @@ public:
     bool otaUpdateOnClientMode() const;
     bool remoteButtonTriggering() const;
     bool loggerEnabled() const;
+    unsigned int fwVersion() const;
     LoggerLevel loggerLevel() const;
-    char * customHotspotSsid();
+    char *customHotspotSsid();
     KEYSTORESETTINGS keystoreSettings() const;
+
+    void handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat);
 
 private:
     void writeButtonEepromSettings(String& config);
     void saveIntegrationSettings(String settings);
+    void writeToEEPROM(EEPROMSETTINGS settings);
 
     String dataFromFS(const String& fileName);
     String eventsData;

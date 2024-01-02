@@ -136,11 +136,11 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
     settings.delaySendEvents = jsonSettings["delaySendEvents"].as<bool>() | false;
 
+    settings.fwVersion = this->buttonEepromSettings.fwVersion;
+
     logger.log("[SettingsService] -> EEPROM config size: ", sizeof settings);
 
-    EEPROM.begin(1024);
-    EEPROM.put(0, settings);
-    EEPROM.end();
+    this->writeToEEPROM(settings);
 }
 
 EEPROMSETTINGS SettingsService::getButtonConfig() {
@@ -263,4 +263,31 @@ KEYSTORESETTINGS SettingsService::keystoreSettings() const {
             buttonEepromSettings.delaySendEvents
     };
     return settings;
+}
+
+unsigned int SettingsService::fwVersion() const {
+    return buttonEepromSettings.fwVersion;
+}
+
+void SettingsService::writeToEEPROM(EEPROMSETTINGS settings) {
+    logger.log("[SettingsService] -> Write to EEPROM ", sizeof settings, " bytes...");
+    EEPROM.begin(1024);
+    EEPROM.put(0, settings);
+    EEPROM.end();
+    logger.log("[SettingsService] -> Write to EEPROM. DONE");
+}
+
+void SettingsService::handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat = false) {
+    const bool versionChanged = buttonEepromSettings.fwVersion != currentFWVersion;
+
+    if (versionChanged && requireEEPROMFormat) {
+        EEPROMSETTINGS defaultEEPROMConfig;
+        defaultEEPROMConfig.fwVersion = currentFWVersion;
+        this->clearEeprom();
+        this->writeToEEPROM(defaultEEPROMConfig);
+        this->buttonEepromSettings = defaultEEPROMConfig;
+    }else {
+        this->buttonEepromSettings.fwVersion = currentFWVersion;
+        this->writeToEEPROM(buttonEepromSettings);
+    }
 }
