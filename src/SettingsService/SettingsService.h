@@ -11,13 +11,14 @@
 class SettingsService {
 public:
     WiFiCONFIG getWiFiConnDetails();
-    String loadEvents();
+    const String *events();
     INTEGRATIONSETTINGS integrationSettings();
     EEPROMSETTINGS getButtonConfig();
 
     void saveEvents(String events);
     void saveSettings(String settings);
     void loadButtonEepromSettings();
+    void loadEvents();
     void clearEeprom();
     void formatFS();
     bool clientWebAccessEnabled() const;
@@ -28,12 +29,14 @@ public:
     bool loggerEnabled() const;
     LoggerLevel loggerLevel() const;
     char * customHotspotSsid();
+    KEYSTORESETTINGS keystoreSettings() const;
 
 private:
     void writeButtonEepromSettings(String& config);
     void saveIntegrationSettings(String settings);
 
     String dataFromFS(const String& fileName);
+    String eventsData;
 
     EEPROMSETTINGS buttonEepromSettings;
 };

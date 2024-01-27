@@ -13,12 +13,14 @@ class EventsService {
 public:
     void SendEvents();
     void SetEvents(String eventsData);
+    void SendEventsOnKeystoreChange();
 
     TelegramIntegration *telegramBotRef = nullptr;
 
 private:
     void SendMessageToTelegram(String message);
     void SendHttpEvent(String &host, String &payload);
+    void ProcessToSend(boolean onlyFromKeystore = false);
 
     String events;
 
