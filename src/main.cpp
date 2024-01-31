@@ -4,6 +4,7 @@
 
 #include "ButtonOTAUpdate/AsyncOtaUpdate.h"
 #include "Global/Global.hpp"
+#include "Global/Version.h"
 #include "HTMLPage/html-page.hpp"
 #include "LEDService/LEDService.h"
 #include "SettingsService/SettingsService.h"
@@ -41,6 +42,8 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
+Version currentFWVersion(1,3,0, false);
+
 LEDService ledService;
 SettingsService buttonSettings;
 AsyncWebServer server(80);
@@ -76,12 +79,14 @@ void setup() {
     ledService.blinkDone();
 
     buttonSettings.loadButtonEepromSettings();
-    buttonSettings.loadEvents();
+    buttonSettings.handleVersionChange(currentFWVersion.uint_version(), currentFWVersion.EEPROMStructureChanged());
 
     if (buttonSettings.loggerEnabled()) {
         logger.start(buttonSettings.loggerLevel());
-        logger.log("BUTTON CURRENT FW: " , currentFirmwareVersion);
+        logger.log("BUTTON CURRENT FW: " , currentFWVersion.str_fullVersion());
     }
+
+    buttonSettings.loadEvents();
 
     String eventsData = *buttonSettings.events();
 

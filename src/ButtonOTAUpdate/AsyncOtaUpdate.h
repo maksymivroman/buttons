@@ -20,8 +20,10 @@
 #include "UpdateWebPage.h"
 #include "Global/Global.hpp"
 #include "Logger/Logger.h"
+#include "Global/Version.h"
 
 extern Logger logger;
+extern Version currentFWVersion;
 
 class AsyncOtaUpdate{
 
@@ -68,7 +70,7 @@ public:
         });
 
         _server->on("/update", HTTP_POST, [&](AsyncWebServerRequest *request) {
-            logger.log("[UPDATE - POST]");
+            logger.log("[UPDATE] Upload...");
             if(_authRequired){
                 if(!request->authenticate(_username.c_str(), _password.c_str())){
                     return request->requestAuthentication();
@@ -128,7 +130,7 @@ public:
 }
 
 void restart() {
-    logger.log("[UPDATE - restart]");
+    logger.log("[FW UPDATE] Restart...");
     requireToRestart = true;
 }
 
@@ -143,7 +145,7 @@ String getID(){
 }
 
 String getFW(){
-    return currentFirmwareVersion;
+    return currentFWVersion.str_fullVersion();
 }
 
 String _id = getID();
