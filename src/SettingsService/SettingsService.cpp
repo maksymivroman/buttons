@@ -202,6 +202,14 @@ char *SettingsService::customHotspotSsid() {
     return const_cast<char *>(name);
 }
 
+String SettingsService::deviceID() const{
+    String espDefaultName = "eButton-";
+    const String mac = WiFi.macAddress();
+    espDefaultName += mac.substring(mac.length() - 6, mac.length());
+    espDefaultName.replace(':', 'x');
+    return espDefaultName;
+}
+
 String SettingsService::dataFromFS(const String &fileName) {
     String data;
     const char *file = fileName.c_str();
@@ -289,5 +297,20 @@ void SettingsService::handleVersionChange(unsigned int currentFWVersion, bool re
     }else {
         this->buttonEepromSettings.fwVersion = currentFWVersion;
         this->writeToEEPROM(buttonEepromSettings);
+    }
+}
+
+String SettingsService::macAddress() const {
+    return WiFi.macAddress();
+}
+
+String SettingsService::localIPAddress() const {
+    switch (WiFi.getMode()) {
+        case WIFI_STA:
+            return WiFi.localIP().toString();
+        case WIFI_AP_STA:
+            return WiFi.softAPIP().toString();
+        default:
+            return "unknown";
     }
 }
