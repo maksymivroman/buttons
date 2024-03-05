@@ -12,21 +12,27 @@ typedef enum {
     STAT_HTTP_GET
 } http_stat_method;
 
+typedef enum  {
+    STAT_SIMPLE, STAT_EXTENDED
+} StatisticLevel;
+
 class Statistic {
 
 public:
-    void initStat(String apiUrl, http_stat_method method = STAT_HTTP_POST, bool sendExtendedData = true);
+    void initStat(String apiUrl, http_stat_method method = STAT_HTTP_POST, unsigned int statisticLevel = 0);
     void sendStat(String data);
 
 private:
     String apiUrl;
     http_stat_method method;
     bool sendExtendedData;
+    bool enabled;
 
     String prepareData(const String &data);
     String extendedData();
 
     int httpPost(String &url, const String &payload);
+    int httpsPost(String &url, const String &payload);
 
 };
 

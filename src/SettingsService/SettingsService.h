@@ -27,8 +27,11 @@ public:
     bool otaUpdateOnClientMode() const;
     bool remoteButtonTriggering() const;
     bool loggerEnabled() const;
+    bool statisticEnabled() const;
+    String statisticApi() const;
     unsigned int fwVersion() const;
     LoggerLevel loggerLevel() const;
+    unsigned int statisticLevel() const;
     char *customHotspotSsid();
     String deviceID() const;
     KEYSTORESETTINGS keystoreSettings() const;

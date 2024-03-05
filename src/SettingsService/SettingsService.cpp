@@ -109,28 +109,37 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     String wiFiPassword = jsonSettings["wifiPass"] | "";
     String hotspotSsid = jsonSettings["hotspotSsid"] | "";
 
-    char ssid[256], pass[256], hSsid[32];
+    String statisticApi = jsonSettings["statisticApi"] | "";
+
+    char ssid[256], pass[256], hSsid[32], statApi[256];
 
     wiFiName.toCharArray(ssid, 256);
     wiFiPassword.toCharArray(pass, 256);
     hotspotSsid.toCharArray(hSsid, 32);
+
+    statisticApi.toCharArray(statApi, 256);
 
     strcpy(settings.wifiSsid, ssid);
     strcpy(settings.wifiPass, pass);
 
     strcpy(settings.hotspotSsid, hSsid);
 
+    strcpy(settings.statisticApi, statApi);
+
     //TODO if button on client mode next settings should not be changed
     settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
 
     settings.loggerEnabled = jsonSettings["loggerEnabled"].as<bool>() | false;
+    settings.statisticEnabled = jsonSettings["statisticEnabled"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
     settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
+
+    settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
 
     settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
@@ -171,8 +180,20 @@ bool SettingsService::loggerEnabled() const {
     return buttonEepromSettings.loggerEnabled | false;
 }
 
+bool SettingsService::statisticEnabled() const {
+    return buttonEepromSettings.statisticEnabled | false;
+}
+
 LoggerLevel SettingsService::loggerLevel() const {
     return static_cast<LoggerLevel>(buttonEepromSettings.loggerLevel);
+}
+
+unsigned int SettingsService::statisticLevel() const {
+    return buttonEepromSettings.statisticLevel;
+}
+
+String SettingsService::statisticApi() const {
+    return buttonEepromSettings.statisticApi;
 }
 
 void SettingsService::clearEeprom() {
@@ -314,3 +335,4 @@ String SettingsService::localIPAddress() const {
             return "unknown";
     }
 }
+
