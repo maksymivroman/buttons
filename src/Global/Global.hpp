@@ -11,15 +11,13 @@
 
 extern Logger logger;
 
-const String currentFirmwareVersion = String("1.3.0 - build date: ") + __DATE__;
-
 struct WiFiCONFIG {
     String ssid;
     String password;
 };
 
 struct NETWORKLIST {
-    String* arr = nullptr;
+    String *arr = nullptr;
     int8_t size = 0;
 };
 

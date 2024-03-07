@@ -3,7 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>Event button | Logs</title>
+    <title>Sanitizer | Logs</title>
     <style>
         html {
             font-size: 16px;
@@ -21,7 +21,7 @@
 
         .header {
             max-height: 50px;
-            background-color: #1e5e9d;
+            background-color: #316b32;
             width: 100vw;
             padding: 0 12px 0 12px;
             display: flex;
@@ -39,7 +39,7 @@
         }
 
         .btn {
-            color: #fff;
+            color: #e30000;
             display: inline-block;
             font-weight: 400;
             text-align: center;
@@ -57,12 +57,12 @@
         }
 
         .btn-red {
-            background-color: #cb1d38;
-            border: 1px solid #cb1d38;
+            background-color: #4a58b1;
+            border: 1px solid #3c4bab;
         }
 
         .btn-red:hover:not(:disabled) {
-            background-color: #a6132f;
+            background-color: #4a58b1;
         }
 
         button, input, optgroup, select, textarea {
@@ -105,14 +105,11 @@
 <div style="display: flex; flex-flow: column; overflow: auto;">
     <div class="header">
         <div style="display: flex; align-items: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="36px" height="36px" viewBox="0 3 24 24">
-                <g> <polygon style="fill:#FFFFFF" points="12.08,6.53 23.67,10.2 12.12,14.49 0.36,10.11 12.08,6.53 12.08,6.35 0,10.08 0,14.35 11.99,18.85 23.98,14.35 23.98,10.19 12.08,6.35 "/>
-                    <polygon style="fill:#FFFFFF" points="11.99,21.71 0.02,17.12 0.02,19.41 12.01,24 24,19.42 24,17.13 "/>
-                    <polygon style="fill:#FFFFFF " points="0.36,10.11 12.12,14.49 23.67,10.2 12.08,6.53 "/>
-                </g>
+            <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 -960 960 960" width="36" fill="#FFFFFF">
+                <path d="M700-640q-39 0-69.5-30.5T600-740q0-35 23-77.5T700-920q54 60 77 102.5t23 77.5q0 39-30.5 69.5T700-640ZM240-80q-66 0-113-47T80-240v-216q0-31 14.5-57.5T135-557l330-214 20 20q20 20 23.5 47.5T497-652l-45 72h308q17 0 28.5 11.5T800-540q0 17-11.5 28.5T760-500H308l77-124-207 134q-9 5-13.5 14t-4.5 20v216q0 33 23.5 56.5T240-160h480q17 0 28.5 11.5T760-120q0 17-11.5 28.5T720-80H240Zm240-280v-80h360q17 0 28.5 11.5T880-400q0 17-11.5 28.5T840-360H480Zm0 140v-80h320q17 0 28.5 11.5T840-260q0 17-11.5 28.5T800-220H480ZM320-360Z"/>
             </svg>
             <div style="display: flex; align-items: baseline; margin-left: 12px;">
-                <h2 style="color: white; font-weight: 200;">event button</h2>
+                <h2 style="color: white; font-weight: 200;">Sanitizer</h2>
                 <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
                 <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Logs</h4>
             </div>
