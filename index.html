@@ -3,7 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>Event button | Setup</title>
+    <title>Sanitizer | Setup</title>
     <style>
         html {
             font-size: 16px;
@@ -21,7 +21,7 @@
 
         .header {
             max-height: 50px;
-            background-color: #1e5e9d;
+            background-color: #316b32;
             width: 100vw;
             padding: 0 12px 0 12px;
             display: flex;
@@ -194,13 +194,13 @@
         }
 
         .btn-red {
-            background-color: #cb1d38;
-            border: 1px solid #cb1d38;
+            background-color: #4a58b1;
+            border: 1px solid #3c4bab;
         }
 
         .btn-blue {
-            background-color: #1e5e9d;
-            border: 1px solid #165c9f;
+            background-color: #336934;
+            border: 1px solid #316b32;
         }
 
         .small-btn {
@@ -209,11 +209,11 @@
         }
 
         .btn-red:hover:not(:disabled) {
-            background-color: #a6132f;
+            background-color: #4a58b1;
         }
 
         .btn-blue:hover:not(:disabled) {
-            background-color: #083867;
+            background-color: #316b32;
         }
 
         .label {
@@ -231,12 +231,6 @@
         #loggerEnabled:not(:checked) ~ #loggerLevel {
             color: darkgray;
             pointer-events: none;
-        }
-
-        #sendEventOnKeystoreUpdate:not(:checked) ~ #delaySendEventsContainer {
-            opacity: .5;
-            pointer-events: none;
-            user-select: none;
         }
 
         input:disabled {
@@ -291,7 +285,6 @@
         .flexbox-column-centered {
             display: flex;
             flex-flow: column;
-            /*justify-content: center;*/
             align-items: center
         }
 
@@ -323,21 +316,18 @@
 
     <div class="header">
         <div style="display: flex; align-items: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="36px" height="36px" viewBox="0 3 24 24">
-                <g> <polygon style="fill:#FFFFFF" points="12.08,6.53 23.67,10.2 12.12,14.49 0.36,10.11 12.08,6.53 12.08,6.35 0,10.08 0,14.35 11.99,18.85 23.98,14.35 23.98,10.19 12.08,6.35 "/>
-                    <polygon style="fill:#FFFFFF" points="11.99,21.71 0.02,17.12 0.02,19.41 12.01,24 24,19.42 24,17.13 "/>
-                    <polygon style="fill:#FFFFFF " points="0.36,10.11 12.12,14.49 23.67,10.2 12.08,6.53 "/>
-                </g>
-            </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 -960 960 960" width="36" fill="#FFFFFF">
+                    <path d="M700-640q-39 0-69.5-30.5T600-740q0-35 23-77.5T700-920q54 60 77 102.5t23 77.5q0 39-30.5 69.5T700-640ZM240-80q-66 0-113-47T80-240v-216q0-31 14.5-57.5T135-557l330-214 20 20q20 20 23.5 47.5T497-652l-45 72h308q17 0 28.5 11.5T800-540q0 17-11.5 28.5T760-500H308l77-124-207 134q-9 5-13.5 14t-4.5 20v216q0 33 23.5 56.5T240-160h480q17 0 28.5 11.5T760-120q0 17-11.5 28.5T720-80H240Zm240-280v-80h360q17 0 28.5 11.5T880-400q0 17-11.5 28.5T840-360H480Zm0 140v-80h320q17 0 28.5 11.5T840-260q0 17-11.5 28.5T800-220H480ZM320-360Z"/>
+                </svg>
             <div style="display: flex; align-items: baseline; margin-left: 12px;">
-                <h2 style="color: white; font-weight: 200;">event button</h2>
+                <h2 style="color: white; font-weight: 200;">Sanitizer</h2>
                 <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
                 <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Setup</h4>
             </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="find()">Find me</button>
-            <button id="updateBtn" style="align-self: flex-end;" type="button" class="btn btn-red"
+            <button disabled id="updateBtn" style="align-self: flex-end;" type="button" class="btn btn-red"
                     onclick="location.href='/update'">FW Update
             </button>
         </div>
@@ -396,49 +386,18 @@
 
         </div>
 
-        <h2 class="section-header">Keystore</h2>
-
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="keystoreEnabled">
-                <label for="keystoreEnabled" style="margin: 0 8px;">Enable keystore</label>
-            </div>
-            <div class="item" style="flex-wrap: wrap;">
-                <input type="checkbox" id="sendEventOnKeystoreUpdate">
-                <label for="sendEventOnKeystoreUpdate" style="margin: 0 8px;">Send events on keystore update (marked with $) </label>
-
-                <div id="delaySendEventsContainer" class="item" style="margin-left: 32px;">
-                    <input type="checkbox" id="delaySendEvents">
-                    <label for="delaySendEvents" style="margin: 0 8px;">Handle delay to send events ('delay' param)</label>
-                </div>
-            </div>
-            <div class="item" style="margin-left: 32px;">
-            </div>
-            <div style="display: flex; flex-flow: row; align-items: center; flex-wrap: wrap;">
-                <h5 class="item" style="margin: 0">Update keystore URL: </h5>
-                <h5 class="item" style=" margin: 0">http://%IP%/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
-            </div>
-            <h5 class="item" style="font-weight: normal; margin: 0">delay - if provided, send events will be initiated after delay, ms</h5>
-            <h5 class="item" style="font-weight: normal; margin: 0">Use $key$ expression for event data, and it will be replaced by corresponding value</h5>
-        </div>
-
         <h2 class="section-header">General settings</h2>
 
         <div class="modal" id="successModel">
             <div style="display: flex; align-items: center; flex-flow: column">
-                <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200px" height="200px" style="fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200">
-                    <g id="Layer_x0020_1">
-                        <polygon fill="#5B5A50" points="193.05,122.02 198.24,124.05 99.92,161.86 2.62,124.46 7.84,122.52 5.7,121.72 0.16,123.79 0.16,142.69 100.09,180.95 200,142.76 200,123.79 194.3,121.66 "/>
-                        <polygon fill="#5B5B5B" points="100.7,54.44 197.22,85.03 101.01,120.73 2.98,84.29 100.7,54.44 100.7,52.91 0,83.98 0,119.58 99.92,157.05 199.85,119.58 199.85,84.91 100.7,52.91 "/>
-                        <polygon id="upload-box_1" fill="#E53324" points="99.92,180.91 0.16,142.69 0.16,161.73 100.09,200 200,161.81 200,142.77 "/>
-                        <polygon fill="#898989" points="2.98,84.29 101.01,120.73 197.22,85.03 100.7,54.44 "/>
-                    </g>
+                <svg xmlns="http://www.w3.org/2000/svg" height="200" viewBox="0 -960 960 960" width="200" fill="#e30000">
+                    <path id="upload-box_1" d="M700-640q-39 0-69.5-30.5T600-740q0-35 23-77.5T700-920q54 60 77 102.5t23 77.5q0 39-30.5 69.5T700-640ZM240-80q-66 0-113-47T80-240v-216q0-31 14.5-57.5T135-557l330-214 20 20q20 20 23.5 47.5T497-652l-45 72h308q17 0 28.5 11.5T800-540q0 17-11.5 28.5T760-500H308l77-124-207 134q-9 5-13.5 14t-4.5 20v216q0 33 23.5 56.5T240-160h480q17 0 28.5 11.5T760-120q0 17-11.5 28.5T720-80H240Zm240-280v-80h360q17 0 28.5 11.5T880-400q0 17-11.5 28.5T840-360H480Zm0 140v-80h320q17 0 28.5 11.5T840-260q0 17-11.5 28.5T800-220H480ZM320-360Z"/>
                 </svg>
 
                 <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
-                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take
+                <h4 style="color: #b9b9b9; font-weight: 200">Sanitizer controller now will reboot to apply new settings. It will take
                     a while</h4>
-                <h4 style="color: #b9b9b9; font-weight: 200">If the Button was connected to Wi-Fi during setup, you can refresh the page to continue</h4>
+                <h4 style="color: #b9b9b9; font-weight: 200">If it was connected to Wi-Fi during setup, you can refresh the page to continue</h4>
                 <button disabled id="refreshBtn" type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
             </div>
         </div>
@@ -456,26 +415,11 @@
             </div>
 
             <div class="item">
-                <input type="checkbox" id="useDnsName" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
-            </div>
-
-            <div class="item">
                 <input type="checkbox" id="useSound" name="dnsName">
                 <label style="margin-left: 8px;" for="useSound">Use sound notification</label>
             </div>
 
             %CLIENTMODEOPTIONS%
-
-            <!--            <div class="item">-->
-            <!--                <input type="checkbox" id="clientWebAccess" name="hotspotAccess">-->
-            <!--                <label style="margin-left: 8px;" for="clientWebAccess">web access on Wi-Fi client mode</label>-->
-            <!--            </div>-->
-            <!--            -->
-            <!--            <div class="item">-->
-            <!--                <input type="checkbox" id="enableOtaUpdate" name="dnsName" disabled>-->
-            <!--                <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on Wi-Fi client mode</label>-->
-            <!--            </div>-->
 
         </div>
 
@@ -484,11 +428,11 @@
         <div class="border" style="padding: 24px">
             <div class="item">
                 <input type="checkbox" id="remoteTriggering">
-                <label for="remoteTriggering" style="margin: 0 8px;">Remote button triggering</label>
+                <label for="remoteTriggering" style="margin: 0 8px;">Remote triggering</label>
             </div>
 
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">Trigger button using POST request:</h5>
+                <h5 class="item" style="margin: 0">Trigger using POST request:</h5>
             </div>
             <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
                 <h5 class="item" style="margin: 0">Content-Type: </h5>
@@ -499,49 +443,7 @@
                 <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
             </div>
         </div>
-        <h2 class="section-header">Integration</h2>
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="useTelegramIntegration">
-                <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message
-                    forwarding)</label>
-            </div>
 
-            <div id="telegramIntegration" class="item" style="margin-bottom: 20px; flex-wrap: wrap">
-                <div class="item --vertical" style="flex: 1; max-width: 400px;">
-                    <label for="tToken" style="margin: 0 8px;">Token</label>
-                    <input maxlength="50" type="text" id="tToken" class="control --fill"
-                           style="max-width: 375px; font-size: 0.75rem;">
-                </div>
-                <div class="item --vertical">
-                    <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
-                    <input maxlength="32" type="number" id="tChanelID" class="control" style="font-size: 0.75rem;">
-                </div>
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h4 class="item" style="margin: 0">Message forwarding:</h4>
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">URL structure:</h5>
-                <h5 class="item" style="margin: 0">http://%IP%/integration?data=MESSAGE</h5>
-            </div>
-
-            <div class="item" style="margin-left: 16px;">
-                <label for="tPrefix" style="margin: 0 8px;">Message prefix</label>
-                <input maxlength="32" type="text" id="tPrefix" class="control">
-            </div>
-            <div class="item" style="margin-left: 16px;">
-                <label for="tSuffix" style="margin: 0 8px;">Message suffix</label>
-                <input maxlength="32" type="text" id="tSuffix" class="control">
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">Result:</h5>
-                <h5 id="integrationResult" class="item" style="margin: 0">MESSAGE</h5>
-            </div>
-        </div>
         <div style="display: flex; flex: 1; justify-content: center; margin: 80px 0;">
             <button id="saveButton" type="button" class="btn btn-red" onclick="saveSettings()">Save And Reboot</button>
         </div>
@@ -550,7 +452,7 @@
 
     <div style="display: flex; justify-content: flex-start; align-items: center; width: 100vw; background: lightgray;">
         <div class="flexbox-wrap max-h">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">FW version:</h5>
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Origin FW version:</h5>
             <h5 style="margin: 5px">%FWVERSION% </h5>
         </div>
         <div class="flexbox-wrap max-h">
@@ -565,10 +467,6 @@
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
             <h5 style="margin: 5px">%HEAP% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Keystore keys:</h5>
-            <h5 style="margin: 5px">%KSKEYS%</h5>
-        </div>
     </div>
 
 </div>
@@ -581,11 +479,6 @@
                 <div class="flexbox-raw-centered" style="gap: 8px;">
                     <input id="nsType" type="radio" name="eventType" value="ns-event">
                     <label for="nsType" style="color: white;">NoviSign event</label>
-                </div>
-
-                <div class="flexbox-raw-centered" style="gap: 8px;">
-                    <input id="telegramType" type="radio" name="eventType" value="telegram-event">
-                    <label for="telegramType" style="color: white;">telegram event</label>
                 </div>
 
                 <div class="flexbox-raw-centered" style="gap: 8px;">
@@ -631,8 +524,6 @@
     </div>
 </dialog>
 
-<!--<div class="modal" > &lt;!&ndash;style="visibility: visible;"&ndash;&gt;-->
-
 </div>
 <div id="body"></div>
 
@@ -677,54 +568,28 @@
         const name = document.getElementById('wifiname').value;
         const pass = document.getElementById('wifipass').value;
         const hSsid = document.getElementById('hotspotSsid').value;
-        // const clientWebAccess = Number(document.getElementById('clientWebAccess')?.checked) || config.clientWebAccess;
-        // const enableOtaUpdate = Number(document.getElementById('enableOtaUpdate')?.checked) || config.enableOtaUpdate;
-
         const clientWebAccess = document.getElementById('clientWebAccess') ? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
         const enableOtaUpdate = document.getElementById('enableOtaUpdate') ? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
-
-        const useDnsName = Number(document.getElementById('useDnsName').checked);
         const loggerEnabled = Number(document.getElementById('loggerEnabled').checked);
         const loggerLevel = Number(document.getElementById('loggerLevel').selectedIndex);
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
-        const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
         const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
-        const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
-        const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
-        const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
 
         const extrasConfig = JSON.stringify({
             clientWebAccess,
-            useDnsName,
             loggerEnabled,
             loggerLevel,
             useSound,
-            useTelegramIntegration,
             customHSsid,
             enableOtaUpdate,
             remoteTriggering,
-            keystoreEnabled,
-            sendEventOnKeystoreUpdate,
-            delaySendEvents,
             wifiSsid: name,
             wifiPass: pass,
             hotspotSsid: hSsid
         });
 
-        const tToken = document.getElementById('tToken').value;
-        const tChanelID = Number(document.getElementById('tChanelID').value);
-        const tPrefix = document.getElementById('tPrefix').value;
-        const tSuffix = document.getElementById('tSuffix').value;
-
-        const integration = JSON.stringify({
-            tToken,
-            tChanelID,
-            tPrefix,
-            tSuffix
-        })
-
-        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + JSON.stringify(eventDataObj) + '}}';
+        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"eventdata":' + JSON.stringify(eventDataObj) + '}}';
         data.replace(/" /g, '');
         data.replace(/ "/g, '');
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
@@ -764,24 +629,12 @@
             document.getElementById('updateBtn').remove();
         }
 
-        document.getElementById('useDnsName').checked = config.useDnsName;
         document.getElementById('loggerEnabled').checked = config.loggerEnabled;
         document.getElementById('loggerLevel').selectedIndex = config.loggerLevel;
         document.getElementById('useSound').checked = config.useSound;
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
-        document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
         document.getElementById('remoteTriggering').checked = config.remoteTriggering;
-        document.getElementById('keystoreEnabled').checked = config.keystoreEnabled;
-        document.getElementById('sendEventOnKeystoreUpdate').checked = config.sendEventOnKeystoreUpdate;
-        document.getElementById('delaySendEvents').checked = config.delaySendEvents;
-
-        integrationConfig = {};// %INTEGRATION% ;
-
-        document.getElementById('tToken').value = integrationConfig.tToken;
-        document.getElementById('tChanelID').value = integrationConfig.tChanelID;
-        document.getElementById('tPrefix').value = integrationConfig.tPrefix;
-        document.getElementById('tSuffix').value = integrationConfig.tSuffix;
 
         try {
             JSON.parse('"' + eventDataObj + '"');
@@ -789,8 +642,6 @@
             eventDataObj = {"sample_event_host": "sample_event_data"};
             console.warn('no saved events found');
         }
-
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
     }
 
     function update() {
@@ -799,21 +650,9 @@
         document.getElementById('wifiname').value = option.value;
     }
 
-    const tPrefixValue = document.getElementById('tPrefix');
-    const tSuffixValue = document.getElementById('tSuffix');
-    const integrationResult = document.getElementById('integrationResult');
-
     let config, integrationConfig, eventDataObj;
 
     let entryKeyToEdit;
-
-    tPrefixValue.addEventListener("input", () => {
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
-    });
-
-    tSuffixValue.addEventListener("input", () => {
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
-    });
 
     const dataTable = document.getElementById('dataTable');
     const tbody = dataTable.querySelector('tbody');
@@ -870,12 +709,6 @@
                 hostInput.value = "";
                 hostInput.disabled = false;
                 nsEventTypeContainer.classList.remove("--hidden");
-                break;
-            case "telegram-event":
-                nsEventTypeContainer.classList.add("--hidden");
-                hostInput.disabled = true;
-                eventData.value = "";
-                hostInput.value = "telegram";
                 break;
             case "custom-event":
                 nsEventTypeContainer.classList.add("--hidden");

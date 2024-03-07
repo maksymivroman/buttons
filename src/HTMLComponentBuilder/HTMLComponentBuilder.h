@@ -8,17 +8,15 @@
 #include <Arduino.h>
 #include "Global/Global.hpp"
 #include <ESP8266WiFi.h>
-#include "Keystore/Keystore.h"
 #include "Global/Version.h"
 
-extern Keystore keystore;
 extern Version currentFWVersion;
 
 class HTMLComponentBuilder {
 public:
     String componentById(const String &ref);
 
-    void setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient);
+    void setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, bool isClient);
 
 private:
     String events, networkSsid, networkPassword;
@@ -30,7 +28,6 @@ private:
     String wiFiList();
 
     String createConfigurationObject(EEPROMSETTINGS data);
-    String createIntegrationDataObject(INTEGRATIONSETTINGS data);
 };
 
 

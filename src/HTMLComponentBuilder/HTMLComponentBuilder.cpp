@@ -4,13 +4,12 @@
 
 #include "HTMLComponentBuilder.h"
 
-void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient) {
+void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, bool isClient) {
     networkSsid = ssid;
     networkPassword = password;
     events = eventsConfig;
     networkList = list;
     configuration = config;
-    integrationSettings = integrationData;
     isClientMode = isClient;
 }
 
@@ -33,7 +32,7 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "CLIENTMODEOPTIONS") {
         if (!isClientMode){
             data += R"(<div class="item">
-                <input type="checkbox" id="enableOtaUpdate" name="otaUpdate">
+                <input disabled type="checkbox" id="enableOtaUpdate" name="otaUpdate">
                 <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on client mode</label>
             </div>)";
             data += R"(<div class="item">
@@ -45,9 +44,6 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "CONFIGURATION") {
         data += createConfigurationObject(configuration);
         return data;
-    } else if (ref == "INTEGRATION") {
-        data += createIntegrationDataObject(integrationSettings);
-        return data;
     } else if (ref == "FWVERSION") {
         data += currentFWVersion.str_version();
         return data;
@@ -56,9 +52,6 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         return data;
     } else if (ref == "HEAP") {
         data += ESP.getFreeHeap();
-        return data;
-    } else if (ref == "KSKEYS") {
-        data += keystore.currentItemsCount();
         return data;
     } else if (ref == "IP") {
         switch (WiFi.getMode()) {
@@ -94,47 +87,22 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             loggerLevel: <loggerLevel>,
             clientWebAccess: <clientWebAccess>,
             enableOtaUpdate: <enableOtaUpdate>,
-            useDnsName: <useDnsName>,
             useSound: <useSound>,
             customHSsid: <useCustomHSsid>,
-            useTelegramIntegration: <useTelegramIntegration>,
             remoteTriggering:<remoteTriggering>,
             fwVersion: <fwVersion>,
-            hotspotSsid: "<hotspotSsid>",
-            keystoreEnabled: <keystoreEnabled>,
-            sendEventOnKeystoreUpdate: <sendEventOnKeystoreUpdate>,
-            delaySendEvents: <delaySendEvents>
+            hotspotSsid: "<hotspotSsid>"
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
     configObj.replace("<loggerLevel>", String(data.loggerLevel));
     configObj.replace("<clientWebAccess>", String(data.clientWebAccess));
     configObj.replace("<enableOtaUpdate>", String(data.enableOtaUpdate));
-    configObj.replace("<useDnsName>", String(data.useDnsName));
     configObj.replace("<useSound>", String(data.useSound));
-    configObj.replace("<useTelegramIntegration>", String(data.useTelegramIntegration));
     configObj.replace("<remoteTriggering>", String(data.remoteTriggering));
     configObj.replace("<fwVersion>", String(data.fwVersion));
     configObj.replace("<hotspotSsid>", String(data.hotspotSsid));
     configObj.replace("<useCustomHSsid>", String(data.useCustomHSsid));
-    configObj.replace("<keystoreEnabled>", String(data.keystoreEnabled));
-    configObj.replace("<sendEventOnKeystoreUpdate>", String(data.sendEventOnKeystoreUpdate));
-    configObj.replace("<delaySendEvents>", String(data.delaySendEvents));
-
-    return configObj;
-}
-
-String HTMLComponentBuilder::createIntegrationDataObject(INTEGRATIONSETTINGS data) {
-    String configObj = R"({
-            tToken: "<tToken>",
-            tChanelID: <tChanelID>,
-            tPrefix: "<tPrefix>",
-            tSuffix: "<tSuffix>"
-        })";
-    configObj.replace("<tToken>", String(data.tToken));
-    configObj.replace("<tChanelID>", String(data.tChanelID));
-    configObj.replace("<tPrefix>", String(data.tPrefix));
-    configObj.replace("<tSuffix>", String(data.tSuffix));
 
     return configObj;
 }

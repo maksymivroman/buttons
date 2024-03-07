@@ -6,21 +6,15 @@
 #define EVENT_BUTTON_EVENTSSERVICE_H
 
 #include <Arduino.h>
-#include "TelegramIntegration/TelegramIntegration.h"
 
 class EventsService {
 
 public:
     void SendEvents();
     void SetEvents(String eventsData);
-    void SendEventsOnKeystoreChange();
-
-    TelegramIntegration *telegramBotRef = nullptr;
-
 private:
-    void SendMessageToTelegram(String message);
     void SendHttpEvent(String &host, String &payload);
-    void ProcessToSend(boolean onlyFromKeystore = false);
+    void ProcessToSend();
 
     String events;
 

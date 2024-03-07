@@ -2,7 +2,6 @@
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
 
-#include "ButtonOTAUpdate/AsyncOtaUpdate.h"
 #include "Global/Global.hpp"
 #include "Global/Version.h"
 #include "HTMLPage/html-page.hpp"
@@ -12,10 +11,8 @@
 #include "HTMLComponentBuilder/HTMLComponentBuilder.h"
 #include "EventsService/EventsService.h"
 #include "SoundService/SoundService.h"
-#include "TelegramIntegration/TelegramIntegration.h"
 #include "TasksHandler/ButtonTask.h"
 #include "Logger/Logger.h"
-#include "Keystore/Keystore.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -26,7 +23,7 @@ const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
 
-bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS, sendEventsOnKeystoreChange, requiredToUpdateEvents;
+bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS;
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
@@ -35,10 +32,6 @@ const char *CLEAR_EEPROM = "CLEAR_EEPROM";
 const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
 const char *FORMAT_FS = "FORMAT_FS";
 const char *ID = "ID";
-
-String integrationMessageToSend = "";
-
-unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
@@ -51,16 +44,11 @@ NetworkService networkService;
 HTMLComponentBuilder htmlComponent;
 SoundService notifier(buzzerPin);
 EventsService eventService;
-TelegramIntegration telegramBot;
-AsyncOtaUpdate ButtonOTAUpdate;
-Keystore keystore(20);
-/**Do not set max logs items more than 20,
- * it will cause heap overflow when using Telegram integration (BearSSL requires more than 12k of RAM) */
 Logger logger(115200, 20);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
-        SendEventsTask, IntegrationTask, CheckConnectionTask(true),
-        FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask;
+        SendEventsTask, CheckConnectionTask(true),
+        FormatFSTask;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -83,7 +71,7 @@ void setup() {
 
     if (buttonSettings.loggerEnabled()) {
         logger.start(buttonSettings.loggerLevel());
-        logger.log("BUTTON CURRENT FW: " , currentFWVersion.str_fullVersion());
+        logger.log("SANITIZER CURRENT FW: " , currentFWVersion.str_fullVersion());
     }
 
     buttonSettings.loadEvents();
@@ -92,8 +80,6 @@ void setup() {
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
-    INTEGRATIONSETTINGS integrationConfig = buttonSettings.integrationSettings();
-    KEYSTORESETTINGS keystoreSettings = buttonSettings.keystoreSettings();
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
     notifier.useSound = buttonSettings.useSoundNotification();
@@ -109,7 +95,7 @@ void setup() {
 
     ledService.blinkPrimary();
 
-    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig,
+    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration,
                                   networkService.isConnectedToWiFi());
     eventService.SetEvents(eventsData);
 
@@ -168,61 +154,9 @@ void setup() {
         request->send(responseCode, "text/html", responseData);
     });
 
-    server.on("/keystore", HTTP_GET, [keystoreSettings](AsyncWebServerRequest *request) {
-        if (keystoreSettings.enabled) {
-            unsigned int paramsCount = request->params();
-            if (paramsCount != 0) {
-                for (unsigned int i = 0; i < paramsCount; i++) {
-                    String paramName = request->getParam(i)->name();
-                    String paramValue = request->getParam(i)->value();
-                    logger.logSerial("[MAIN->HTTP GET][/keystore] receive param - ", paramName,": ", paramValue);
-                    if (paramName == "delay" && keystoreSettings.delayEvent) {
-                        const unsigned int delayMs = std::stoi(paramValue.c_str());
-                        timeToExecuteTask = millis() + delayMs;
-                        logger.log("[MAIN->HTTP GET][/keystore] Set task delay(ms): ", delayMs);
-                    } else {
-                        keystore.addItem(paramName, paramValue);
-                    }
-                }
-                if (keystoreSettings.sendEventsOnUpdate) sendEventsOnKeystoreChange = true;
-                requiredToUpdateEvents = true;
-                logger.log("[MAIN->HTTP GET][/keystore]: Update Keystore, total items - ", paramsCount);
-                request->send_P(200, "text/html", "OK");
-            } else {
-                logger.log("[MAIN->HTTP GET][/keystore]: no parameters received");
-                request->send_P(400, "text/html", "Bad Request");
-            }
-        } else {
-            logger.log("[MAIN->HTTP GET][/keystore]: Keystore disabled. Forbidden.");
-            request->send_P(403, "text/html", "Forbidden");
-        }
-    });
-
-    if(buttonSettings.useTelegramIntegration()) {
-        telegramBot.configureTelegramIntegration(buttonSettings.integrationSettings());
-        eventService.telegramBotRef = &telegramBot;
-        server.on("/integration", HTTP_GET, [](AsyncWebServerRequest *request) {
-            if (request->hasParam("data")) {
-                integrationMessageToSend += buttonSettings.integrationSettings().tPrefix;
-                integrationMessageToSend += request->getParam("data")->value();
-                integrationMessageToSend += buttonSettings.integrationSettings().tSuffix;
-                logger.log("[MAIN->HTTP GET -> integration]");
-                logger.logSerial("[HTTP GET -> integration message]: ", integrationMessageToSend);
-            }
-            else {logger.log("[MAIN->HTTP GET -> integration]: wrong GET data");}
-            request->send_P(200, "text/html", "OK");
-        });
-    }
-
     const bool serverEnabled = !networkService.isConnectedToWiFi() || (buttonSettings.clientWebAccessEnabled() &&
                                                                        networkService.isConnectedToWiFi());
-    if ( serverEnabled ) {
-        if(!networkService.isConnectedToWiFi() || (buttonSettings.otaUpdateOnClientMode() &&
-                                                   networkService.isConnectedToWiFi())) {
-            ButtonOTAUpdate.setID(buttonSettings.customHotspotSsid());
-            ButtonOTAUpdate.begin(&server);
-        }
-        server.begin(); }
+    if ( serverEnabled ) { server.begin(); }
 
     ledService.lightOnGreen(true);
 }
@@ -230,25 +164,9 @@ void setup() {
 void loop() {
     delay(100);
 
-    UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){
-        ledService.updateKeystoreProgress(true);
-        auto items = keystore.keystoreItems();
-        String events = *buttonSettings.events();
-        for (auto &item: items) {
-            const auto &key = item.first;
-            const auto &value = item.second;
-            String constructKey = "$";
-            constructKey.concat(key); constructKey.concat("$");
-            events.replace(constructKey,value);
-        }
-        eventService.SetEvents(events);
-        ledService.updateKeystoreProgress(false);
-        requiredToUpdateEvents = false;
-    });
-
     SendEventsTask((digitalRead(buttonPin) == 1 || requiredToTriggerButton), [](){
         if (requiredToTriggerButton) {
-            requiredToTriggerButton =!requiredToTriggerButton;
+            requiredToTriggerButton = !requiredToTriggerButton;
             notifier.onRemoteTrigger();
         }
         ledService.eventsSendInProgress(true);
@@ -272,24 +190,6 @@ void loop() {
         buttonSettings.formatFS();
     });
 
-    IntegrationTask(integrationMessageToSend.length() != 0, [](){
-        notifier.onIntegrationMessage();
-        telegramBot.sendMessage(integrationMessageToSend);
-        integrationMessageToSend = "";
-    });
-
-    OnKeystoreUpdateTask(
-            sendEventsOnKeystoreChange, []() {
-                ledService.updateKeystoreProgress(true);
-                eventService.SendEventsOnKeystoreChange();
-                sendEventsOnKeystoreChange = !sendEventsOnKeystoreChange;
-                timeToExecuteTask = 0;
-                ledService.updateKeystoreProgress(false);
-            },
-            [](){},
-            []() -> bool { return millis() < timeToExecuteTask; }
-    );
-
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
             [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
@@ -297,6 +197,6 @@ void loop() {
             networkService.isAPMode()
             );
 
-    RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+    RestartTask(requiredRestart, restart);
 
 }

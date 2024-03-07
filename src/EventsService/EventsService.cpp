@@ -13,11 +13,7 @@ void EventsService::SendEvents() {
     ProcessToSend();
 }
 
-void EventsService::SendEventsOnKeystoreChange() {
-    ProcessToSend(true);
-}
-
-void EventsService::ProcessToSend(boolean onlyFromKeystore) {
+void EventsService::ProcessToSend() {
     logger.log("[EventsService] SendEvents");
     logger.logSerial("[EventsService] SendEvents", this->events);
 
@@ -35,32 +31,13 @@ void EventsService::ProcessToSend(boolean onlyFromKeystore) {
         logger.logSerial("[EventsService] request data: ", requestData);
         logger.logSerial("[EventsService] request URL: ", requestUrl);
 
-        if (requestUrl == "telegram" && !onlyFromKeystore) {
-            SendMessageToTelegram(requestData);
-        } else if (onlyFromKeystore && requestUrl.substring(0, 1) == "$") {
-            requestUrl.remove(0, 1);
-            SendHttpEvent(requestUrl, requestData);
-        } else {
-            if(requestUrl.substring(0, 1) != "$" && !onlyFromKeystore) {
-                SendHttpEvent(requestUrl, requestData);
-            }
-        }
+        SendHttpEvent(requestUrl, requestData);
+
     }
 }
 
 void EventsService::SetEvents(String eventsData) {
     events = std::move(eventsData);
-}
-
-void EventsService::SendMessageToTelegram(String message) {
-    logger.logSerial("[EventsService] SendMessageToTelegram: ", message);
-
-    if (telegramBotRef != nullptr) {
-        logger.log("[EventsService] Telegram: Integration Enabled. Sending message...");
-        telegramBotRef->sendMessage(message);
-    } else {
-        logger.log("[EventsService] Telegram: Integration Disabled");
-    }
 }
 
 void EventsService::SendHttpEvent(String &host, String &payload) {
