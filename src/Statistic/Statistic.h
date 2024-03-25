@@ -28,12 +28,14 @@ private:
     bool sendExtendedData;
     bool enabled;
 
-    String prepareData(const String &data);
-    String extendedData();
+    String prepareData(const String &data, bool asUrlParams = false);
+    String extendedData(bool asUrlParams = false);
 
     int httpPost(String &url, const String &payload);
     int httpsPost(String &url, const String &payload);
 
+    int httpGet(String &url, const String &payload);
+    int httpsGet(String &url, const String &payload);
 };
 
 
