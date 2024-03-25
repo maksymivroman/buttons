@@ -16,6 +16,7 @@
 #include "TasksHandler/ButtonTask.h"
 #include "Logger/Logger.h"
 #include "Keystore/Keystore.h"
+#include "Statistic/Statistic.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -42,7 +43,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,3,0, false);
+Version currentFWVersion(1,4,0, true);
 
 LEDService ledService;
 SettingsService buttonSettings;
@@ -53,6 +54,7 @@ SoundService notifier(buzzerPin);
 EventsService eventService;
 TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
+Statistic statistic;
 Keystore keystore(20);
 /**Do not set max logs items more than 20,
  * it will cause heap overflow when using Telegram integration (BearSSL requires more than 12k of RAM) */
@@ -84,6 +86,10 @@ void setup() {
     if (buttonSettings.loggerEnabled()) {
         logger.start(buttonSettings.loggerLevel());
         logger.log("BUTTON CURRENT FW: " , currentFWVersion.str_fullVersion());
+    }
+
+    if (buttonSettings.statisticEnabled()) {
+        statistic.initStat(buttonSettings.statisticApi(),STAT_HTTP_POST, buttonSettings.statisticLevel());
     }
 
     buttonSettings.loadEvents();
@@ -244,16 +250,22 @@ void loop() {
         eventService.SetEvents(events);
         ledService.updateKeystoreProgress(false);
         requiredToUpdateEvents = false;
+        if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Keystore update");
     });
 
     SendEventsTask((digitalRead(buttonPin) == 1 || requiredToTriggerButton), [](){
-        if (requiredToTriggerButton) {
-            requiredToTriggerButton =!requiredToTriggerButton;
-            notifier.onRemoteTrigger();
-        }
+        if (requiredToTriggerButton) notifier.onRemoteTrigger();
+
         ledService.eventsSendInProgress(true);
         eventService.SendEvents();
         ledService.eventsSendInProgress(false);
+
+        if (requiredToTriggerButton) {
+            requiredToTriggerButton =!requiredToTriggerButton;
+            if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Send events. Triggered by: remote");
+        } else {
+            statistic.sendStat("Send events. Triggered by: physical");
+        }
     },networkService.isAPMode());
 
     RequiredToFindTask(requiredToFind , [](){
@@ -276,6 +288,7 @@ void loop() {
         notifier.onIntegrationMessage();
         telegramBot.sendMessage(integrationMessageToSend);
         integrationMessageToSend = "";
+        if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Integration: send message to telegram.");
     });
 
     OnKeystoreUpdateTask(

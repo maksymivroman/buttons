@@ -109,28 +109,37 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     String wiFiPassword = jsonSettings["wifiPass"] | "";
     String hotspotSsid = jsonSettings["hotspotSsid"] | "";
 
-    char ssid[256], pass[256], hSsid[32];
+    String statisticApi = jsonSettings["statisticApi"] | "";
+
+    char ssid[256], pass[256], hSsid[32], statApi[256];
 
     wiFiName.toCharArray(ssid, 256);
     wiFiPassword.toCharArray(pass, 256);
     hotspotSsid.toCharArray(hSsid, 32);
+
+    statisticApi.toCharArray(statApi, 256);
 
     strcpy(settings.wifiSsid, ssid);
     strcpy(settings.wifiPass, pass);
 
     strcpy(settings.hotspotSsid, hSsid);
 
+    strcpy(settings.statisticApi, statApi);
+
     //TODO if button on client mode next settings should not be changed
     settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
 
     settings.loggerEnabled = jsonSettings["loggerEnabled"].as<bool>() | false;
+    settings.statisticEnabled = jsonSettings["statisticEnabled"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
     settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
+
+    settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
 
     settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
@@ -171,8 +180,20 @@ bool SettingsService::loggerEnabled() const {
     return buttonEepromSettings.loggerEnabled | false;
 }
 
+bool SettingsService::statisticEnabled() const {
+    return buttonEepromSettings.statisticEnabled | false;
+}
+
 LoggerLevel SettingsService::loggerLevel() const {
     return static_cast<LoggerLevel>(buttonEepromSettings.loggerLevel);
+}
+
+unsigned int SettingsService::statisticLevel() const {
+    return buttonEepromSettings.statisticLevel;
+}
+
+String SettingsService::statisticApi() const {
+    return buttonEepromSettings.statisticApi;
 }
 
 void SettingsService::clearEeprom() {
@@ -200,6 +221,14 @@ char *SettingsService::customHotspotSsid() {
     strcpy(name, espDefaultName.c_str());
 
     return const_cast<char *>(name);
+}
+
+String SettingsService::deviceID() const{
+    String espDefaultName = "eButton-";
+    const String mac = WiFi.macAddress();
+    espDefaultName += mac.substring(mac.length() - 6, mac.length());
+    espDefaultName.replace(':', 'x');
+    return espDefaultName;
 }
 
 String SettingsService::dataFromFS(const String &fileName) {
@@ -291,3 +320,19 @@ void SettingsService::handleVersionChange(unsigned int currentFWVersion, bool re
         this->writeToEEPROM(buttonEepromSettings);
     }
 }
+
+String SettingsService::macAddress() const {
+    return WiFi.macAddress();
+}
+
+String SettingsService::localIPAddress() const {
+    switch (WiFi.getMode()) {
+        case WIFI_STA:
+            return WiFi.localIP().toString();
+        case WIFI_AP_STA:
+            return WiFi.softAPIP().toString();
+        default:
+            return "unknown";
+    }
+}
+

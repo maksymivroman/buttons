@@ -103,7 +103,10 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             hotspotSsid: "<hotspotSsid>",
             keystoreEnabled: <keystoreEnabled>,
             sendEventOnKeystoreUpdate: <sendEventOnKeystoreUpdate>,
-            delaySendEvents: <delaySendEvents>
+            delaySendEvents: <delaySendEvents>,
+            statisticEnabled: <statisticEnabled>,
+            statisticLevel: <statisticLevel>,
+            statisticApi: "<statisticApi>"
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
@@ -120,6 +123,9 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     configObj.replace("<keystoreEnabled>", String(data.keystoreEnabled));
     configObj.replace("<sendEventOnKeystoreUpdate>", String(data.sendEventOnKeystoreUpdate));
     configObj.replace("<delaySendEvents>", String(data.delaySendEvents));
+    configObj.replace("<statisticEnabled>", String(data.statisticEnabled));
+    configObj.replace("<statisticLevel>", String(data.statisticLevel));
+    configObj.replace("<statisticApi>", String(data.statisticApi));
 
     return configObj;
 }

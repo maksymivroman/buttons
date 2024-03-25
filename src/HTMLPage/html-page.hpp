@@ -239,6 +239,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             pointer-events: none;
         }
 
+        #statisticEnabled:not(:checked) ~ #statisticLevel {
+            color: darkgray;
+            pointer-events: none;
+        }
+
         #sendEventOnKeystoreUpdate:not(:checked) ~ #delaySendEventsContainer {
             opacity: .5;
             pointer-events: none;
@@ -464,6 +469,24 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         </div>
 
+        <h2 class="section-header">Statistic</h2>
+
+        <div class="border" style="padding: 24px;">
+            <div class="item">
+                <input type="checkbox" id="statisticEnabled">
+                <label style="margin-left: 8px; margin-right: 8px;" for="statisticEnabled">Enable Statistic</label>
+                <select class="control" style="height: auto; min-width: auto;" id="statisticLevel">
+                    <option value="0">Simple</option>
+                    <option value="1">Extended</option>
+                </select>
+            </div>
+            <div class="item --vertical" style="flex: 1; max-width: 400px;">
+                <label style="margin-left: 8px; margin-right: 8px; word-break: keep-all" for="statisticApi">API url</label>
+                <input maxlength="255" type="text" id="statisticApi" class="control --fill"
+                       style="max-width: 375px; font-size: 0.75rem;">
+            </div>
+        </div>
+
         <h2 class="section-header">Remote triggering</h2>
 
         <div class="border" style="padding: 24px">
@@ -660,22 +683,33 @@ const char index_html[] PROGMEM = R"rawliteral(
         const name = document.getElementById('wifiname').value;
         const pass = document.getElementById('wifipass').value;
         const hSsid = document.getElementById('hotspotSsid').value;
-        const clientWebAccess = document.getElementById('clientWebAccess')? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
-        const enableOtaUpdate = document.getElementById('enableOtaUpdate')? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
+
+        const clientWebAccess = document.getElementById('clientWebAccess') ? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
+        const enableOtaUpdate = document.getElementById('enableOtaUpdate') ? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
+
         const useDnsName = Number(document.getElementById('useDnsName').checked);
         const loggerEnabled = Number(document.getElementById('loggerEnabled').checked);
         const loggerLevel = Number(document.getElementById('loggerLevel').selectedIndex);
+
+        const statisticEnabled = Number(document.getElementById('statisticEnabled').checked);
+        const statisticLevel = Number(document.getElementById('statisticLevel').selectedIndex);
+
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
-        const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);        const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
+        const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
+        const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
         const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
         const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
+
+        const statApi = document.getElementById('statisticApi').value;
 
         const extrasConfig = JSON.stringify({
             clientWebAccess,
             useDnsName,
             loggerEnabled,
+            statisticEnabled,
+            statisticLevel,
             loggerLevel,
             useSound,
             useTelegramIntegration,
@@ -687,7 +721,8 @@ const char index_html[] PROGMEM = R"rawliteral(
             delaySendEvents,
             wifiSsid: name,
             wifiPass: pass,
-            hotspotSsid: hSsid
+            hotspotSsid: hSsid,
+            statisticApi: statApi
         });
 
         const tToken = document.getElementById('tToken').value;
@@ -745,6 +780,9 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('useDnsName').checked = config.useDnsName;
         document.getElementById('loggerEnabled').checked = config.loggerEnabled;
         document.getElementById('loggerLevel').selectedIndex = config.loggerLevel;
+        document.getElementById('statisticEnabled').checked = config.statisticEnabled;
+        document.getElementById('statisticLevel').selectedIndex = config.statisticLevel;
+        document.getElementById('statisticApi').value = config.statisticApi;
         document.getElementById('useSound').checked = config.useSound;
         document.getElementById('useHotspotSsid').checked = config.customHSsid;
         document.getElementById('hotspotSsid').value = config.hotspotSsid;

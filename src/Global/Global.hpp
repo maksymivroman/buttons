@@ -29,6 +29,7 @@ struct RGBCONFIG {
 
 struct EEPROMSETTINGS {
     bool loggerEnabled = false;
+    bool statisticEnabled = false;
     bool clientWebAccess = false;
     bool enableOtaUpdate = false;
     bool useDnsName = false;
@@ -43,6 +44,10 @@ struct EEPROMSETTINGS {
 
     unsigned int loggerLevel = 0;
     unsigned int fwVersion = 0;
+
+    unsigned int statisticLevel = 0;
+    char statisticApi[256]{};
+
     char wifiSsid[256]{};
     char wifiPass[256]{};
     char hotspotSsid[32]{};
