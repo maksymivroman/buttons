@@ -51,5 +51,22 @@ private:
 
 };
 
+class ButtonIntervalTask {
+
+public:
+    template<typename Fn>
+    void operator()(unsigned long interval, Fn execute, bool skipTask = false){
+        unsigned long currentTime = millis();
+        if ((currentTime >= this->executeTime) && !skipTask) {
+            logger.logSerial("[ButtonIntervalTask] Execute task handler (interval): ", interval);
+            this->executeTime = currentTime + interval;
+            execute();
+        }
+    };
+
+private:
+    unsigned long executeTime = 0;
+};
+
 
 #endif //EVENT_BUTTON_BUTTONTASK_H

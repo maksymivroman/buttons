@@ -17,6 +17,7 @@
 #include "Logger/Logger.h"
 #include "Keystore/Keystore.h"
 #include "Statistic/Statistic.h"
+#include "ExternalInterface/ExternalInterfaceService.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -28,6 +29,7 @@ const int buttonPin = 5;
 const int buzzerPin = 4;
 
 bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS, sendEventsOnKeystoreChange, requiredToUpdateEvents;
+bool externalInterface_ledActive, externalInterface_buzzActive;
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
@@ -63,6 +65,8 @@ Logger logger(115200, 20);
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
         SendEventsTask, IntegrationTask, CheckConnectionTask(true),
         FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask;
+
+ButtonIntervalTask ChangeLedStateITask, ChangeSoundStateITask;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -204,6 +208,23 @@ void setup() {
         }
     });
 
+    server.on("/external", HTTP_GET, [](AsyncWebServerRequest *request) {
+        unsigned int paramsCount = request->params();
+        if (paramsCount != 0) {
+
+            auto * external = new ExternalInterfaceService();
+            external->handleTriggers(request, {
+                {EXTERNAL_LED, externalInterface_ledActive},
+                {EXTERNAL_BEEP, externalInterface_buzzActive}
+            });
+
+            delete external;
+        }
+
+        logger.log("[MAIN->HTTP_POST]-> Return response code: ", 200);
+        request->send_P(200, "text/html", "OK");
+    });
+
     if(buttonSettings.useTelegramIntegration()) {
         telegramBot.configureTelegramIntegration(buttonSettings.integrationSettings());
         eventService.telegramBotRef = &telegramBot;
@@ -230,7 +251,7 @@ void setup() {
         }
         server.begin(); }
 
-    ledService.lightOnGreen(true);
+    ledService.idle();
 }
 
 void loop() {
@@ -256,12 +277,14 @@ void loop() {
     SendEventsTask((digitalRead(buttonPin) == 1 || requiredToTriggerButton), [](){
         if (requiredToTriggerButton) notifier.onRemoteTrigger();
 
+        externalInterface_ledActive = false;
+        externalInterface_buzzActive = false;
         ledService.eventsSendInProgress(true);
         eventService.SendEvents();
         ledService.eventsSendInProgress(false);
 
         if (requiredToTriggerButton) {
-            requiredToTriggerButton =!requiredToTriggerButton;
+            requiredToTriggerButton = !requiredToTriggerButton;
             if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Send events. Triggered by: remote");
         } else {
             statistic.sendStat("Send events. Triggered by: physical");
@@ -280,8 +303,9 @@ void loop() {
     });
 
     FormatFSTask(requiredToFormatFS, [](){
-        ledService.lightOnRed(true);
+        ledService.onFormatFS();
         buttonSettings.formatFS();
+        requiredRestart = true;
     });
 
     IntegrationTask(integrationMessageToSend.length() != 0, [](){
@@ -305,10 +329,18 @@ void loop() {
 
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
-            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
-            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); },
+            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.idle(); },
+            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.onNoConnection(); },
             networkService.isAPMode()
             );
+
+    ChangeLedStateITask(1000, []() {
+        ledService.onExternalInterfaceProgress(true);
+    }, !externalInterface_ledActive);
+
+    ChangeSoundStateITask(10000, []() {
+        notifier.onExternal();
+    }, !externalInterface_buzzActive);
 
     RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
 
