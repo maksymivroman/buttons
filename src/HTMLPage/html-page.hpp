@@ -507,6 +507,22 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
             </div>
         </div>
+        <h2 class="section-header">Remote LED and Sound notifications</h2>
+
+        <div class="border" style="padding: 24px">
+            <div class="item">
+                <input type="checkbox" id="remoteStateChange">
+                <label for="remoteStateChange" style="margin: 0 8px;">Switch LED/Sound notifications remotely</label>
+            </div>
+
+            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+                <h5 class="item" style="margin: 0">Trigger button LED/Sound using GET request:</h5>
+            </div>
+            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
+                <h5 class="item" style="margin: 0">URL structure:</h5>
+                <h5 class="item" style="margin: 0">http://%IP%/external?led=${on/off}&beep={on/off}</h5>
+            </div>
+        </div>
         <h2 class="section-header">Integration</h2>
         <div class="border" style="padding: 24px">
             <div class="item">
@@ -698,6 +714,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
         const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
+        const remoteStateChange = Number(document.getElementById('remoteStateChange').checked);
         const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
         const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
         const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
@@ -716,6 +733,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             customHSsid,
             enableOtaUpdate,
             remoteTriggering,
+            remoteStateChange,
             keystoreEnabled,
             sendEventOnKeystoreUpdate,
             delaySendEvents,
@@ -789,6 +807,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
         document.getElementById('remoteTriggering').checked = config.remoteTriggering;
         document.getElementById('keystoreEnabled').checked = config.keystoreEnabled;
+        document.getElementById('remoteStateChange').checked = config.remoteStateChange;
         document.getElementById('sendEventOnKeystoreUpdate').checked = config.sendEventOnKeystoreUpdate;
         document.getElementById('delaySendEvents').checked = config.delaySendEvents;
 

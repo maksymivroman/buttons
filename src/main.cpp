@@ -64,7 +64,7 @@ Logger logger(115200, 20);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
         SendEventsTask, IntegrationTask, CheckConnectionTask(true),
-        FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask;
+        FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask, ResetExternalStateTask;
 
 ButtonIntervalTask ChangeLedStateITask, ChangeSoundStateITask;
 
@@ -208,22 +208,22 @@ void setup() {
         }
     });
 
-    server.on("/external", HTTP_GET, [](AsyncWebServerRequest *request) {
-        unsigned int paramsCount = request->params();
-        if (paramsCount != 0) {
-
-            auto * external = new ExternalInterfaceService();
-            external->handleTriggers(request, {
-                {EXTERNAL_LED, externalInterface_ledActive},
-                {EXTERNAL_BEEP, externalInterface_buzzActive}
-            });
-
-            delete external;
-        }
-
-        logger.log("[MAIN->HTTP_POST]-> Return response code: ", 200);
-        request->send_P(200, "text/html", "OK");
-    });
+    if (buttonSettings.remoteStateChangeEnabled()) {
+        server.on("/external", HTTP_GET, [](AsyncWebServerRequest *request) {
+            unsigned int paramsCount = request->params();
+            if (paramsCount != 0) {
+                logger.log("[MAIN->HTTP GET][/external]: Update LED/Sound state. Params received: ", paramsCount);
+                auto * external = new ExternalInterfaceService();
+                external->handleTriggers(request, {
+                        {EXTERNAL_LED, externalInterface_ledActive},
+                        {EXTERNAL_BEEP, externalInterface_buzzActive}
+                });
+                delete external;
+            }
+            logger.log("[MAIN->HTTP_POST]-> Return response code: ", 200);
+            request->send_P(200, "text/html", "OK");
+        });
+    }
 
     if(buttonSettings.useTelegramIntegration()) {
         telegramBot.configureTelegramIntegration(buttonSettings.integrationSettings());
@@ -341,6 +341,10 @@ void loop() {
     ChangeSoundStateITask(10000, []() {
         notifier.onExternal();
     }, !externalInterface_buzzActive);
+
+    ResetExternalStateTask(
+            !externalInterface_ledActive,
+            [](){ledService.idle();});
 
     RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
 
