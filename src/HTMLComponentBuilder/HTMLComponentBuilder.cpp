@@ -106,7 +106,8 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             delaySendEvents: <delaySendEvents>,
             statisticEnabled: <statisticEnabled>,
             statisticLevel: <statisticLevel>,
-            statisticApi: "<statisticApi>"
+            statisticApi: "<statisticApi>",
+            remoteStateChange: <remoteStateChange>
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
@@ -126,6 +127,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     configObj.replace("<statisticEnabled>", String(data.statisticEnabled));
     configObj.replace("<statisticLevel>", String(data.statisticLevel));
     configObj.replace("<statisticApi>", String(data.statisticApi));
+    configObj.replace("<remoteStateChange>", String(data.remoteStateChange));
 
     return configObj;
 }

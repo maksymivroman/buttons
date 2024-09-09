@@ -28,6 +28,7 @@ public:
     bool remoteButtonTriggering() const;
     bool loggerEnabled() const;
     bool statisticEnabled() const;
+    bool remoteStateChangeEnabled() const;
     String statisticApi() const;
     unsigned int fwVersion() const;
     LoggerLevel loggerLevel() const;

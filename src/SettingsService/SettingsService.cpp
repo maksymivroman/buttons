@@ -138,8 +138,8 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
-
     settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
+    settings.remoteStateChange = jsonSettings["remoteStateChange"].as<bool>() | false;
 
     settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
@@ -182,6 +182,10 @@ bool SettingsService::loggerEnabled() const {
 
 bool SettingsService::statisticEnabled() const {
     return buttonEepromSettings.statisticEnabled | false;
+}
+
+bool SettingsService::remoteStateChangeEnabled() const {
+    return buttonEepromSettings.remoteStateChange | false;
 }
 
 LoggerLevel SettingsService::loggerLevel() const {

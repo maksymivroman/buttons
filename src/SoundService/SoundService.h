@@ -16,6 +16,7 @@ public:
     void onFindMe();
     void onIntegrationMessage();
     void onRemoteTrigger();
+    void onExternal();
 
     bool useSound = false;
 

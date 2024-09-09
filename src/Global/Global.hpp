@@ -41,6 +41,7 @@ struct EEPROMSETTINGS {
     bool keystoreEnabled = false;
     bool sendEventOnKeystoreUpdate = false;
     bool delaySendEvents = false;
+    bool remoteStateChange = false;
 
     unsigned int loggerLevel = 0;
     unsigned int fwVersion = 0;

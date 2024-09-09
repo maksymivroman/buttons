@@ -48,3 +48,14 @@ void SoundService::onRemoteTrigger() {
         noTone(buzzerPin);
     }
 }
+
+void SoundService::onExternal() {
+    logger.log("[SoundService] onExternal. Enabled: ", useSound);
+    if (useSound) {
+        for (int i = 0; i < 5; i++) {
+            tone(buzzerPin, 1500 * i, 150);
+            delay(100);
+        }
+        noTone(buzzerPin);
+    }
+}

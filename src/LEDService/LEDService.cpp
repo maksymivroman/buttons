@@ -23,6 +23,12 @@ void LEDService::switchPin(RGBCONFIG pinsState) const {
     digitalWrite(pinBlue, pinsState.b);
 }
 
+void LEDService::switchAnalogPin(RGBCONFIG pinsState) const {
+    analogWrite(pinRed, pinsState.r);
+    analogWrite(pinGreen, pinsState.g);
+    analogWrite(pinBlue, pinsState.b);
+}
+
 void LEDService::blink(int pin, int count) {
     for (int i = 0; i < count * 2; ++i) {
         int state = digitalRead(pin);
@@ -33,23 +39,19 @@ void LEDService::blink(int pin, int count) {
 }
 
 void LEDService::lightOnRed(bool on) {
-    const int state = on ? 1 : 0;
-    switchPin(pinRed, state);
+    on ? switchAnalogPin(RGB._red) : switchAnalogPin(RGB._off);
 }
 
 void LEDService::lightOnBlue(bool on) {
-    const int state = on ? 1 : 0;
-    switchPin(pinBlue, state);
+    on ? switchAnalogPin(RGB._blue) : switchAnalogPin(RGB._off);
 }
 
 void LEDService::lightOnGreen(bool on) {
-    const int state = on ? 1 : 0;
-    switchPin(pinGreen, state);
+    on ? switchAnalogPin(RGB._green) : switchAnalogPin(RGB._off);
 }
 
 void LEDService::lightOnPurple(bool on) {
-    const int state = on ? 1 : 0;
-    switchPin({state, 0, state});
+    on ? switchAnalogPin(RGB._purple) : switchAnalogPin(RGB._off);
 }
 
 void LEDService::blinkWarn() {
@@ -64,15 +66,15 @@ void LEDService::blinkDone() {
     blink(pinGreen, 5);
 }
 
+void LEDService::saveCurrentRGBState() {
+    rgbCurrentState = {digitalRead(pinRed),digitalRead(pinGreen),digitalRead(pinBlue)};
+}
+
 void LEDService::findMe() {
     saveCurrentRGBState();
     blinkWarn();
     blinkPrimary();
     restoreCurrentRGBState();
-}
-
-void LEDService::saveCurrentRGBState() {
-    rgbCurrentState = {digitalRead(pinRed),digitalRead(pinGreen),digitalRead(pinBlue)};
 }
 
 void LEDService::restoreCurrentRGBState() {
@@ -83,7 +85,7 @@ void LEDService::restoreCurrentRGBState() {
 
 void LEDService::eventsSendInProgress(bool on) {
     if (on) {
-        saveCurrentRGBState();
+        if (!externalInterfaceOn) saveCurrentRGBState();
         lightOnBlue(true);
     } else {
         restoreCurrentRGBState();
@@ -92,13 +94,45 @@ void LEDService::eventsSendInProgress(bool on) {
 
 void LEDService::updateKeystoreProgress(bool on) {
     if (on) {
-        saveCurrentRGBState();
+        if (!externalInterfaceOn) saveCurrentRGBState();
         lightOnPurple(true);
     } else {
         restoreCurrentRGBState();
     }
 }
 
+void LEDService::onExternalInterfaceProgress(bool on) {
+    if (on) {
+        this->toggleExternalInterfaceProgress();
+    } else {
+        restoreCurrentRGBState();
+    }
+}
+
+void LEDService::toggleExternalInterfaceProgress() {
+    if (externalInterfaceOn) {
+        restoreCurrentRGBState();
+        externalInterfaceOn = false;
+    } else {
+        switchAnalogPin(externalIMode);
+        externalInterfaceOn = true;
+    }
+}
+
+void LEDService::onFormatFS() {
+    lightOnRed(true);
+}
+
 void LEDService::idle() {
-//TODO standby RGB gradient
+    switchAnalogPin(RGB._green);
+    saveCurrentRGBState();
+}
+
+void LEDService::onNoConnection() {
+    lightOnRed(true);
+    saveCurrentRGBState();
+}
+
+void LEDService::setCustomRGB(RGBCONFIG RGBConfig) {
+    this->externalIMode = RGBConfig;
 }
