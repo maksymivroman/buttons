@@ -244,6 +244,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             pointer-events: none;
         }
 
+        #saveLastState:not(:checked) ~ #restoreLastStateOnLoadContainer {
+            opacity: .5;
+            pointer-events: none;
+            user-select: none;
+        }
+
         #sendEventOnKeystoreUpdate:not(:checked) ~ #delaySendEventsContainer {
             opacity: .5;
             pointer-events: none;
@@ -530,6 +536,10 @@ const char index_html[] PROGMEM = R"rawliteral(
             <div class="item">
                 <input type="checkbox" id="saveLastState">
                 <label for="saveLastState" style="margin: 0 8px;">Enable Toggle mode support</label>
+                <div id="restoreLastStateOnLoadContainer" class="item" style="margin-left: 32px;">
+                    <input type="checkbox" id="restoreLastStateOnLoad">
+                    <label for="restoreLastStateOnLoad" style="margin: 0 8px;">Restore last state on load</label>
+                </div>
             </div>
         </div>
 
@@ -727,8 +737,9 @@ const char index_html[] PROGMEM = R"rawliteral(
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
-        const saveLastState = Number(document.getElementById('saveLastState').checked);
         const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
+        const saveLastState = Number(document.getElementById('saveLastState').checked);
+        const restoreLastStateOnLoad = Number(document.getElementById('restoreLastStateOnLoad').checked);
         const remoteStateChange = Number(document.getElementById('remoteStateChange').checked);
         const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
         const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
@@ -749,6 +760,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             enableOtaUpdate,
             remoteTriggering,
             saveLastState,
+            restoreLastStateOnLoad,
             remoteStateChange,
             keystoreEnabled,
             sendEventOnKeystoreUpdate,
@@ -823,6 +835,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
         document.getElementById('remoteTriggering').checked = config.remoteTriggering;
         document.getElementById('saveLastState').checked = config.saveLastState;
+        document.getElementById('restoreLastStateOnLoad').checked = config.restoreLastStateOnLoad;
         document.getElementById('keystoreEnabled').checked = config.keystoreEnabled;
         document.getElementById('remoteStateChange').checked = config.remoteStateChange;
         document.getElementById('sendEventOnKeystoreUpdate').checked = config.sendEventOnKeystoreUpdate;

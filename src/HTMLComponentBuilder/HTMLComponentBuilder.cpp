@@ -111,7 +111,8 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
             statisticLevel: <statisticLevel>,
             statisticApi: "<statisticApi>",
             remoteStateChange: <remoteStateChange>,
-            saveLastState: <saveLastState>
+            saveLastState: <saveLastState>,
+            restoreLastStateOnLoad: <restoreLastStateOnLoad>
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
@@ -133,6 +134,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     configObj.replace("<statisticApi>", String(data.statisticApi));
     configObj.replace("<remoteStateChange>", String(data.remoteStateChange));
     configObj.replace("<saveLastState>", String(data.saveLastState));
+    configObj.replace("<restoreLastStateOnLoad>", String(data.restoreLastStateOnLoad));
 
     return configObj;
 }

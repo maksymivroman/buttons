@@ -46,7 +46,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,4,0, true);
+Version currentFWVersion(1,3,9, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -74,7 +74,7 @@ String components(const String &ref) {
     return htmlComponent.componentById(ref);
 }
 
-[[noreturn]] void restart() {
+void restart() {
     optimistic_yield(1000);
     ledService.lightOnRed(true);
     notifier.onRestart();
@@ -99,10 +99,13 @@ void setup() {
     }
 
     if (buttonSettings.saveLastState()) {
+        logger.log("[MAIN:INIT] Button Toggle mode enabled");
         buttonSettings.loadButtonDynamicProps();
-        auto state = static_cast<BUTTON_STATE>(buttonSettings.getLastStatePressed());
-        buttonState.setToggleState(state);
-        logger.log("[ButtonInit] Button state restored to : ", state);
+        if(buttonSettings.restoreLastStateOnLoad()) {
+            auto state = static_cast<BUTTON_STATE>(buttonSettings.getLastStatePressed());
+            buttonState.setToggleState(state);
+            logger.log("[MAIN:INIT] Button Toggle mode restored to : ", state);
+        }
     }
 
     buttonSettings.loadEvents();
@@ -271,7 +274,7 @@ void loop() {
 
     ToggleStateTask(buttonState.isPressed(),[]() {
         auto state = buttonState.toggleState();
-        buttonSettings.setLastState(state);
+        if (buttonSettings.restoreLastStateOnLoad()) buttonSettings.setLastState(state);
         ledService.idle(state);}, !buttonSettings.saveLastState());
 
     UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){

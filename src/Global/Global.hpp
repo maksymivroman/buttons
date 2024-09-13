@@ -41,7 +41,9 @@ struct EEPROM_SETTINGS {
     bool sendEventOnKeystoreUpdate = false;
     bool delaySendEvents = false;
     bool remoteStateChange = false;
-    bool saveLastState = true;
+
+    bool saveLastState = false;
+    bool restoreLastStateOnLoad = false;
 
     unsigned int loggerLevel = 0;
     unsigned int fwVersion = 0;

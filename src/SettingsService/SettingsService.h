@@ -29,7 +29,10 @@ public:
     bool loggerEnabled() const;
     bool statisticEnabled() const;
     bool remoteStateChangeEnabled() const;
+
     bool saveLastState() const;
+    bool restoreLastStateOnLoad() const;
+
     String statisticApi() const;
     unsigned int fwVersion() const;
     LoggerLevel loggerLevel() const;

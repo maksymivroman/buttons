@@ -140,7 +140,9 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
     settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
     settings.remoteStateChange = jsonSettings["remoteStateChange"].as<bool>() | false;
+
     settings.saveLastState = jsonSettings["saveLastState"].as<bool>() | false;
+    settings.restoreLastStateOnLoad = jsonSettings["restoreLastStateOnLoad"].as<bool>() | false;
 
     settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
@@ -191,6 +193,10 @@ bool SettingsService::remoteStateChangeEnabled() const {
 
 bool SettingsService::saveLastState() const {
     return buttonEepromSettings.saveLastState | false;
+}
+
+bool SettingsService::restoreLastStateOnLoad() const {
+    return buttonEepromSettings.restoreLastStateOnLoad | false;
 }
 
 LoggerLevel SettingsService::loggerLevel() const {
@@ -309,7 +315,7 @@ unsigned int SettingsService::fwVersion() const {
 
 void SettingsService::writeToEEPROM(EEPROM_SETTINGS settings) {
     logger.log("[SettingsService] -> Write to EEPROM ", sizeof settings, " bytes...");
-    EEPROM.begin(this->eepromSize);
+    EEPROM.begin(this->dynamicEepromSize + this->dynamicEepromStartOffset());
     EEPROM.put(0, settings);
     EEPROM.end();
     logger.log("[SettingsService] -> Write to EEPROM. DONE");
