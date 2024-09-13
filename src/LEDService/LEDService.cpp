@@ -1,38 +1,51 @@
 #include <Arduino.h>
 #include "LEDService.h"
 
+unsigned char RGB_IO::read(IO_PINS pin) const {
+    return _rgbStateMap.at(pin);
+}
+
+void RGB_IO::write(IO_PINS pin, unsigned char value)  {
+    auto ioPin = this->ioPinConfig.at(pin);
+    analogWrite(ioPin, value);
+    _rgbStateMap[static_cast<IO_PINS>(pin)] = value;
+}
+
+void RGB_IO::initIOPins(unsigned char r, unsigned char g, unsigned char b) {
+    this->ioPinConfig = {{ R_PIN, r }, {G_PIN, g} , { B_PIN, b }};
+    pinMode(r, OUTPUT);
+    pinMode(g, OUTPUT);
+    pinMode(b, OUTPUT);
+}
+
+
 void LEDService::pinConfig(int r, int g, int b) {
-    pinGreen = g;
-    pinRed = r;
-    pinBlue = b;
-    pinMode(pinRed, OUTPUT);
-    pinMode(pinGreen, OUTPUT);
-    pinMode(pinBlue, OUTPUT);
+    this->initIOPins(r, g, b);
 }
 
-void LEDService::switchPin(int pin, int state) const {
-    digitalWrite(pinGreen, 0);
-    digitalWrite(pinRed, 0);
-    digitalWrite(pinBlue, 0);
-    digitalWrite(pin, state);
+void LEDService::switchPin(IO_PINS pin, int state) {
+    write(R_PIN, 0);
+    write(G_PIN, 0);
+    write(B_PIN, 0);
+    write(pin, state);
 }
 
-void LEDService::switchPin(RGBCONFIG pinsState) const {
-    digitalWrite(pinRed, pinsState.r);
-    digitalWrite(pinGreen, pinsState.g);
-    digitalWrite(pinBlue, pinsState.b);
+void LEDService::switchPin(RGBCONFIG pinsState) {
+    write(R_PIN, pinsState.r);
+    write(G_PIN, pinsState.g);
+    write(B_PIN, pinsState.b);
 }
 
-void LEDService::switchAnalogPin(RGBCONFIG pinsState) const {
-    analogWrite(pinRed, pinsState.r);
-    analogWrite(pinGreen, pinsState.g);
-    analogWrite(pinBlue, pinsState.b);
+void LEDService::switchAnalogPin(RGBCONFIG pinsState) {
+    write(R_PIN, pinsState.r);
+    write(G_PIN, pinsState.g);
+    write(B_PIN, pinsState.b);
 }
 
-void LEDService::blink(int pin, int count) {
+void LEDService::blink(IO_PINS pin, int count) {
     for (int i = 0; i < count * 2; ++i) {
-        int state = digitalRead(pin);
-        switchPin(pin, !state);
+        unsigned char state = read(pin);
+        switchPin(pin, ~state);
         delay(100);
     }
     switchPin(pin, 0);
@@ -55,19 +68,19 @@ void LEDService::lightOnPurple(bool on) {
 }
 
 void LEDService::blinkWarn() {
-    blink(pinRed, 6);
+    blink(R_PIN, 6);
 }
 
 void LEDService::blinkPrimary() {
-    blink(pinBlue, 5);
+    blink(B_PIN, 5);
 }
 
 void LEDService::blinkDone() {
-    blink(pinGreen, 5);
+    blink(G_PIN, 5);
 }
 
 void LEDService::saveCurrentRGBState() {
-    rgbCurrentState = {digitalRead(pinRed),digitalRead(pinGreen),digitalRead(pinBlue)};
+    rgbCurrentState = {read(R_PIN),read(G_PIN),read(B_PIN)};
 }
 
 void LEDService::findMe() {
@@ -78,9 +91,9 @@ void LEDService::findMe() {
 }
 
 void LEDService::restoreCurrentRGBState() {
-    digitalWrite(pinRed, rgbCurrentState.r);
-    digitalWrite(pinGreen, rgbCurrentState.g);
-    digitalWrite(pinBlue, rgbCurrentState.b);
+    write(R_PIN, rgbCurrentState.r);
+    write(G_PIN, rgbCurrentState.g);
+    write(B_PIN, rgbCurrentState.b);
 }
 
 void LEDService::eventsSendInProgress(bool on) {
@@ -123,16 +136,26 @@ void LEDService::onFormatFS() {
     lightOnRed(true);
 }
 
-void LEDService::idle() {
-    switchAnalogPin(RGB._green);
-    saveCurrentRGBState();
-}
-
 void LEDService::onNoConnection() {
     lightOnRed(true);
     saveCurrentRGBState();
 }
 
-void LEDService::setCustomRGB(RGBCONFIG RGBConfig) {
-    this->externalIMode = RGBConfig;
+void LEDService::idle() {
+    switchAnalogPin(RGB._green);
+    saveCurrentRGBState();
+}
+
+void LEDService::idle(bool isToggleMode, bool isPressedState) {
+    if (!isToggleMode) {
+        this->idle();
+        return;
+    }
+    isPressedState ? switchAnalogPin(RGB._orange) : switchAnalogPin(RGB._green);
+    saveCurrentRGBState();
+}
+
+void LEDService::idle(bool isPressedState) {
+    isPressedState ? switchAnalogPin(RGB._orange) : switchAnalogPin(RGB._green);
+    saveCurrentRGBState();
 }

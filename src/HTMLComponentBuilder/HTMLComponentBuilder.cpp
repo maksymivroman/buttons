@@ -4,7 +4,7 @@
 
 #include "HTMLComponentBuilder.h"
 
-void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient) {
+void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient) {
     networkSsid = ssid;
     networkPassword = password;
     events = eventsConfig;
@@ -60,6 +60,9 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "KSKEYS") {
         data += keystore.currentItemsCount();
         return data;
+    } else if (ref == "TOGGLESTATE") {
+        data += buttonState.getToggleMode() ? "PRESSED" : "RELEASED";
+        return data;
     } else if (ref == "IP") {
         switch (WiFi.getMode()) {
             case WIFI_STA:
@@ -88,7 +91,7 @@ String HTMLComponentBuilder::wiFiList() {
     return wifilist;
 }
 
-String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
+String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     String configObj = R"({
             loggerEnabled: <loggerEnabled>,
             loggerLevel: <loggerLevel>,
@@ -107,7 +110,8 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
             statisticEnabled: <statisticEnabled>,
             statisticLevel: <statisticLevel>,
             statisticApi: "<statisticApi>",
-            remoteStateChange: <remoteStateChange>
+            remoteStateChange: <remoteStateChange>,
+            saveLastState: <saveLastState>
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
@@ -128,6 +132,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROMSETTINGS data) {
     configObj.replace("<statisticLevel>", String(data.statisticLevel));
     configObj.replace("<statisticApi>", String(data.statisticApi));
     configObj.replace("<remoteStateChange>", String(data.remoteStateChange));
+    configObj.replace("<saveLastState>", String(data.saveLastState));
 
     return configObj;
 }

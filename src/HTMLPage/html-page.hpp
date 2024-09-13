@@ -523,6 +523,16 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <h5 class="item" style="margin: 0">http://%IP%/external?led=${on/off}&beep={on/off}</h5>
             </div>
         </div>
+
+        <h2 class="section-header">Toggle mode</h2>
+
+        <div class="border" style="padding: 24px">
+            <div class="item">
+                <input type="checkbox" id="saveLastState">
+                <label for="saveLastState" style="margin: 0 8px;">Enable Toggle mode support</label>
+            </div>
+        </div>
+
         <h2 class="section-header">Integration</h2>
         <div class="border" style="padding: 24px">
             <div class="item">
@@ -592,6 +602,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="flexbox-wrap max-h">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Keystore keys:</h5>
             <h5 style="margin: 5px">%KSKEYS%</h5>
+        </div>
+        <div class="flexbox-wrap max-h">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Toggle state:</h5>
+            <h5 style="margin: 5px">%TOGGLESTATE%</h5>
         </div>
     </div>
 
@@ -713,6 +727,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
+        const saveLastState = Number(document.getElementById('saveLastState').checked);
         const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
         const remoteStateChange = Number(document.getElementById('remoteStateChange').checked);
         const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
@@ -733,6 +748,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             customHSsid,
             enableOtaUpdate,
             remoteTriggering,
+            saveLastState,
             remoteStateChange,
             keystoreEnabled,
             sendEventOnKeystoreUpdate,
@@ -806,6 +822,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('hotspotSsid').value = config.hotspotSsid;
         document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
         document.getElementById('remoteTriggering').checked = config.remoteTriggering;
+        document.getElementById('saveLastState').checked = config.saveLastState;
         document.getElementById('keystoreEnabled').checked = config.keystoreEnabled;
         document.getElementById('remoteStateChange').checked = config.remoteStateChange;
         document.getElementById('sendEventOnKeystoreUpdate').checked = config.sendEventOnKeystoreUpdate;

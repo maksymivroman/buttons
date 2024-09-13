@@ -13,7 +13,7 @@ public:
     WiFiCONFIG getWiFiConnDetails();
     const String *events();
     INTEGRATIONSETTINGS integrationSettings();
-    EEPROMSETTINGS getButtonConfig();
+    EEPROM_SETTINGS getButtonConfig();
 
     void saveEvents(String events);
     void saveSettings(String settings);
@@ -29,6 +29,7 @@ public:
     bool loggerEnabled() const;
     bool statisticEnabled() const;
     bool remoteStateChangeEnabled() const;
+    bool saveLastState() const;
     String statisticApi() const;
     unsigned int fwVersion() const;
     LoggerLevel loggerLevel() const;
@@ -36,6 +37,10 @@ public:
     char *customHotspotSsid();
     String deviceID() const;
     KEYSTORESETTINGS keystoreSettings() const;
+
+    void loadButtonDynamicProps();
+    bool getLastStatePressed();
+    void setLastState(int state);
 
     void handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat);
 
@@ -45,12 +50,21 @@ public:
 private:
     void writeButtonEepromSettings(String& config);
     void saveIntegrationSettings(String settings);
-    void writeToEEPROM(EEPROMSETTINGS settings);
+    void writeToEEPROM(EEPROM_SETTINGS settings);
+
+    void updateDynamicEEPROM(EEPROM_DYNAMIC dynamicProps);
 
     String dataFromFS(const String& fileName);
     String eventsData;
 
-    EEPROMSETTINGS buttonEepromSettings;
+    EEPROM_SETTINGS buttonEepromSettings;
+    EEPROM_DYNAMIC buttonDynamicEeprom;
+
+    const size_t eepromSize = 1024;
+    const size_t dynamicEepromSize = 64;
+
+    size_t dynamicEepromStartOffset() const;
+    size_t totalEepromSize() const;
 };
 
 

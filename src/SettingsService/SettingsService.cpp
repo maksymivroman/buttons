@@ -94,13 +94,13 @@ void SettingsService::saveSettings(String settings) {
 
 void SettingsService::loadButtonEepromSettings() {
     logger.log("[SettingsService] Read EEPROM");
-    EEPROM.begin(1024);
+    EEPROM.begin(this->eepromSize);
     EEPROM.get(0, buttonEepromSettings);
     EEPROM.end();
 }
 
 void SettingsService::writeButtonEepromSettings(String &config) {
-    EEPROMSETTINGS settings = *new EEPROMSETTINGS;
+    EEPROM_SETTINGS settings = *new EEPROM_SETTINGS;
 
     DynamicJsonDocument jsonSettings(1024);
     deserializeJson(jsonSettings, config);
@@ -140,6 +140,7 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
     settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
     settings.remoteStateChange = jsonSettings["remoteStateChange"].as<bool>() | false;
+    settings.saveLastState = jsonSettings["saveLastState"].as<bool>() | false;
 
     settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
@@ -152,7 +153,7 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     this->writeToEEPROM(settings);
 }
 
-EEPROMSETTINGS SettingsService::getButtonConfig() {
+EEPROM_SETTINGS SettingsService::getButtonConfig() {
     return buttonEepromSettings;
 }
 
@@ -188,6 +189,10 @@ bool SettingsService::remoteStateChangeEnabled() const {
     return buttonEepromSettings.remoteStateChange | false;
 }
 
+bool SettingsService::saveLastState() const {
+    return buttonEepromSettings.saveLastState | false;
+}
+
 LoggerLevel SettingsService::loggerLevel() const {
     return static_cast<LoggerLevel>(buttonEepromSettings.loggerLevel);
 }
@@ -201,9 +206,9 @@ String SettingsService::statisticApi() const {
 }
 
 void SettingsService::clearEeprom() {
-    logger.log("[SettingsService] Start clear EEPROM [1024] ...");
-    EEPROM.begin(1024);
-    for (int i = 0; i < 1024; ++i) {
+    logger.log("[SettingsService] Start clear EEPROM. Size: ", this->totalEepromSize(), " ...");
+    EEPROM.begin(this->totalEepromSize());
+    for (int i = 0; i < this->totalEepromSize(); ++i) {
         EEPROM.write(i, 0);
     }
     EEPROM.commit();
@@ -302,19 +307,27 @@ unsigned int SettingsService::fwVersion() const {
     return buttonEepromSettings.fwVersion;
 }
 
-void SettingsService::writeToEEPROM(EEPROMSETTINGS settings) {
+void SettingsService::writeToEEPROM(EEPROM_SETTINGS settings) {
     logger.log("[SettingsService] -> Write to EEPROM ", sizeof settings, " bytes...");
-    EEPROM.begin(1024);
+    EEPROM.begin(this->eepromSize);
     EEPROM.put(0, settings);
     EEPROM.end();
     logger.log("[SettingsService] -> Write to EEPROM. DONE");
+}
+
+void SettingsService::updateDynamicEEPROM(EEPROM_DYNAMIC dynamicProps) {
+    logger.log("[SettingsService] -> Write to EEPROM_DYNAMIC ", sizeof dynamicProps, " bytes...");
+    EEPROM.begin(this->dynamicEepromSize + this->dynamicEepromStartOffset());
+    EEPROM.put(this->dynamicEepromStartOffset(), dynamicProps);
+    EEPROM.end();
+    logger.log("[SettingsService] -> Write to EEPROM_DYNAMIC. DONE");
 }
 
 void SettingsService::handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat = false) {
     const bool versionChanged = buttonEepromSettings.fwVersion != currentFWVersion;
 
     if (versionChanged && requireEEPROMFormat) {
-        EEPROMSETTINGS defaultEEPROMConfig;
+        EEPROM_SETTINGS defaultEEPROMConfig;
         defaultEEPROMConfig.fwVersion = currentFWVersion;
         this->clearEeprom();
         this->writeToEEPROM(defaultEEPROMConfig);
@@ -340,3 +353,30 @@ String SettingsService::localIPAddress() const {
     }
 }
 
+size_t SettingsService::dynamicEepromStartOffset() const {
+    return static_cast<const int>(this->eepromSize) + 1;
+}
+
+void SettingsService::loadButtonDynamicProps() {
+    logger.log("[SettingsService] Read Dynamic EEPROM");
+    EEPROM.begin(this->dynamicEepromSize + this->dynamicEepromStartOffset());
+    EEPROM.get(this->dynamicEepromStartOffset(), this->buttonDynamicEeprom);
+    EEPROM.end();
+}
+
+bool SettingsService::getLastStatePressed() {
+    logger.log("[SettingsService] Read isPressedState: ", buttonDynamicEeprom.isPressedState);
+    return buttonDynamicEeprom.isPressedState;
+}
+
+size_t SettingsService::totalEepromSize() const {
+    return this->dynamicEepromStartOffset() + this->dynamicEepromSize;
+}
+
+void SettingsService::setLastState(int state) {
+    logger.log("[SettingsService] Set button state to ", state);
+    EEPROM_DYNAMIC props = *new EEPROM_DYNAMIC;
+    props.isPressedState = state;
+    this->updateDynamicEEPROM(props);
+    buttonDynamicEeprom.isPressedState = state;
+}

@@ -18,6 +18,7 @@
 #include "Keystore/Keystore.h"
 #include "Statistic/Statistic.h"
 #include "ExternalInterface/ExternalInterfaceService.h"
+#include "ButtonState/ButtonState.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -47,6 +48,7 @@ const char *hotspotPass = "12345678";
 
 Version currentFWVersion(1,4,0, true);
 
+ButtonState buttonState;
 LEDService ledService;
 SettingsService buttonSettings;
 AsyncWebServer server(80);
@@ -63,7 +65,7 @@ Keystore keystore(20);
 Logger logger(115200, 20);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
-        SendEventsTask, IntegrationTask, CheckConnectionTask(true),
+        SendEventsTask, IntegrationTask, CheckConnectionTask(true), ToggleStateTask(false),
         FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask, ResetExternalStateTask;
 
 ButtonIntervalTask ChangeLedStateITask, ChangeSoundStateITask;
@@ -96,12 +98,19 @@ void setup() {
         statistic.initStat(buttonSettings.statisticApi(),STAT_HTTP_POST, buttonSettings.statisticLevel());
     }
 
+    if (buttonSettings.saveLastState()) {
+        buttonSettings.loadButtonDynamicProps();
+        auto state = static_cast<BUTTON_STATE>(buttonSettings.getLastStatePressed());
+        buttonState.setToggleState(state);
+        logger.log("[ButtonInit] Button state restored to : ", state);
+    }
+
     buttonSettings.loadEvents();
 
     String eventsData = *buttonSettings.events();
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
-    EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
+    EEPROM_SETTINGS configuration = buttonSettings.getButtonConfig();
     INTEGRATIONSETTINGS integrationConfig = buttonSettings.integrationSettings();
     KEYSTORESETTINGS keystoreSettings = buttonSettings.keystoreSettings();
     NETWORKLIST wiFiList;
@@ -251,11 +260,19 @@ void setup() {
         }
         server.begin(); }
 
-    ledService.idle();
+    ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode());
 }
 
 void loop() {
     delay(100);
+
+    //TODO move to interruption
+    buttonState.setState(digitalRead(buttonPin));
+
+    ToggleStateTask(buttonState.isPressed(),[]() {
+        auto state = buttonState.toggleState();
+        buttonSettings.setLastState(state);
+        ledService.idle(state);}, !buttonSettings.saveLastState());
 
     UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){
         ledService.updateKeystoreProgress(true);
@@ -274,7 +291,7 @@ void loop() {
         if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Keystore update");
     });
 
-    SendEventsTask((digitalRead(buttonPin) == 1 || requiredToTriggerButton), [](){
+    SendEventsTask((buttonState.isPressed() || requiredToTriggerButton), [](){
         if (requiredToTriggerButton) notifier.onRemoteTrigger();
 
         externalInterface_ledActive = false;
@@ -329,7 +346,7 @@ void loop() {
 
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
-            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.idle(); },
+            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode()); },
             [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.onNoConnection(); },
             networkService.isAPMode()
             );
@@ -344,7 +361,7 @@ void loop() {
 
     ResetExternalStateTask(
             !externalInterface_ledActive,
-            [](){ledService.idle();});
+            [](){ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode());});
 
     RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
 
