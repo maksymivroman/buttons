@@ -11,6 +11,19 @@
 
 extern Logger logger;
 
+
+enum EVENT_TRIGGER {
+    DEFAULT_TRIGGER,
+    KEYSTORE_UPDATE,
+    STATE_PRESSED,
+    STATE_RELEASED
+};
+
+enum BUTTON_STATE {
+    NOT_PRESSED,
+    PRESSED
+};
+
 struct WiFiCONFIG {
     String ssid;
     String password;
@@ -22,12 +35,12 @@ struct NETWORKLIST {
 };
 
 struct RGBCONFIG {
-    int r;
-    int g;
-    int b;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
 };
 
-struct EEPROMSETTINGS {
+struct EEPROM_SETTINGS {
     bool loggerEnabled = false;
     bool statisticEnabled = false;
     bool clientWebAccess = false;
@@ -37,11 +50,13 @@ struct EEPROMSETTINGS {
     bool useCustomHSsid = false;
     bool useTelegramIntegration = false;
     bool remoteTriggering = false;
-
     bool keystoreEnabled = false;
     bool sendEventOnKeystoreUpdate = false;
     bool delaySendEvents = false;
     bool remoteStateChange = false;
+
+    bool saveLastState = false;
+    bool restoreLastStateOnLoad = false;
 
     unsigned int loggerLevel = 0;
     unsigned int fwVersion = 0;
@@ -52,6 +67,10 @@ struct EEPROMSETTINGS {
     char wifiSsid[256]{};
     char wifiPass[256]{};
     char hotspotSsid[32]{};
+};
+
+struct EEPROM_DYNAMIC {
+    bool isPressedState = false;
 };
 
 struct KEYSTORESETTINGS {

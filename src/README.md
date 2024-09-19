@@ -5,7 +5,7 @@
 #### _used 564 bytes_
 
 ```c++
-struct EEPROMSETTINGS {
+struct EEPROM_SETTINGS {
     bool loggerEnabled;
     bool clientWebAccess;
     bool enableOtaUpdate;
