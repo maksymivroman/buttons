@@ -300,7 +300,7 @@ void loop() {
         externalInterface_ledActive = false;
         externalInterface_buzzActive = false;
         ledService.eventsSendInProgress(true);
-        eventService.SendEvents();
+        eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
         ledService.eventsSendInProgress(false);
 
         if (requiredToTriggerButton) {
@@ -338,7 +338,7 @@ void loop() {
     OnKeystoreUpdateTask(
             sendEventsOnKeystoreChange, []() {
                 ledService.updateKeystoreProgress(true);
-                eventService.SendEventsOnKeystoreChange();
+                eventService.SendEvents(KEYSTORE_UPDATE);
                 sendEventsOnKeystoreChange = !sendEventsOnKeystoreChange;
                 timeToExecuteTask = 0;
                 ledService.updateKeystoreProgress(false);

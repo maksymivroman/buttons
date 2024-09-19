@@ -11,6 +11,19 @@
 
 extern Logger logger;
 
+
+enum EVENT_TRIGGER {
+    DEFAULT_TRIGGER,
+    KEYSTORE_UPDATE,
+    STATE_PRESSED,
+    STATE_RELEASED
+};
+
+enum BUTTON_STATE {
+    NOT_PRESSED,
+    PRESSED
+};
+
 struct WiFiCONFIG {
     String ssid;
     String password;

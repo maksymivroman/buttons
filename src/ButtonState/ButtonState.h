@@ -5,10 +5,10 @@
 #ifndef EVENT_BUTTON_BUTTONSTATE_H
 #define EVENT_BUTTON_BUTTONSTATE_H
 
-enum BUTTON_STATE {
-    NOT_PRESSED,
-    PRESSED
-};
+#include "Global/Global.hpp"
+#include <map>
+
+typedef std::map<BUTTON_STATE, EVENT_TRIGGER> EventTriggerMap;
 
 class ButtonState {
 
@@ -20,10 +20,15 @@ public:
     void setToggleState(BUTTON_STATE state);
     BUTTON_STATE toggleState();
     BUTTON_STATE getToggleMode() const;
+    EVENT_TRIGGER getEventTrigger(bool isToggleMode);
 
 private:
     int currentButtonState = 0;
     int toggleableState = 0;
+    EventTriggerMap triggerByState = {
+            {NOT_PRESSED, STATE_RELEASED},
+            {PRESSED, STATE_PRESSED}
+    };
 };
 
 

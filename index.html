@@ -142,6 +142,18 @@
 
         .hashed {
             color: #858181;
+        }
+
+        .hashed-green {
+            background: repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgb(107, 182, 100, 0.3) 10px,
+                    rgba(107, 182, 100, 0.3) 20px
+            );
+        }
+        .hashed-gray {
             background: repeating-linear-gradient(
                     45deg,
                     transparent,
@@ -150,10 +162,18 @@
                     rgba(0, 0, 0, 0.04) 20px
             );
         }
-
-        .mt-m {
-            margin-top: 16px;
+        .hashed-orange {
+            background: repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgb(243, 157, 71, 0.3) 10px,
+                    rgba(243, 157, 71, 0.3) 20px
+            );
         }
+
+        .mt-m { margin-top: 16px; }
+        .m-0 { margin: 0; }
 
         .control {
             display: block;
@@ -261,9 +281,8 @@
             display: none;
         }
 
-        option {
-            font-size: 1rem;
-        }
+        option { font-size: 1rem; }
+        label { margin: 0 8px; }
 
         button, input, optgroup, select, textarea {
             margin: 0;
@@ -331,7 +350,6 @@
 <body>
 
 <div style="display: flex; flex-flow: column; overflow: auto;">
-
     <div class="header">
         <div style="display: flex; align-items: center;">
             <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="36px" height="36px" viewBox="0 3 24 24">
@@ -357,41 +375,27 @@
     <div class="content">
         <h2 class="section-header">Connectivity</h2>
         <div class="connectivity-container border">
-
             <div class="wifi-credentials">
-                <!--                %WIFILIST%-->
-                <!--                            <div class="main-container"><label class="label" for="wifiname">Select available network</label><select class="control" id="networks" onchange="update()"><option value="mal_net">mal_net</option><option value="TP-Link_300E">TP-Link_300E</option><option value="GB_">GB_</option><option value="justas_IoT">justas_IoT</option><option value="zhuk-free">zhuk-free</option><option value="peako">peako</option><option value="VEL.ZAL_2.4">VEL.ZAL_2.4</option><option value="Guest_Vel.Zal">Guest_Vel.Zal</option><option value="uarnet_reserv">uarnet_reserv</option></select></div>-->
-
-                <!--                <label class="label" style="margin: 16px 0;"></label>-->
-
-                <!--                %NETWORKINFO%-->
-                <div class="main-container"><label for="wifiname">WiFi SSID</label><input class="control mt-m"
-                                                                                          type="text" id="wifiname"
-                                                                                          value="peako-IoT"></div>
-                <div class="main-container"><label for="wifipass">WiFi password</label><input class="control mt-m"
-                                                                                              type="password"
-                                                                                              id="wifipass"
-                                                                                              value="shakal77"></div>
+                %WIFILIST%
+                <label class="label"></label>
+                %NETWORKINFO%
             </div>
-
             <div class="item mt-m" style="min-height: 55px; flex-wrap: wrap; gap: 20px;">
                 <input type="checkbox" id="useHotspotSsid">
                 <label for="useHotspotSsid">Use custom hotspot SSID</label>
                 <input maxlength="32" type="text" id="hotspotSsid" class="control">
             </div>
-
         </div>
 
         <div style="display: flex; flex: 1; align-items: center; justify-content: space-between">
             <h2 class="section-header">Assigned events</h2>
             <button style="display: flex; padding: 0 10px; align-self: flex-end; margin-bottom: 16px; align-items: center; gap: 4px;"
                     type="button" class="btn btn-red" onclick="openEditor()"><h1
-                    style="margin: 0; line-height: normal; font-weight: 200;">+</h1> Add new event
+                    style="line-height: normal; font-weight: 200; margin: 0;">+</h1> Add new event
             </button>
-
         </div>
-        <div class="event-data border">
 
+        <div class="event-data border">
             <table id="dataTable">
                 <thead>
                 <tr>
@@ -404,58 +408,10 @@
                 <!-- Table data -->
                 </tbody>
             </table>
-
-        </div>
-
-        <h2 class="section-header">Keystore</h2>
-
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="keystoreEnabled">
-                <label for="keystoreEnabled" style="margin: 0 8px;">Enable keystore</label>
-            </div>
-            <div class="item" style="flex-wrap: wrap;">
-                <input type="checkbox" id="sendEventOnKeystoreUpdate">
-                <label for="sendEventOnKeystoreUpdate" style="margin: 0 8px;">Send events on keystore update (marked with $) </label>
-
-                <div id="delaySendEventsContainer" class="item" style="margin-left: 32px;">
-                    <input type="checkbox" id="delaySendEvents">
-                    <label for="delaySendEvents" style="margin: 0 8px;">Handle delay to send events ('delay' param)</label>
-                </div>
-            </div>
-            <div class="item" style="margin-left: 32px;">
-            </div>
-            <div style="display: flex; flex-flow: row; align-items: center; flex-wrap: wrap;">
-                <h5 class="item" style="margin: 0">Update keystore URL: </h5>
-                <h5 class="item" style=" margin: 0">http://%IP%/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
-            </div>
-            <h5 class="item" style="font-weight: normal; margin: 0">delay - if provided, send events will be initiated after delay, ms</h5>
-            <h5 class="item" style="font-weight: normal; margin: 0">Use $key$ expression for event data, and it will be replaced by corresponding value</h5>
         </div>
 
         <h2 class="section-header">General settings</h2>
-
-        <div class="modal" id="successModel">
-            <div style="display: flex; align-items: center; flex-flow: column">
-                <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200px" height="200px" style="fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200">
-                    <g id="Layer_x0020_1">
-                        <polygon fill="#5B5A50" points="193.05,122.02 198.24,124.05 99.92,161.86 2.62,124.46 7.84,122.52 5.7,121.72 0.16,123.79 0.16,142.69 100.09,180.95 200,142.76 200,123.79 194.3,121.66 "/>
-                        <polygon fill="#5B5B5B" points="100.7,54.44 197.22,85.03 101.01,120.73 2.98,84.29 100.7,54.44 100.7,52.91 0,83.98 0,119.58 99.92,157.05 199.85,119.58 199.85,84.91 100.7,52.91 "/>
-                        <polygon id="upload-box_1" fill="#E53324" points="99.92,180.91 0.16,142.69 0.16,161.73 100.09,200 200,161.81 200,142.77 "/>
-                        <polygon fill="#898989" points="2.98,84.29 101.01,120.73 197.22,85.03 100.7,54.44 "/>
-                    </g>
-                </svg>
-
-                <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
-                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take
-                    a while</h4>
-                <h4 style="color: #b9b9b9; font-weight: 200">If the Button was connected to Wi-Fi during setup, you can refresh the page to continue</h4>
-                <button disabled id="refreshBtn" type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
-            </div>
-        </div>
-
-        <div class="extras-container border">
-
+        <div class="extras-container border" style="padding: 24px">
             <div class="item">
                 <input type="checkbox" id="loggerEnabled">
                 <label style="margin-left: 8px; margin-right: 8px;" for="loggerEnabled">Logger</label>
@@ -490,21 +446,87 @@
 
         </div>
 
-        <h2 class="section-header">Statistic</h2>
+        <h2 class="section-header">Toggle mode</h2>
 
-        <div class="border" style="padding: 24px;">
+        <div class="border" style="padding: 24px">
             <div class="item">
-                <input type="checkbox" id="statisticEnabled">
-                <label style="margin-left: 8px; margin-right: 8px;" for="statisticEnabled">Enable Statistic</label>
-                <select class="control" style="height: auto; min-width: auto;" id="statisticLevel">
-                    <option value="0">Simple</option>
-                    <option value="1">Extended</option>
-                </select>
+                <input type="checkbox" id="saveLastState">
+                <label for="saveLastState" >Enable Toggle mode</label>
+                <div id="restoreLastStateOnLoadContainer" class="item" style="margin-left: 32px;">
+                    <input type="checkbox" id="restoreLastStateOnLoad">
+                    <label for="restoreLastStateOnLoad">Restore last state on load</label>
+                </div>
             </div>
-            <div class="item --vertical" style="flex: 1; max-width: 400px;">
-                <label style="margin-left: 8px; margin-right: 8px; word-break: keep-all" for="statisticApi">API url</label>
-                <input maxlength="255" type="text" id="statisticApi" class="control --fill"
-                       style="max-width: 375px; font-size: 0.75rem;">
+            <div class="item" style="flex-flow: column; align-items: flex-start">
+                <span>Toggle mode allows you to send events depending on the state of the Button - Pressed or Released</span>
+                <span class="mt-m">Event host should be marked by $P$ or $R$ prefix</span>
+            </div>
+            <div class="item" style="gap: 12px;">
+                <div class="hashed hashed-green" style="padding: 0 16px;">
+                    <span style="color: black; border: 1px solid lightcoral">$R$</span>
+                    <span class="hashed">http://192.1...</span>
+                </div>
+                <span>Event will be sent if the Button state is Released</span>
+            </div>
+            <div class="item" style="gap: 12px;">
+                <div class="hashed hashed-orange" style="padding: 0 16px;">
+                    <span style="color: black; border: 1px solid lightcoral">$P$</span>
+                    <span class="hashed">http://192.1...</span>
+                </div>
+                <span>Event will be sent if the Button state is Pressed</span>
+            </div>
+        </div>
+
+        <h2 class="section-header">Keystore</h2>
+
+        <div class="border" style="padding: 24px">
+            <div class="item">
+                <input type="checkbox" id="keystoreEnabled">
+                <label for="keystoreEnabled">Enable keystore</label>
+            </div>
+            <div class="item" style="flex-wrap: wrap;">
+                <input type="checkbox" id="sendEventOnKeystoreUpdate">
+                <label for="sendEventOnKeystoreUpdate">Send events on keystore update (marked with a $K$) </label>
+
+                <div id="delaySendEventsContainer" class="item" style="margin-left: 32px;">
+                    <input type="checkbox" id="delaySendEvents">
+                    <label for="delaySendEvents">Handle delay to send events ('delay' param)</label>
+                </div>
+            </div>
+            <div class="item" style="flex-flow: column; align-items: flex-start">
+                <span>Event host should be marked with $K$ prefix</span>
+            </div>
+            <div class="item" style="gap: 12px;">
+                <div class="hashed hashed-gray" style="padding: 0 16px;">
+                    <span style="color: black; border: 1px solid lightcoral">$K$</span>
+                    <span class="hashed">http://192.1...</span>
+                </div>
+                <span>Event will be sent on Keysore update</span>
+            </div>
+            <div style="display: flex; flex-flow: row; align-items: center; flex-wrap: wrap;">
+                <h5 class="item m-0">Update keystore URL: </h5>
+                <h5 class="item m-0">http://%IP%/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
+            </div>
+            <h5 class="item m-0" style="font-weight: normal;">delay - if provided, send events will be initiated after delay, ms</h5>
+            <h5 class="item m-0" style="font-weight: normal;">Use $key$ expression for event data, and it will be replaced by corresponding value</h5>
+        </div>
+
+        <div class="modal" id="successModel">
+            <div style="display: flex; align-items: center; flex-flow: column">
+                <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200px" height="200px" style="fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200">
+                    <g id="Layer_x0020_1">
+                        <polygon fill="#5B5A50" points="193.05,122.02 198.24,124.05 99.92,161.86 2.62,124.46 7.84,122.52 5.7,121.72 0.16,123.79 0.16,142.69 100.09,180.95 200,142.76 200,123.79 194.3,121.66 "/>
+                        <polygon fill="#5B5B5B" points="100.7,54.44 197.22,85.03 101.01,120.73 2.98,84.29 100.7,54.44 100.7,52.91 0,83.98 0,119.58 99.92,157.05 199.85,119.58 199.85,84.91 100.7,52.91 "/>
+                        <polygon id="upload-box_1" fill="#E53324" points="99.92,180.91 0.16,142.69 0.16,161.73 100.09,200 200,161.81 200,142.77 "/>
+                        <polygon fill="#898989" points="2.98,84.29 101.01,120.73 197.22,85.03 100.7,54.44 "/>
+                    </g>
+                </svg>
+
+                <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
+                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take
+                    a while</h4>
+                <h4 style="color: #b9b9b9; font-weight: 200">If the Button was connected to Wi-Fi during setup, you can refresh the page to continue</h4>
+                <button disabled id="refreshBtn" type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
             </div>
         </div>
 
@@ -513,19 +535,19 @@
         <div class="border" style="padding: 24px">
             <div class="item">
                 <input type="checkbox" id="remoteTriggering">
-                <label for="remoteTriggering" style="margin: 0 8px;">Remote button triggering</label>
+                <label for="remoteTriggering">Remote button triggering</label>
             </div>
 
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">Trigger button using POST request:</h5>
+                <h5 class="item m-0">Trigger button using POST request:</h5>
             </div>
             <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-                <h5 class="item" style="margin: 0">Content-Type: </h5>
-                <h5 class="item" style="font-weight: normal; margin: 0">application/form-data</h5>
+                <h5 class="item m-0">Content-Type: </h5>
+                <h5 class="item m-0" style="font-weight: normal;">application/form-data</h5>
             </div>
             <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-                <h5 class="item" style="margin: 0">Key/Value: </h5>
-                <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
+                <h5 class="item m-0">Key/Value: </h5>
+                <h5 class="item m-0" style="font-weight: normal;">TRIGGER_BUTTON: AUTO</h5>
             </div>
         </div>
 
@@ -534,28 +556,15 @@
         <div class="border" style="padding: 24px">
             <div class="item">
                 <input type="checkbox" id="remoteStateChange">
-                <label for="remoteStateChange" style="margin: 0 8px;">Switch LED/Sound notifications remotely</label>
+                <label for="remoteStateChange">Switch LED/Sound notifications remotely</label>
             </div>
 
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">Trigger button LED/Sound using GET request:</h5>
+                <h5 class="item m-0">Trigger button LED/Sound using GET request:</h5>
             </div>
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">URL structure:</h5>
-                <h5 class="item" style="margin: 0">http://%IP%/external?led=${on/off}&beep={on/off}</h5>
-            </div>
-        </div>
-
-        <h2 class="section-header">Toggle mode</h2>
-
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="saveLastState">
-                <label for="saveLastState" style="margin: 0 8px;">Enable Toggle mode support</label>
-                <div id="restoreLastStateOnLoadContainer" class="item" style="margin-left: 32px;">
-                    <input type="checkbox" id="restoreLastStateOnLoad">
-                    <label for="restoreLastStateOnLoad" style="margin: 0 8px;">Restore last state on load</label>
-                </div>
+                <h5 class="item m-0">URL structure:</h5>
+                <h5 class="item m-0">http://%IP%/external?led=${on/off}&beep={on/off}</h5>
             </div>
         </div>
 
@@ -563,45 +572,64 @@
         <div class="border" style="padding: 24px">
             <div class="item">
                 <input type="checkbox" id="useTelegramIntegration">
-                <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message
+                <label for="useTelegramIntegration">Telegram Integration (send events, message
                     forwarding)</label>
             </div>
 
             <div id="telegramIntegration" class="item" style="margin-bottom: 20px; flex-wrap: wrap">
                 <div class="item --vertical" style="flex: 1; max-width: 400px;">
-                    <label for="tToken" style="margin: 0 8px;">Token</label>
+                    <label for="tToken">Token</label>
                     <input maxlength="50" type="text" id="tToken" class="control --fill"
                            style="max-width: 375px; font-size: 0.75rem;">
                 </div>
                 <div class="item --vertical">
-                    <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
+                    <label for="tChanelID">Chanel ID</label>
                     <input maxlength="32" type="number" id="tChanelID" class="control" style="font-size: 0.75rem;">
                 </div>
             </div>
 
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h4 class="item" style="margin: 0">Message forwarding:</h4>
+                <h4 class="item m-0">Message forwarding:</h4>
             </div>
 
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">URL structure:</h5>
-                <h5 class="item" style="margin: 0">http://%IP%/integration?data=MESSAGE</h5>
+                <h5 class="item m-0">URL structure:</h5>
+                <h5 class="item m-0">http://%IP%/integration?data=MESSAGE</h5>
             </div>
 
             <div class="item" style="margin-left: 16px;">
-                <label for="tPrefix" style="margin: 0 8px;">Message prefix</label>
+                <label for="tPrefix">Message prefix</label>
                 <input maxlength="32" type="text" id="tPrefix" class="control">
             </div>
             <div class="item" style="margin-left: 16px;">
-                <label for="tSuffix" style="margin: 0 8px;">Message suffix</label>
+                <label for="tSuffix">Message suffix</label>
                 <input maxlength="32" type="text" id="tSuffix" class="control">
             </div>
 
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">Result:</h5>
-                <h5 id="integrationResult" class="item" style="margin: 0">MESSAGE</h5>
+                <h5 class="item m-0">Result:</h5>
+                <h5 id="integrationResult" class="item m-0">MESSAGE</h5>
             </div>
         </div>
+        
+        <h2 class="section-header">Statistic</h2>
+
+        <div class="border" style="padding: 24px;">
+            <div class="item">
+                <input type="checkbox" id="statisticEnabled">
+                <label for="statisticEnabled">Enable Statistic</label>
+                <select class="control" style="height: auto; min-width: auto;" id="statisticLevel">
+                    <option value="0">Simple</option>
+                    <option value="1">Extended</option>
+                </select>
+            </div>
+            <div class="item --vertical" style="flex: 1; max-width: 400px;">
+                <label style="word-break: keep-all" for="statisticApi">API url</label>
+                <input maxlength="255" type="text" id="statisticApi" class="control --fill"
+                       style="max-width: 375px; font-size: 0.75rem;">
+            </div>
+        </div>
+
         <div style="display: flex; flex: 1; justify-content: center; margin: 80px 0;">
             <button id="saveButton" type="button" class="btn btn-red" onclick="saveSettings()">Save And Reboot</button>
         </div>
@@ -694,8 +722,6 @@
         </div>
     </div>
 </dialog>
-
-<!--<div class="modal" > &lt;!&ndash;style="visibility: visible;"&ndash;&gt;-->
 
 </div>
 <div id="body"></div>
@@ -824,41 +850,36 @@
     }
 
     function showSaved() {
+        const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
+            'useTelegramIntegration', 'saveLastState',
+            'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
+        const optionSettings = ['loggerLevel', 'statisticLevel'];
+        const inputsSettings = ['statisticApi', 'hotspotSsid'];
+        const securedCheckboxSettings = ['clientWebAccess', 'enableOtaUpdate'];
+
         config = {};//%CONFIGURATION% ;
+        // eventDataObj = Object( %EVENTINFO% );
+        eventDataObj = Object( {"$R$ssss":"wewe wee"} );
 
-        eventDataObj = {"sample_event_host": "sample_event_data"}; // %EVENTINFO%
-
-        if (eventDataObj === null) {
-            eventDataObj = {};
-        }
-
-        try {
-            document.getElementById('clientWebAccess').checked = config.clientWebAccess;
-            document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
-        } catch (e) {
-            console.warn('some options are restricted in client mode');
+        for(let key in config) {
+            if (checkboxSettings.some(k => k === key)) {
+                document.getElementById(key).checked = config[key];
+            } else if (optionSettings.some(k => k === key)) {
+                document.getElementById(key).selectedIndex = config[key];
+            } else if (inputsSettings.some(k => k === key)) {
+                document.getElementById(key).value = config[key];
+            } else if (securedCheckboxSettings.some(k => k === key)) {
+                try {
+                    document.getElementById(key).checked = config[key];
+                } catch (e) {
+                    console.warn('some options are restricted in client mode');
+                }
+            }
         }
 
         if (!config.enableOtaUpdate && !document.getElementById('enableOtaUpdate')) {
             document.getElementById('updateBtn').remove();
         }
-
-        document.getElementById('useDnsName').checked = config.useDnsName;
-        document.getElementById('loggerEnabled').checked = config.loggerEnabled;
-        document.getElementById('loggerLevel').selectedIndex = config.loggerLevel;
-        document.getElementById('statisticEnabled').checked = config.statisticEnabled;
-        document.getElementById('statisticLevel').selectedIndex = config.statisticLevel;
-        document.getElementById('statisticApi').value = config.statisticApi;
-        document.getElementById('useSound').checked = config.useSound;
-        document.getElementById('useHotspotSsid').checked = config.customHSsid;
-        document.getElementById('hotspotSsid').value = config.hotspotSsid;
-        document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
-        document.getElementById('remoteTriggering').checked = config.remoteTriggering;
-        document.getElementById('restoreLastStateOnLoad').checked = config.restoreLastStateOnLoad;
-        document.getElementById('keystoreEnabled').checked = config.keystoreEnabled;
-        document.getElementById('remoteStateChange').checked = config.remoteStateChange;
-        document.getElementById('sendEventOnKeystoreUpdate').checked = config.sendEventOnKeystoreUpdate;
-        document.getElementById('delaySendEvents').checked = config.delaySendEvents;
 
         integrationConfig = {};// %INTEGRATION% ;
 
@@ -902,11 +923,17 @@
     const dataTable = document.getElementById('dataTable');
     const tbody = dataTable.querySelector('tbody');
 
+    const colorMap = {
+        $K$: 'class="hashed hashed-gray"',
+        $P$: 'class="hashed hashed-orange"',
+        $R$: 'class="hashed hashed-green"',
+    }
+
     function populateTable() {
         tbody.innerHTML = '';
         for (const key in eventDataObj) {
             const row = `
-                        <tr ${key.startsWith("$",0) ? 'class="hashed"' : ''}>
+                        <tr ${colorMap[key.substring(0,3)]}>
                           <td>${key}</td>
                           <td >${eventDataObj[key]}</td>
                           <td style="display: flex; justify-content: flex-end; gap: 8px;">

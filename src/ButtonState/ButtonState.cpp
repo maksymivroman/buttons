@@ -28,3 +28,10 @@ BUTTON_STATE ButtonState::toggleState() {
 void ButtonState::setToggleState(BUTTON_STATE state) {
     this->toggleableState = state;
 }
+
+EVENT_TRIGGER ButtonState::getEventTrigger(bool isToggleMode) {
+    if (!isToggleMode) {
+        return DEFAULT_TRIGGER;
+    }
+    return this->triggerByState.at(this->getToggleMode());
+}
