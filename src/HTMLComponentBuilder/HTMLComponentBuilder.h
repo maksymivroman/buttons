@@ -11,10 +11,12 @@
 #include "Keystore/Keystore.h"
 #include "Global/Version.h"
 #include "ButtonState/ButtonState.h"
+#include "NetworkService/NetworkService.h"
 
 extern Keystore keystore;
 extern Version currentFWVersion;
 extern ButtonState buttonState;
+extern NetworkService networkService;
 
 class HTMLComponentBuilder {
 public:

@@ -7,8 +7,12 @@
 #include <ESP8266WiFi.h>
 #include "Global/Global.hpp"
 
+void NetworkService::setWiFiMode(BUTTON_WIFI_MODE mode) {
+    this->_mode = mode;
+}
+
 void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
-    WiFi.mode(WIFI_STA);
+    this->initWirelessModule();
     wifi_station_set_hostname("Event button");
     WiFi.setAutoConnect(false);
     logger.log("[NetworkService] Hostname: ", WiFi.hostname().c_str());
@@ -23,7 +27,7 @@ void NetworkService::ConnectToWiFi(const String& ssid, const String& pass) {
 
 void NetworkService::ButtonHotspot(bool isOn, const char* ssid, const char* pass) {
     if (isOn) {
-        WiFi.mode(WIFI_STA);
+        this->initWirelessModule();
         WiFi.softAP(ssid, pass);
         IPAddress IP = WiFi.softAPIP();
         logger.log("[NetworkService] Set AP: ", ssid, " IP address: ", IP.toString());
@@ -54,4 +58,16 @@ bool NetworkService::isConnectedToWiFi() {
 
 bool NetworkService::isAPMode() {
     return (WiFi.getMode() == WIFI_AP) | (WiFi.getMode() == WIFI_AP_STA);
+}
+
+void NetworkService::initWirelessModule() {
+    WiFi.mode(WIFI_STA);
+    if (this->_mode) {
+        logger.log("[NetworkService] Set WiFi mode to: ", this->_modeMap.at(static_cast<const WiFiPhyMode>(this->_mode)));
+        WiFi.setPhyMode(static_cast<WiFiPhyMode_t>(this->_mode));
+    }
+}
+
+String NetworkService::getWiFIMode() const {
+    return this->_modeMap.at(WiFi.getPhyMode());
 }

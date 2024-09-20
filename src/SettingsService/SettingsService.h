@@ -36,6 +36,7 @@ public:
     String statisticApi() const;
     unsigned int fwVersion() const;
     LoggerLevel loggerLevel() const;
+    BUTTON_WIFI_MODE wiFiMode() const;
     unsigned int statisticLevel() const;
     char *customHotspotSsid();
     String deviceID() const;

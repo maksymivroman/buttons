@@ -138,6 +138,7 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
+    settings.wiFiMode = jsonSettings["wiFiMode"].as<unsigned int>() | 0;
     settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
     settings.remoteStateChange = jsonSettings["remoteStateChange"].as<bool>() | false;
 
@@ -201,6 +202,10 @@ bool SettingsService::restoreLastStateOnLoad() const {
 
 LoggerLevel SettingsService::loggerLevel() const {
     return static_cast<LoggerLevel>(buttonEepromSettings.loggerLevel);
+}
+
+BUTTON_WIFI_MODE SettingsService::wiFiMode() const {
+    return static_cast<BUTTON_WIFI_MODE>(buttonEepromSettings.wiFiMode);
 }
 
 unsigned int SettingsService::statisticLevel() const {
