@@ -202,9 +202,6 @@ const char index_html[] PROGMEM = R"rawliteral(
             text-align: center;
             white-space: nowrap;
             vertical-align: middle;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
             padding: .375rem .75rem;
             font-size: 1rem;
@@ -429,6 +426,16 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
 
             <div class="item">
+                <label style="margin-right: 8px;" for="wiFiMode">WiFi mode</label>
+                <select class="control" style="height: auto; min-width: auto;" id="wiFiMode">
+                    <option value="0">Auto</option>
+                    <option value="1">11B</option>
+                    <option value="2">11G</option>
+                    <option value="3">11N</option>
+                </select>
+            </div>
+
+            <div class="item">
                 <input type="checkbox" id="useDnsName" name="dnsName" disabled>
                 <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
             </div>
@@ -632,30 +639,34 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     </div>
 
-    <div style="display: flex; justify-content: flex-start; align-items: center; width: 100vw; background: lightgray;">
-        <div class="flexbox-wrap max-h">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); background: lightgray;">
+        <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">FW version:</h5>
             <h5 style="margin: 5px">%FWVERSION% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">MAC address:</h5>
+        <div class="flexbox-wrap">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">MAC:</h5>
             <h5 style="margin: 5px">%MAC% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP address:</h5>
+        <div class="flexbox-wrap">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP:</h5>
             <h5 style="margin: 5px">%IP% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
+        <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
             <h5 style="margin: 5px">%HEAP% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
+        <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Keystore keys:</h5>
             <h5 style="margin: 5px">%KSKEYS%</h5>
         </div>
-        <div class="flexbox-wrap max-h">
+        <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Toggle state:</h5>
             <h5 style="margin: 5px">%TOGGLESTATE%</h5>
+        </div>
+        <div class="flexbox-wrap">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">WiFi mode:</h5>
+            <h5 style="margin: 5px">%WIFIMODE%</h5>
         </div>
     </div>
 
@@ -770,6 +781,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const useDnsName = Number(document.getElementById('useDnsName').checked);
         const loggerEnabled = Number(document.getElementById('loggerEnabled').checked);
         const loggerLevel = Number(document.getElementById('loggerLevel').selectedIndex);
+        const wiFiMode = Number(document.getElementById('wiFiMode').selectedIndex);
 
         const statisticEnabled = Number(document.getElementById('statisticEnabled').checked);
         const statisticLevel = Number(document.getElementById('statisticLevel').selectedIndex);
@@ -794,6 +806,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             statisticEnabled,
             statisticLevel,
             loggerLevel,
+            wiFiMode,
             useSound,
             useTelegramIntegration,
             customHSsid,
@@ -847,7 +860,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
             'useTelegramIntegration', 'saveLastState',
             'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
-        const optionSettings = ['loggerLevel', 'statisticLevel'];
+        const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode'];
         const inputsSettings = ['statisticApi', 'hotspotSsid'];
         const securedCheckboxSettings = ['clientWebAccess', 'enableOtaUpdate'];
 

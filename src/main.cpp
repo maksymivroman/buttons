@@ -46,7 +46,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,3,9, true);
+Version currentFWVersion(1,3,91, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -119,6 +119,7 @@ void setup() {
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
     notifier.useSound = buttonSettings.useSoundNotification();
+    networkService.setWiFiMode(buttonSettings.wiFiMode());
 
     if (digitalRead(buttonPin) == 1) {
         ledService.blinkWarn();

@@ -8,6 +8,7 @@
 
 #include <Arduino.h>
 #include "Logger/Logger.h"
+#include <ESP8266WiFi.h>
 
 extern Logger logger;
 
@@ -22,6 +23,13 @@ enum EVENT_TRIGGER {
 enum BUTTON_STATE {
     NOT_PRESSED,
     PRESSED
+};
+
+enum BUTTON_WIFI_MODE {
+    AUTO,
+    MODE_11B = WiFiPhyMode::WIFI_PHY_MODE_11B,
+    MODE_11G = WiFiPhyMode::WIFI_PHY_MODE_11G,
+    MODE_11N = WiFiPhyMode::WIFI_PHY_MODE_11N,
 };
 
 struct WiFiCONFIG {
@@ -58,6 +66,7 @@ struct EEPROM_SETTINGS {
     bool saveLastState = false;
     bool restoreLastStateOnLoad = false;
 
+    unsigned int wiFiMode = 0;
     unsigned int loggerLevel = 0;
     unsigned int fwVersion = 0;
 

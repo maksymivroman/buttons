@@ -63,6 +63,9 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "TOGGLESTATE") {
         data += buttonState.getToggleMode() ? "PRESSED" : "RELEASED";
         return data;
+    } else if (ref == "WIFIMODE") {
+        data += networkService.getWiFIMode();
+        return data;
     } else if (ref == "IP") {
         switch (WiFi.getMode()) {
             case WIFI_STA:
@@ -112,7 +115,8 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
             statisticApi: "<statisticApi>",
             remoteStateChange: <remoteStateChange>,
             saveLastState: <saveLastState>,
-            restoreLastStateOnLoad: <restoreLastStateOnLoad>
+            restoreLastStateOnLoad: <restoreLastStateOnLoad>,
+            wiFiMode: <wiFiMode>
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
@@ -135,6 +139,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     configObj.replace("<remoteStateChange>", String(data.remoteStateChange));
     configObj.replace("<saveLastState>", String(data.saveLastState));
     configObj.replace("<restoreLastStateOnLoad>", String(data.restoreLastStateOnLoad));
+    configObj.replace("<wiFiMode>", String(data.wiFiMode));
 
     return configObj;
 }
