@@ -58,7 +58,6 @@ public:
     void operator()(unsigned long interval, Fn execute, bool skipTask = false){
         unsigned long currentTime = millis();
         if ((currentTime >= this->executeTime) && !skipTask) {
-            logger.logSerial("[ButtonIntervalTask] Execute task handler (interval): ", interval);
             this->executeTime = currentTime + interval;
             execute();
         }

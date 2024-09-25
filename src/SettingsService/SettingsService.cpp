@@ -9,12 +9,7 @@
 #include "SettingsService.h"
 
 WiFiCONFIG SettingsService::getWiFiConnDetails() {
-    logger.log("[SettingsService] Get WiFi credentials from settings");
-    WiFiCONFIG eepromWiFiConfig;
-
-    eepromWiFiConfig.ssid = buttonEepromSettings.wifiSsid;
-    eepromWiFiConfig.password = buttonEepromSettings.wifiPass;
-
+    WiFiCONFIG eepromWiFiConfig{buttonEepromSettings.wifiSsid, buttonEepromSettings.wifiPass};
     return eepromWiFiConfig;
 }
 

@@ -21,6 +21,8 @@ public:
     bool isConnectedToWiFi();
     bool isAPMode();
 
+    void initConnectionToWiFi(const WiFiCONFIG& config);
+
     String getWiFIMode() const;
 
 private:
@@ -32,6 +34,8 @@ private:
             {WIFI_PHY_MODE_11G, "11G"},
             {WIFI_PHY_MODE_11N, "11N"}
     };
+
+    bool _isConnectionInitialized {false};
 };
 
 
