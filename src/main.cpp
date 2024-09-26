@@ -270,11 +270,17 @@ void setup() {
 
 void loop() {
     ConnectToWiFiITask(1000, [](){
-        ledService.lightOnBlue(true);
         auto config = buttonSettings.getWiFiConnDetails();
         networkService.initConnectionToWiFi(config);
         logger.logSerial("[MAIN] Pending connection to ", config.ssid, " / ", config.password);
     }, buttonState.isSetupOperationMode() || networkService.isConnectedToWiFi());
+
+    CheckConnectionTask(
+            networkService.isConnectedToWiFi(),
+            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode()); },
+            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.onNoConnection(); },
+            buttonState.isSetupOperationMode()
+    );
 
     MainITask(100, [&]() {
         //TODO move to interruption
@@ -353,13 +359,6 @@ void loop() {
                 },
                 [](){},
                 []() -> bool { return millis() < timeToExecuteTask; }
-        );
-
-        CheckConnectionTask(
-                networkService.isConnectedToWiFi(),
-                [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode()); },
-                [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.onNoConnection(); },
-                networkService.isAPMode()
         );
 
         ChangeLedStateITask(1000, []() {
