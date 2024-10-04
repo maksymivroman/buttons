@@ -68,7 +68,8 @@ ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
         SendEventsTask, IntegrationTask, CheckConnectionTask(true), ToggleStateTask(false),
         FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask, ResetExternalStateTask;
 
-ButtonIntervalTask ChangeLedStateITask, ChangeSoundStateITask;
+ButtonIntervalTask MainITask;
+ButtonIntervalTask ChangeLedStateITask, ChangeSoundStateITask, ConnectToWiFiITask;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
@@ -121,19 +122,18 @@ void setup() {
     notifier.useSound = buttonSettings.useSoundNotification();
     networkService.setWiFiMode(buttonSettings.wiFiMode());
 
-    if (digitalRead(buttonPin) == 1) {
+    buttonState.setOperationMode(static_cast<OPERATION_MODE>(digitalRead(buttonPin)));
+
+    if(buttonState.isSetupOperationMode()) {
         ledService.blinkWarn();
         const char *networkSsid =  buttonSettings.customHotspotSsid();
         networkService.ButtonHotspot(true, networkSsid, hotspotPass);
-    } else {
-        ledService.lightOnBlue(true);
-        networkService.ConnectToWiFi(wiFiConnDetails.ssid,wiFiConnDetails.password);
     }
 
     ledService.blinkPrimary();
 
     htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig,
-                                  networkService.isConnectedToWiFi());
+                                  buttonState.isRunOperationMode());
     eventService.SetEvents(eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -254,119 +254,127 @@ void setup() {
         });
     }
 
-    const bool serverEnabled = !networkService.isConnectedToWiFi() || (buttonSettings.clientWebAccessEnabled() &&
-                                                                       networkService.isConnectedToWiFi());
-    if ( serverEnabled ) {
-        if(!networkService.isConnectedToWiFi() || (buttonSettings.otaUpdateOnClientMode() &&
-                                                   networkService.isConnectedToWiFi())) {
+    const bool buttonOTAUpdateEnabled = buttonState.isSetupOperationMode() || (buttonState.isRunOperationMode() && buttonSettings.otaUpdateOnClientMode());
+    const bool serverEnabled = buttonState.isSetupOperationMode() || (buttonState.isRunOperationMode() && buttonSettings.clientWebAccessEnabled());
+
+    if (serverEnabled) {
+        if (buttonOTAUpdateEnabled) {
             ButtonOTAUpdate.setID(buttonSettings.customHotspotSsid());
             ButtonOTAUpdate.begin(&server);
         }
-        server.begin(); }
+        server.begin();
+    }
 
     ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode());
 }
 
 void loop() {
-    delay(100);
-
-    //TODO move to interruption
-    buttonState.setState(digitalRead(buttonPin));
-
-    ToggleStateTask(buttonState.isPressed(),[]() {
-        auto state = buttonState.toggleState();
-        if (buttonSettings.restoreLastStateOnLoad()) buttonSettings.setLastState(state);
-        ledService.idle(state);}, !buttonSettings.saveLastState());
-
-    UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){
-        ledService.updateKeystoreProgress(true);
-        auto items = keystore.keystoreItems();
-        String events = *buttonSettings.events();
-        for (auto &item: items) {
-            const auto &key = item.first;
-            const auto &value = item.second;
-            String constructKey = "$";
-            constructKey.concat(key); constructKey.concat("$");
-            events.replace(constructKey,value);
-        }
-        eventService.SetEvents(events);
-        ledService.updateKeystoreProgress(false);
-        requiredToUpdateEvents = false;
-        if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Keystore update");
-    });
-
-    SendEventsTask((buttonState.isPressed() || requiredToTriggerButton), [](){
-        if (requiredToTriggerButton) notifier.onRemoteTrigger();
-
-        externalInterface_ledActive = false;
-        externalInterface_buzzActive = false;
-        ledService.eventsSendInProgress(true);
-        eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
-        ledService.eventsSendInProgress(false);
-
-        if (requiredToTriggerButton) {
-            requiredToTriggerButton = !requiredToTriggerButton;
-            if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Send events. Triggered by: remote");
-        } else {
-            statistic.sendStat("Send events. Triggered by: physical");
-        }
-    },networkService.isAPMode());
-
-    RequiredToFindTask(requiredToFind , [](){
-        notifier.onFindMe();
-        ledService.findMe();
-        requiredToFind = !requiredToFind;
-    });
-
-    EepromClearTask(requiredEepromClear,  [](){
-        buttonSettings.clearEeprom();
-        requiredRestart = true;
-    });
-
-    FormatFSTask(requiredToFormatFS, [](){
-        ledService.onFormatFS();
-        buttonSettings.formatFS();
-        requiredRestart = true;
-    });
-
-    IntegrationTask(integrationMessageToSend.length() != 0, [](){
-        notifier.onIntegrationMessage();
-        telegramBot.sendMessage(integrationMessageToSend);
-        integrationMessageToSend = "";
-        if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Integration: send message to telegram.");
-    });
-
-    OnKeystoreUpdateTask(
-            sendEventsOnKeystoreChange, []() {
-                ledService.updateKeystoreProgress(true);
-                eventService.SendEvents(KEYSTORE_UPDATE);
-                sendEventsOnKeystoreChange = !sendEventsOnKeystoreChange;
-                timeToExecuteTask = 0;
-                ledService.updateKeystoreProgress(false);
-            },
-            [](){},
-            []() -> bool { return millis() < timeToExecuteTask; }
-    );
+    ConnectToWiFiITask(1000, [](){
+        auto config = buttonSettings.getWiFiConnDetails();
+        networkService.initConnectionToWiFi(config);
+        logger.logSerial("[MAIN] Pending connection to ", config.ssid, " / ", config.password);
+    }, buttonState.isSetupOperationMode() || networkService.isConnectedToWiFi());
 
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
             [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode()); },
             [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.onNoConnection(); },
-            networkService.isAPMode()
-            );
+            buttonState.isSetupOperationMode()
+    );
 
-    ChangeLedStateITask(1000, []() {
-        ledService.onExternalInterfaceProgress(true);
-    }, !externalInterface_ledActive);
+    MainITask(100, [&]() {
+        //TODO move to interruption
+        buttonState.setState(digitalRead(buttonPin));
 
-    ChangeSoundStateITask(10000, []() {
-        notifier.onExternal();
-    }, !externalInterface_buzzActive);
+        ToggleStateTask(buttonState.isPressed(),[]() {
+            auto state = buttonState.toggleState();
+            if (buttonSettings.restoreLastStateOnLoad()) buttonSettings.setLastState(state);
+            ledService.idle(state);}, !buttonSettings.saveLastState());
 
-    ResetExternalStateTask(
-            !externalInterface_ledActive,
-            [](){ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode());});
+        UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){
+            ledService.updateKeystoreProgress(true);
+            auto items = keystore.keystoreItems();
+            String events = *buttonSettings.events();
+            for (auto &item: items) {
+                const auto &key = item.first;
+                const auto &value = item.second;
+                String constructKey = "$";
+                constructKey.concat(key); constructKey.concat("$");
+                events.replace(constructKey,value);
+            }
+            eventService.SetEvents(events);
+            ledService.updateKeystoreProgress(false);
+            requiredToUpdateEvents = false;
+            if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Keystore update");
+        });
 
-    RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+        SendEventsTask((buttonState.isPressed() || requiredToTriggerButton), [](){
+            if (requiredToTriggerButton) notifier.onRemoteTrigger();
 
+            externalInterface_ledActive = false;
+            externalInterface_buzzActive = false;
+            ledService.eventsSendInProgress(true);
+            eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
+            ledService.eventsSendInProgress(false);
+
+            if (requiredToTriggerButton) {
+                requiredToTriggerButton = !requiredToTriggerButton;
+                if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Send events. Triggered by: remote");
+            } else {
+                statistic.sendStat("Send events. Triggered by: physical");
+            }
+        },networkService.isAPMode());
+
+        RequiredToFindTask(requiredToFind , [](){
+            notifier.onFindMe();
+            ledService.findMe();
+            requiredToFind = !requiredToFind;
+        });
+
+        EepromClearTask(requiredEepromClear,  [](){
+            buttonSettings.clearEeprom();
+            requiredRestart = true;
+        });
+
+        FormatFSTask(requiredToFormatFS, [](){
+            ledService.onFormatFS();
+            buttonSettings.formatFS();
+            requiredRestart = true;
+        });
+
+        IntegrationTask(integrationMessageToSend.length() != 0, [](){
+            notifier.onIntegrationMessage();
+            telegramBot.sendMessage(integrationMessageToSend);
+            integrationMessageToSend = "";
+            if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Integration: send message to telegram.");
+        });
+
+        OnKeystoreUpdateTask(
+                sendEventsOnKeystoreChange, []() {
+                    ledService.updateKeystoreProgress(true);
+                    eventService.SendEvents(KEYSTORE_UPDATE);
+                    sendEventsOnKeystoreChange = !sendEventsOnKeystoreChange;
+                    timeToExecuteTask = 0;
+                    ledService.updateKeystoreProgress(false);
+                },
+                [](){},
+                []() -> bool { return millis() < timeToExecuteTask; }
+        );
+
+        ChangeLedStateITask(1000, []() {
+            ledService.onExternalInterfaceProgress(true);
+        }, !externalInterface_ledActive);
+
+        ChangeSoundStateITask(10000, []() {
+            notifier.onExternal();
+        }, !externalInterface_buzzActive);
+
+        ResetExternalStateTask(
+                !externalInterface_ledActive,
+                [](){ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode());});
+
+        RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+
+
+    }, buttonState.isRunOperationMode() && !networkService.isConnectedToWiFi());
 }

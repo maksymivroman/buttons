@@ -35,3 +35,19 @@ EVENT_TRIGGER ButtonState::getEventTrigger(bool isToggleMode) {
     }
     return this->triggerByState.at(this->getToggleMode());
 }
+
+void ButtonState::setOperationMode(OPERATION_MODE mode) {
+    this->_operationMode = mode;
+}
+
+OPERATION_MODE ButtonState::getOperationMode() const {
+    return this->_operationMode;
+}
+
+bool ButtonState::isSetupOperationMode() const {
+    return this->_operationMode == SETUP;
+}
+
+bool ButtonState::isRunOperationMode() const {
+    return this->_operationMode == RUN;
+}

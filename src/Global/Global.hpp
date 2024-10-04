@@ -25,6 +25,11 @@ enum BUTTON_STATE {
     PRESSED
 };
 
+enum OPERATION_MODE {
+    RUN,
+    SETUP
+};
+
 enum BUTTON_WIFI_MODE {
     AUTO,
     MODE_11B = WiFiPhyMode::WIFI_PHY_MODE_11B,
