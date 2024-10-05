@@ -46,7 +46,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,3,91, true);
+Version currentFWVersion(1,3,94, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -77,7 +77,7 @@ String components(const String &ref) {
 
 void restart() {
     optimistic_yield(1000);
-    ledService.lightOnRed(true);
+    ledService.setLedAction(ACTIONS::WARN);
     notifier.onRestart();
     EspClass::restart();
 }
@@ -85,9 +85,12 @@ void restart() {
 void setup() {
     pinMode(buttonPin, INPUT);
     ledService.pinConfig(redPin, greenPin, bluePin);
-    ledService.blinkDone();
 
     buttonSettings.loadButtonEepromSettings();
+    if (buttonSettings.overrideLedConfig()) ledService.applyLedMap(buttonSettings.ledMap());
+
+    ledService.setLedAction(ACTIONS::LOADING, true);
+
     buttonSettings.handleVersionChange(currentFWVersion.uint_version(), currentFWVersion.EEPROMStructureChanged());
 
     if (buttonSettings.loggerEnabled()) {
@@ -125,12 +128,12 @@ void setup() {
     buttonState.setOperationMode(static_cast<OPERATION_MODE>(digitalRead(buttonPin)));
 
     if(buttonState.isSetupOperationMode()) {
-        ledService.blinkWarn();
+        ledService.setLedAction(ACTIONS::WARN, true);
         const char *networkSsid =  buttonSettings.customHotspotSsid();
         networkService.ButtonHotspot(true, networkSsid, hotspotPass);
     }
 
-    ledService.blinkPrimary();
+    ledService.setLedAction(ACTIONS::DONE, true);
 
     htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig,
                                   buttonState.isRunOperationMode());
@@ -265,7 +268,13 @@ void setup() {
         server.begin();
     }
 
-    ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode());
+    auto action = []()->ACTIONS{
+        if (buttonSettings.saveLastState() && buttonState.getToggleMode() == PRESSED) return ACTIONS::IDLE_PRESSED;
+        return ACTIONS::IDLE_DEFAULT;
+    };
+    ledService.setLedAction(action());
+
+    logger.logSerial(sizeof(buttonSettings));
 }
 
 void loop() {
@@ -277,8 +286,14 @@ void loop() {
 
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
-            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode()); },
-            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.onNoConnection(); },
+            [](){ logger.log("[CheckConnectionTask]: Connected. IP: ", networkService.ipAddress());
+                auto action = []()->ACTIONS{
+                        if (buttonSettings.saveLastState() && buttonState.getToggleMode() == PRESSED) return ACTIONS::IDLE_PRESSED;
+                        return ACTIONS::IDLE_DEFAULT;
+                };
+                ledService.setLedAction(action());
+                },
+            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.setLedAction(ACTIONS::WARN); },
             buttonState.isSetupOperationMode()
     );
 
@@ -289,10 +304,11 @@ void loop() {
         ToggleStateTask(buttonState.isPressed(),[]() {
             auto state = buttonState.toggleState();
             if (buttonSettings.restoreLastStateOnLoad()) buttonSettings.setLastState(state);
-            ledService.idle(state);}, !buttonSettings.saveLastState());
+            ledService.setLedAction(buttonState.getToggleMode() == PRESSED ? ACTIONS::IDLE_PRESSED : ACTIONS::IDLE_DEFAULT);},
+                        !buttonSettings.saveLastState());
 
         UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){
-            ledService.updateKeystoreProgress(true);
+            ledService.setLedAction(ACTIONS::KEYSTORE_UPDATE, false, false);
             auto items = keystore.keystoreItems();
             String events = *buttonSettings.events();
             for (auto &item: items) {
@@ -303,7 +319,7 @@ void loop() {
                 events.replace(constructKey,value);
             }
             eventService.SetEvents(events);
-            ledService.updateKeystoreProgress(false);
+            ledService.resetLedAction();
             requiredToUpdateEvents = false;
             if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Keystore update");
         });
@@ -313,9 +329,9 @@ void loop() {
 
             externalInterface_ledActive = false;
             externalInterface_buzzActive = false;
-            ledService.eventsSendInProgress(true);
+            ledService.setLedAction(ACTIONS::SEND_EVENTS, false, false);
             eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
-            ledService.eventsSendInProgress(false);
+            ledService.resetLedAction();
 
             if (requiredToTriggerButton) {
                 requiredToTriggerButton = !requiredToTriggerButton;
@@ -327,7 +343,7 @@ void loop() {
 
         RequiredToFindTask(requiredToFind , [](){
             notifier.onFindMe();
-            ledService.findMe();
+            ledService.setLedAction(ACTIONS::WARN, true);
             requiredToFind = !requiredToFind;
         });
 
@@ -337,7 +353,7 @@ void loop() {
         });
 
         FormatFSTask(requiredToFormatFS, [](){
-            ledService.onFormatFS();
+            ledService.setLedAction(ACTIONS::WARN);
             buttonSettings.formatFS();
             requiredRestart = true;
         });
@@ -351,18 +367,18 @@ void loop() {
 
         OnKeystoreUpdateTask(
                 sendEventsOnKeystoreChange, []() {
-                    ledService.updateKeystoreProgress(true);
+                    ledService.setLedAction(ACTIONS::KEYSTORE_UPDATE, false, false);
                     eventService.SendEvents(KEYSTORE_UPDATE);
                     sendEventsOnKeystoreChange = !sendEventsOnKeystoreChange;
                     timeToExecuteTask = 0;
-                    ledService.updateKeystoreProgress(false);
+                    ledService.resetLedAction();
                 },
                 [](){},
                 []() -> bool { return millis() < timeToExecuteTask; }
         );
 
         ChangeLedStateITask(1000, []() {
-            ledService.onExternalInterfaceProgress(true);
+            ledService.setLedAction(ACTIONS::EXTERNAL_INTERFACE);
         }, !externalInterface_ledActive);
 
         ChangeSoundStateITask(10000, []() {
@@ -371,7 +387,13 @@ void loop() {
 
         ResetExternalStateTask(
                 !externalInterface_ledActive,
-                [](){ledService.idle(buttonSettings.saveLastState(), buttonState.getToggleMode());});
+                [](){
+                    auto action = []()->ACTIONS{
+                        if (buttonSettings.saveLastState() && buttonState.getToggleMode() == PRESSED) return ACTIONS::IDLE_PRESSED;
+                        return ACTIONS::IDLE_DEFAULT;
+                    };
+                    ledService.setLedAction(action());
+                });
 
         RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
 

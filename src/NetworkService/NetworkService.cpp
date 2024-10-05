@@ -85,3 +85,14 @@ void NetworkService::initWirelessModule() {
 String NetworkService::getWiFIMode() const {
     return this->_modeMap.at(WiFi.getPhyMode());
 }
+
+String NetworkService::ipAddress() const {
+    switch (WiFi.getMode()) {
+        case WIFI_STA:
+            return WiFi.localIP().toString();
+        case WIFI_AP_STA:
+            return WiFi.softAPIP().toString();
+        default:
+            return "unknown";
+    }
+}

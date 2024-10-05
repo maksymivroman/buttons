@@ -7,16 +7,6 @@
 
 extern Logger logger;
 
-struct RGB_def {
-    const RGBCONFIG _off{0, 0, 0};
-    const RGBCONFIG _red{255, 0, 0};
-    const RGBCONFIG _green{0, 255, 0};
-    const RGBCONFIG _blue{0, 0, 255};
-    const RGBCONFIG _orange{220, 90, 0};
-    const RGBCONFIG _purple{255, 0, 255};
-    const RGBCONFIG _ocean{0, 235, 255};
-};
-
 enum IO_PINS {
     R_PIN, G_PIN, B_PIN
 };
@@ -28,7 +18,8 @@ class RGB_IO {
 
 public:
     unsigned char read(IO_PINS pin) const;
-    void write(IO_PINS pin, unsigned char value);
+    RGBCONFIG readAll() const;
+    void write(IO_PINS pin, unsigned char value, bool saveState = true);
 
     void initIOPins(unsigned char r, unsigned char g, unsigned char b);
 
@@ -42,41 +33,28 @@ private:
 class LEDService : private RGB_IO {
 public:
     void pinConfig(int r, int g, int b);
-    void blinkWarn();
-    void blinkPrimary();
-    void blinkDone();
+    void applyLedMap(LED_MAP ledMap);
 
-    void lightOnRed(bool on);
-    void lightOnGreen(bool on);
-    void lightOnBlue(bool on);
-    void lightOnPurple(bool on);
-
-    void findMe();
-    void eventsSendInProgress(bool on);
-    void updateKeystoreProgress(bool on);
-    void onExternalInterfaceProgress(bool on);
-    void onFormatFS();
-    void onNoConnection();
-
-    void idle();
-    void idle(bool isToggleMode, bool isPressedState);
-    void idle( bool isPressedState);
+    void setLedAction(ACTIONS action, bool blink = false, bool saveState = true);
+    void resetLedAction();
 
 private:
-    const RGB_def RGB;
-    RGBCONFIG externalIMode{RGB._ocean};
+    LEDConfig _ledMap{
+            {ACTIONS::IDLE_DEFAULT,       {0,   255, 0}},
+            {ACTIONS::IDLE_PRESSED,       {220, 90,  0}},
+            {ACTIONS::LOADING,            {0,   0,   255}},
+            {ACTIONS::WARN,               {255, 0,   0}},
+            {ACTIONS::DONE,               {0,   255, 0}},
+            {ACTIONS::KEYSTORE_UPDATE,    {255, 0,   255}},
+            {ACTIONS::SEND_EVENTS,        {0,   0,   255}},
+            {ACTIONS::EXTERNAL_INTERFACE, {0,   235, 235}},
+    };
 
-    RGBCONFIG rgbCurrentState;
-    bool externalInterfaceOn{false};
-
-    void switchPin(RGBCONFIG pinsState = {0,0,0});
+    void switchPin(RGBCONFIG pinsState = {0,0,0}, bool saveState = true);
     void switchPin(IO_PINS pin, int state);
-    void switchAnalogPin(RGBCONFIG pinsState = {0,0,0});
-    void blink(IO_PINS pin, int count);
-    void saveCurrentRGBState();
-    void restoreCurrentRGBState();
-    void toggleExternalInterfaceProgress();
 
+    void blinkRGB(RGBCONFIG config, int count);
+    bool isEnabled(RGBCONFIG config) const;
 };
 
 

@@ -339,6 +339,11 @@ const char index_html[] PROGMEM = R"rawliteral(
             align-items: center
         }
 
+        .led-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+
         @media screen and (max-width: 800px) {
             .wifi-credentials {
                 flex-direction: column;
@@ -633,6 +638,19 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
         </div>
 
+        <h2 class="section-header">LED Actions configuration</h2>
+
+        <div class="border" style="padding: 24px;">
+            <div class="item">
+                <input type="checkbox" id="overrideLedConfig">
+                <label for="overrideLedConfig">Custom LED Actions</label>
+            </div>
+            <div class="led-grid-layout" id="led-container">
+                <!--led controls-->
+                no actions defined
+            </div>
+        </div>
+
         <div style="display: flex; flex: 1; justify-content: center; margin: 80px 0;">
             <button id="saveButton" type="button" class="btn btn-red" onclick="saveSettings()">Save And Reboot</button>
         </div>
@@ -770,9 +788,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         };
     }
 
+    let ledConfig = {};
     function saveSettings() {
-        const name = document.getElementById('wifiname').value;
-        const pass = document.getElementById('wifipass').value;
+        const name = document.getElementById('wifiname')?.value;
+        const pass = document.getElementById('wifipass')?.value;
         const hSsid = document.getElementById('hotspotSsid').value;
 
         const clientWebAccess = document.getElementById('clientWebAccess') ? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
@@ -796,6 +815,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
         const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
         const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
+        const overrideLedConfig = Number(document.getElementById('overrideLedConfig').checked);
 
         const statApi = document.getElementById('statisticApi').value;
 
@@ -814,10 +834,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             remoteTriggering,
             saveLastState,
             restoreLastStateOnLoad,
+            overrideLedConfig,
             remoteStateChange,
             keystoreEnabled,
             sendEventOnKeystoreUpdate,
             delaySendEvents,
+            ledConfig,
             wifiSsid: name,
             wifiPass: pass,
             hotspotSsid: hSsid,
@@ -836,7 +858,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             tSuffix
         })
 
-        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + JSON.stringify(eventDataObj) + '}}';
+        let data = '{ "inputdata" :{"configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + JSON.stringify(eventDataObj) + '}}';
         data.replace(/" /g, '');
         data.replace(/ "/g, '');
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
@@ -858,7 +880,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function showSaved() {
         const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
-            'useTelegramIntegration', 'saveLastState',
+            'useTelegramIntegration', 'saveLastState', 'overrideLedConfig',
             'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
         const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode'];
         const inputsSettings = ['statisticApi', 'hotspotSsid'];
@@ -902,6 +924,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
 
         integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
+
+        const ledContainer = document.getElementById('led-container');
+        ledConfig = {...config.ledConfig};
+        initLedControls(ledContainer, ledConfig);
     }
 
     function update() {
@@ -1163,6 +1189,30 @@ const char index_html[] PROGMEM = R"rawliteral(
         checkButtonRestart().then(
             _ => window.location.reload()
         ).catch(_=> setTimeout(startCheckRestart,2000));
+    }
+
+    function initLedControls(container, ledRBGData) {
+        const ledColorMap = {
+            ledIdleDefault: 'Idle default',
+            ledIdlePressed: 'Idle on pressed state',
+            ledLoading: 'Loading progress',
+            ledWarn: 'Warning',
+            ledDone: 'Action done',
+            ledKeystoreUpdate: 'Keystore action',
+            ledSendEvents: 'Send events progress',
+            ledExternalInterface: 'External interface trigger'
+        }
+        if (Object.keys(ledRBGData).length) {
+            container.innerText = '';
+            for (const key in ledRBGData) {
+                const ctr = `<div class="item">
+                    <input type="color" style="width: 32px; border: none" id="${key}"value="${ledRBGData[key]}">
+                    <label for="colorPckr">${ledColorMap[key] || key}</label></div>`;
+                container.insertAdjacentHTML('beforeend', ctr);
+                const ctrl = document.getElementById(key);
+                ctrl.addEventListener("change", () => ledConfig[key] = ctrl.value);
+            }
+        }
     }
 
 </script>)rawliteral";
