@@ -88,14 +88,14 @@ struct EEPROM_SETTINGS {
     unsigned int fwVersion = 0;
     unsigned int statisticLevel = 0;
 
-    char ledIdleDefault[8]{"#FFFFFF"};
-    char ledIdlePressed[8]{"#FFFFFF"};
-    char ledLoading[8]{"#FFFFFF"};
-    char ledWarn[8]{"#FFFFFF"};
-    char ledDone[8]{"#FFFFFF"};
-    char ledKeystoreUpdate[8]{"#FFFFFF"};
-    char ledSendEvents[8]{"#FFFFFF"};
-    char ledExternalInterface[8]{"#FFFFFF"};
+    char ledIdleDefault[8]{"#00FF00"};
+    char ledIdlePressed[8]{"#DC5A00"};
+    char ledLoading[8]{"#0000FF"};
+    char ledWarn[8]{"#FF0000"};
+    char ledDone[8]{"#00FF00"};
+    char ledKeystoreUpdate[8]{"#FF00FF"};
+    char ledSendEvents[8]{"#0000FF"};
+    char ledExternalInterface[8]{"#00EBEB"};
 
     char statisticApi[256]{};
     char wifiSsid[256]{};
