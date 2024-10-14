@@ -16,7 +16,7 @@ public:
     EEPROM_SETTINGS getButtonConfig();
 
     void saveEvents(String events);
-    void saveSettings(String settings);
+    void saveSettings(String &settings);
     void loadButtonEepromSettings();
     void loadEvents();
     void clearEeprom();
@@ -29,6 +29,7 @@ public:
     bool loggerEnabled() const;
     bool statisticEnabled() const;
     bool remoteStateChangeEnabled() const;
+    bool overrideLedConfig() const;
 
     bool saveLastState() const;
     bool restoreLastStateOnLoad() const;
@@ -51,6 +52,8 @@ public:
     String macAddress() const;
     String localIPAddress() const;
 
+    LED_MAP ledMap();
+
 private:
     void writeButtonEepromSettings(String& config);
     void saveIntegrationSettings(String settings);
@@ -69,6 +72,8 @@ private:
 
     size_t dynamicEepromStartOffset() const;
     size_t totalEepromSize() const;
+
+    RGBCONFIG hexToRGB(const char hex[]);
 };
 
 

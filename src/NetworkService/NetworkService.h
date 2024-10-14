@@ -24,6 +24,7 @@ public:
     void initConnectionToWiFi(const WiFiCONFIG& config);
 
     String getWiFIMode() const;
+    String ipAddress() const;
 
 private:
     void initWirelessModule();

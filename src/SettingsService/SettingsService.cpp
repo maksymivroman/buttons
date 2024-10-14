@@ -56,31 +56,20 @@ void SettingsService::saveIntegrationSettings(String settings) {
 }
 
 
-void SettingsService::saveSettings(String settings) {
+void SettingsService::saveSettings(String &settings) {
     DynamicJsonDocument jsonDoc(4096);
     deserializeJson(jsonDoc, settings);
     JsonObject data = jsonDoc["inputdata"];
-    logger.log("[SettingsService] Save Settings data (json)");
+    logger.log("[SettingsService] Save Settings data (json). Size: ", sizeof(data));
     logger.logSerial("[SettingsService] events data json: ", data);
 
-    WiFiCONFIG wiFiSett;
-
-    const char *wiFiName = data["wifiname"];
-    const char *wiFiPassword = data["wifipass"];
     String events = data["eventdata"];
-
     String config = data["configuration"];
-    writeButtonEepromSettings(config);
-
     String integrationData = data["integration"];
 
-    logger.logSerial("[SettingsService] 'eventdata' data json: ",events);
+    writeButtonEepromSettings(config);
+
     logger.logSerial("[SettingsService] 'configuration' data json: ", config);
-
-    wiFiSett.password = wiFiPassword;
-    wiFiSett.ssid = wiFiName;
-
-    logger.log("[SettingsService] data json large: ", data.size());
     logger.logSerial("[SettingsService] 'eventData' data json: ", events);
 
     saveEvents(events);
@@ -136,13 +125,20 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.wiFiMode = jsonSettings["wiFiMode"].as<unsigned int>() | 0;
     settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
     settings.remoteStateChange = jsonSettings["remoteStateChange"].as<bool>() | false;
-
     settings.saveLastState = jsonSettings["saveLastState"].as<bool>() | false;
     settings.restoreLastStateOnLoad = jsonSettings["restoreLastStateOnLoad"].as<bool>() | false;
-
     settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
     settings.delaySendEvents = jsonSettings["delaySendEvents"].as<bool>() | false;
+    settings.overrideLedConfig = jsonSettings["overrideLedConfig"].as<bool>() | false;
+    strncpy(settings.ledIdleDefault, String(jsonSettings["ledConfig"]["ledIdleDefault"]).c_str(), 7);
+    strncpy(settings.ledIdlePressed, String(jsonSettings["ledConfig"]["ledIdlePressed"]).c_str(), 7);
+    strncpy(settings.ledLoading, String(jsonSettings["ledConfig"]["ledLoading"]).c_str(), 7);
+    strncpy(settings.ledWarn, String(jsonSettings["ledConfig"]["ledWarn"]).c_str(), 7);
+    strncpy(settings.ledDone, String(jsonSettings["ledConfig"]["ledDone"]).c_str(), 7);
+    strncpy(settings.ledKeystoreUpdate, String(jsonSettings["ledConfig"]["ledKeystoreUpdate"]).c_str(), 7);
+    strncpy(settings.ledSendEvents, String(jsonSettings["ledConfig"]["ledSendEvents"]).c_str(), 7);
+    strncpy(settings.ledExternalInterface, String(jsonSettings["ledConfig"]["ledExternalInterface"]).c_str(), 7);
 
     settings.fwVersion = this->buttonEepromSettings.fwVersion;
 
@@ -193,6 +189,10 @@ bool SettingsService::saveLastState() const {
 
 bool SettingsService::restoreLastStateOnLoad() const {
     return buttonEepromSettings.restoreLastStateOnLoad | false;
+}
+
+bool SettingsService::overrideLedConfig() const {
+    return buttonEepromSettings.overrideLedConfig | false;
 }
 
 LoggerLevel SettingsService::loggerLevel() const {
@@ -385,4 +385,27 @@ void SettingsService::setLastState(int state) {
     props.isPressedState = state;
     this->updateDynamicEEPROM(props);
     buttonDynamicEeprom.isPressedState = state;
+}
+
+RGBCONFIG SettingsService::hexToRGB(const char *hex) {
+    const char *cleanHex = (hex[0] == '#') ? &hex[1] : hex;
+    unsigned int hexValue = strtol(cleanHex, nullptr, 16);
+    return {
+            .r = static_cast<unsigned char>((hexValue >> 16) & 0xFF),
+            .g = static_cast<unsigned char>((hexValue >> 8) & 0xFF),
+            .b = static_cast<unsigned char>(hexValue & 0xFF)
+    };
+}
+
+LED_MAP SettingsService::ledMap() {
+    return {
+            {hexToRGB(buttonEepromSettings.ledIdleDefault)},
+            {hexToRGB(buttonEepromSettings.ledIdlePressed)},
+            {hexToRGB(buttonEepromSettings.ledLoading)},
+            {hexToRGB(buttonEepromSettings.ledWarn)},
+            {hexToRGB(buttonEepromSettings.ledDone)},
+            {hexToRGB(buttonEepromSettings.ledKeystoreUpdate)},
+            {hexToRGB(buttonEepromSettings.ledSendEvents)},
+            {hexToRGB(buttonEepromSettings.ledExternalInterface)}
+    };
 }

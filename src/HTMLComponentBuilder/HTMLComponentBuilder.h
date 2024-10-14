@@ -35,6 +35,7 @@ private:
 
     String createConfigurationObject(EEPROM_SETTINGS data);
     String createIntegrationDataObject(INTEGRATIONSETTINGS data);
+    String getLedConfig(EEPROM_SETTINGS settings);
 };
 
 

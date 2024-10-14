@@ -9,6 +9,7 @@
 #include <Arduino.h>
 #include "Logger/Logger.h"
 #include <ESP8266WiFi.h>
+#include <map>
 
 extern Logger logger;
 
@@ -53,6 +54,17 @@ struct RGBCONFIG {
     unsigned char b;
 };
 
+struct LED_MAP {
+    RGBCONFIG IDLE_DEFAULT;
+    RGBCONFIG IDLE_PRESSED;
+    RGBCONFIG LOADING;
+    RGBCONFIG WARN;
+    RGBCONFIG DONE;
+    RGBCONFIG KEYSTORE_UPDATE;
+    RGBCONFIG SEND_EVENTS;
+    RGBCONFIG EXTERNAL_INTERFACE;
+};
+
 struct EEPROM_SETTINGS {
     bool loggerEnabled = false;
     bool statisticEnabled = false;
@@ -67,17 +79,25 @@ struct EEPROM_SETTINGS {
     bool sendEventOnKeystoreUpdate = false;
     bool delaySendEvents = false;
     bool remoteStateChange = false;
-
     bool saveLastState = false;
     bool restoreLastStateOnLoad = false;
+    bool overrideLedConfig = false;
 
     unsigned int wiFiMode = 0;
     unsigned int loggerLevel = 0;
     unsigned int fwVersion = 0;
-
     unsigned int statisticLevel = 0;
-    char statisticApi[256]{};
 
+    char ledIdleDefault[8]{"#00FF00"};
+    char ledIdlePressed[8]{"#DC5A00"};
+    char ledLoading[8]{"#0000FF"};
+    char ledWarn[8]{"#FF0000"};
+    char ledDone[8]{"#00FF00"};
+    char ledKeystoreUpdate[8]{"#FF00FF"};
+    char ledSendEvents[8]{"#0000FF"};
+    char ledExternalInterface[8]{"#00EBEB"};
+
+    char statisticApi[256]{};
     char wifiSsid[256]{};
     char wifiPass[256]{};
     char hotspotSsid[32]{};
@@ -99,5 +119,18 @@ struct INTEGRATIONSETTINGS {
     String tPrefix;
     String tSuffix;
 };
+
+enum class ACTIONS {
+    IDLE_DEFAULT,
+    IDLE_PRESSED,
+    LOADING,
+    WARN,
+    DONE,
+    KEYSTORE_UPDATE,
+    SEND_EVENTS,
+    EXTERNAL_INTERFACE
+};
+
+typedef std::map<ACTIONS, RGBCONFIG> LEDConfig;
 
 #endif //EVENT_BUTTON_GLOBAL_HPP

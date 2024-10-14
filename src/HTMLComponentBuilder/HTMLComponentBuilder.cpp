@@ -116,7 +116,9 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
             remoteStateChange: <remoteStateChange>,
             saveLastState: <saveLastState>,
             restoreLastStateOnLoad: <restoreLastStateOnLoad>,
-            wiFiMode: <wiFiMode>
+            wiFiMode: <wiFiMode>,
+            overrideLedConfig: <overrideLedConfig>,
+            ledConfig: <ledConfig>
         })";
 
     configObj.replace("<loggerEnabled>", String(data.loggerEnabled));
@@ -139,7 +141,9 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     configObj.replace("<remoteStateChange>", String(data.remoteStateChange));
     configObj.replace("<saveLastState>", String(data.saveLastState));
     configObj.replace("<restoreLastStateOnLoad>", String(data.restoreLastStateOnLoad));
+    configObj.replace("<overrideLedConfig>", String(data.overrideLedConfig));
     configObj.replace("<wiFiMode>", String(data.wiFiMode));
+    configObj.replace("<ledConfig>", getLedConfig(data));
 
     return configObj;
 }
@@ -157,4 +161,26 @@ String HTMLComponentBuilder::createIntegrationDataObject(INTEGRATIONSETTINGS dat
     configObj.replace("<tSuffix>", String(data.tSuffix));
 
     return configObj;
+}
+
+String HTMLComponentBuilder::getLedConfig(EEPROM_SETTINGS settings) {
+    String config = R"({
+            ledIdleDefault: "<ledIdleDefault>",
+            ledIdlePressed: "<ledIdlePressed>",
+            ledLoading: "<ledLoading>",
+            ledWarn: "<ledWarn>",
+            ledDone: "<ledDone>",
+            ledKeystoreUpdate: "<ledKeystoreUpdate>",
+            ledSendEvents: "<ledSendEvents>",
+            ledExternalInterface: "<ledExternalInterface>"
+        })";
+    config.replace("<ledIdleDefault>", String(settings.ledIdleDefault));
+    config.replace("<ledIdlePressed>", String(settings.ledIdlePressed));
+    config.replace("<ledLoading>", String(settings.ledLoading));
+    config.replace("<ledWarn>", String(settings.ledWarn));
+    config.replace("<ledDone>", String(settings.ledDone));
+    config.replace("<ledKeystoreUpdate>", String(settings.ledKeystoreUpdate));
+    config.replace("<ledSendEvents>", String(settings.ledSendEvents));
+    config.replace("<ledExternalInterface>", String(settings.ledExternalInterface));
+    return config;
 }
