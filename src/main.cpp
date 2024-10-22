@@ -19,6 +19,7 @@
 #include "Statistic/Statistic.h"
 #include "ExternalInterface/ExternalInterfaceService.h"
 #include "ButtonState/ButtonState.h"
+#include "ButtonTrigger/Trigger.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -29,8 +30,9 @@ const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
 
-bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS, sendEventsOnKeystoreChange, requiredToUpdateEvents;
 bool externalInterface_ledActive, externalInterface_buzzActive;
+
+Trigger RequiredToTriggerButton, RequiredToFind, RequiredEepromClear, RequiredToFormatFS, RequiredRestart, RequiredToUpdateEvents, SendEventsOnKeystoreChange;
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
@@ -46,7 +48,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,3,94, true);
+Version currentFWVersion(1,3,95, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -162,7 +164,7 @@ void setup() {
         unsigned int params = request->params();
         logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
         int responseCode = 200;
-        String responseData = "done";
+        String responseData = "OK";
         if (params > 0) {
             AsyncWebParameter *param = request->getParam(0);
             String paramName = param->name().c_str();
@@ -171,23 +173,19 @@ void setup() {
             logger.log("[MAIN->HTTP_POST] ", paramName);
             logger.logSerial("[MAIN->HTTP_POST] ", paramName, ": ", paramMessage);
 
-            if (paramName == FIND_ME) {
-                requiredToFind = true;
-            } else if (paramName == TRIGGER_BUTTON) {
-                buttonSettings.remoteButtonTriggering() ? requiredToTriggerButton = true : responseCode = 403;
-            } else if (paramName == CLEAR_EEPROM) {
-                requiredEepromClear = true;
-            } else if (paramName == SAVE_SETTINGS) {
+            RequiredToTriggerButton.setIf(paramName == TRIGGER_BUTTON && buttonSettings.remoteButtonTriggering());
+            RequiredToFind.setIf(paramName == FIND_ME);
+            RequiredEepromClear.setIf(paramName == CLEAR_EEPROM);
+            RequiredToFormatFS.setIf(paramName == FORMAT_FS);
+
+            if (paramName == SAVE_SETTINGS) {
                 buttonSettings.saveSettings(paramMessage);
-                requiredRestart = true;
-            } else if (paramName == FORMAT_FS) {
-                //TODO handle diff params value to start different system tools. Rename FORMAT_FS
-                requiredToFormatFS = true;
-                requiredRestart = true;
+                RequiredRestart.set();
             } else if (paramName == ID) {
                 responseData = WiFi.macAddress().c_str();
-            } else {
+            } else if (!(RequiredToTriggerButton || RequiredToFind || RequiredEepromClear || RequiredToFormatFS)){
                 responseCode = 418;
+                responseData = "Bad request";
             }
         }
         logger.log("[MAIN->HTTP_POST]-> Return response code: ", responseCode);
@@ -210,8 +208,8 @@ void setup() {
                         keystore.addItem(paramName, paramValue);
                     }
                 }
-                if (keystoreSettings.sendEventsOnUpdate) sendEventsOnKeystoreChange = true;
-                requiredToUpdateEvents = true;
+                if (keystoreSettings.sendEventsOnUpdate) SendEventsOnKeystoreChange.set();
+                RequiredToUpdateEvents.set();
                 logger.log("[MAIN->HTTP GET][/keystore]: Update Keystore, total items - ", paramsCount);
                 request->send_P(200, "text/html", "OK");
             } else {
@@ -273,8 +271,6 @@ void setup() {
         return ACTIONS::IDLE_DEFAULT;
     };
     ledService.setLedAction(action());
-
-    logger.logSerial(sizeof(buttonSettings));
 }
 
 void loop() {
@@ -299,15 +295,15 @@ void loop() {
 
     MainITask(100, [&]() {
         //TODO move to interruption
-        buttonState.setState(digitalRead(buttonPin));
+        buttonState.setState(RequiredToTriggerButton || digitalRead(buttonPin));
 
         ToggleStateTask(buttonState.isPressed(),[]() {
-            auto state = buttonState.toggleState();
+            auto state = buttonState.toggleToggleState();
             if (buttonSettings.restoreLastStateOnLoad()) buttonSettings.setLastState(state);
             ledService.setLedAction(buttonState.getToggleMode() == PRESSED ? ACTIONS::IDLE_PRESSED : ACTIONS::IDLE_DEFAULT);},
                         !buttonSettings.saveLastState());
 
-        UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){
+        UpdateEventsWithKeystoreTask(RequiredToUpdateEvents.get(), [](){
             ledService.setLedAction(ACTIONS::KEYSTORE_UPDATE, false, false);
             auto items = keystore.keystoreItems();
             String events = *buttonSettings.events();
@@ -320,12 +316,12 @@ void loop() {
             }
             eventService.SetEvents(events);
             ledService.resetLedAction();
-            requiredToUpdateEvents = false;
+            RequiredToUpdateEvents.reset();
             if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Keystore update");
         });
 
-        SendEventsTask((buttonState.isPressed() || requiredToTriggerButton), [](){
-            if (requiredToTriggerButton) notifier.onRemoteTrigger();
+        SendEventsTask((buttonState.isPressed()), [](){
+            if (RequiredToTriggerButton) notifier.onRemoteTrigger();
 
             externalInterface_ledActive = false;
             externalInterface_buzzActive = false;
@@ -333,29 +329,29 @@ void loop() {
             eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
             ledService.resetLedAction();
 
-            if (requiredToTriggerButton) {
-                requiredToTriggerButton = !requiredToTriggerButton;
+            if (RequiredToTriggerButton) {
+                RequiredToTriggerButton.reset();
                 if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Send events. Triggered by: remote");
             } else {
                 statistic.sendStat("Send events. Triggered by: physical");
             }
         },networkService.isAPMode());
 
-        RequiredToFindTask(requiredToFind , [](){
+        RequiredToFindTask(RequiredToFind.get(), [](){
             notifier.onFindMe();
             ledService.setLedAction(ACTIONS::WARN, true);
-            requiredToFind = !requiredToFind;
+            RequiredToFind.reset();
         });
 
-        EepromClearTask(requiredEepromClear,  [](){
+        EepromClearTask(RequiredEepromClear.get(),  [](){
             buttonSettings.clearEeprom();
-            requiredRestart = true;
+            RequiredRestart.set();
         });
 
-        FormatFSTask(requiredToFormatFS, [](){
+        FormatFSTask(RequiredToFormatFS.get(), [](){
             ledService.setLedAction(ACTIONS::WARN);
             buttonSettings.formatFS();
-            requiredRestart = true;
+            RequiredRestart.set();
         });
 
         IntegrationTask(integrationMessageToSend.length() != 0, [](){
@@ -366,10 +362,10 @@ void loop() {
         });
 
         OnKeystoreUpdateTask(
-                sendEventsOnKeystoreChange, []() {
+                SendEventsOnKeystoreChange.get(), []() {
                     ledService.setLedAction(ACTIONS::KEYSTORE_UPDATE, false, false);
                     eventService.SendEvents(KEYSTORE_UPDATE);
-                    sendEventsOnKeystoreChange = !sendEventsOnKeystoreChange;
+                    SendEventsOnKeystoreChange.reset();
                     timeToExecuteTask = 0;
                     ledService.resetLedAction();
                 },
@@ -395,7 +391,7 @@ void loop() {
                     ledService.setLedAction(action());
                 });
 
-        RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+        RestartTask((RequiredRestart || ButtonOTAUpdate.requireToRestart), restart);
 
 
     }, buttonState.isRunOperationMode() && !networkService.isConnectedToWiFi());

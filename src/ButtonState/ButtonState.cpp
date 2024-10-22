@@ -8,6 +8,10 @@ void ButtonState::setState(int state) {
     this->currentButtonState = state;
 }
 
+void ButtonState::toggleState() {
+    this->currentButtonState = this->currentButtonState ? 0 : 1;
+}
+
 BUTTON_STATE ButtonState::getState() const {
     return static_cast<BUTTON_STATE>(this->currentButtonState);
 }
@@ -20,7 +24,7 @@ BUTTON_STATE ButtonState::getToggleMode() const {
     return static_cast<BUTTON_STATE>(this->toggleableState);
 }
 
-BUTTON_STATE ButtonState::toggleState() {
+BUTTON_STATE ButtonState::toggleToggleState() {
     this->toggleableState = this->toggleableState ? 0 : 1;
     return static_cast<BUTTON_STATE>(this->toggleableState);
 }
