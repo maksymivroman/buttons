@@ -53,7 +53,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             display: flex;
             padding: 5px;
             background: inherit;
-            min-height: 500px;
+            min-height: 400px;
             max-height: 50vh;
             overflow: auto;
         }
@@ -321,6 +321,8 @@ const char index_html[] PROGMEM = R"rawliteral(
             justify-content: space-between;
         }
 
+        .btn-min-w {min-width: 100px;}
+
         .flexbox-column-centered {
             display: flex;
             flex-flow: column;
@@ -397,25 +399,30 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         <div style="display: flex; flex: 1; align-items: center; justify-content: space-between">
             <h2 class="section-header">Assigned events</h2>
-            <button style="display: flex; padding: 0 10px; align-self: flex-end; margin-bottom: 16px; align-items: center; gap: 4px;"
-                    type="button" class="btn btn-red" onclick="openEditor()"><h1
-                    style="line-height: normal; font-weight: 200; margin: 0;">+</h1> Add new event
-            </button>
+            <button type="button" id="toggleEditModeButton" style="align-self: flex-end;" class="btn btn-blue btn-min-w"
+            onclick="toggleEditMode('edit')" >Edit</button>
+            <div id="editActionsContainer" style="align-self: flex-end; display: none;">
+                <button type="button" class="btn btn-blue btn-min-w" onclick="openEditor()">Add new</button>
+                <button id="saveEditedEventsBtn" type="button" class="btn btn-red btn-min-w" disabled onclick="saveEvents()">Save</button>
+                <button type="button" class="btn btn-blue btn-min-w" onclick="toggleEditMode()">Cancel</button>
+            </div>
         </div>
 
-        <div class="event-data border">
-            <table id="dataTable">
-                <thead>
-                <tr>
-                    <th>host</th>
-                    <th style="width: 70%;">event data</th>
-                    <th>actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <!-- Table data -->
-                </tbody>
-            </table>
+        <div class="border">
+            <div class="event-data">
+                <table id="dataTable">
+                    <thead>
+                    <tr>
+                        <th>host</th>
+                        <th style="width: 70%;">event data</th>
+                        <th>actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Table data -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <h2 class="section-header">General settings</h2>
@@ -530,11 +537,9 @@ const char index_html[] PROGMEM = R"rawliteral(
                     </g>
                 </svg>
 
-                <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
-                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take
-                    a while</h4>
-                <h4 style="color: #b9b9b9; font-weight: 200">If the Button was connected to Wi-Fi during setup, you can refresh the page to continue</h4>
-                <button disabled id="refreshBtn" type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
+                <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Please wait...</h1>
+                <h4 style="color: #b9b9b9; font-weight: 200" id="dialogMessage">...</h4>
+                <button disabled id="refreshBtn" type="button" class="btn btn-blue btn-min-w" onclick="location.reload()">OK</button>
             </div>
         </div>
 
@@ -620,12 +625,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
         </div>
 
-        <h2 class="section-header">Statistic</h2>
+        <h2 class="section-header">Reports</h2>
 
         <div class="border" style="padding: 24px;">
             <div class="item">
                 <input type="checkbox" id="statisticEnabled">
-                <label for="statisticEnabled">Enable Statistic</label>
+                <label for="statisticEnabled">Enable Reports</label>
                 <select class="control" style="height: auto; min-width: auto;" id="statisticLevel">
                     <option value="0">Simple</option>
                     <option value="1">Extended</option>
@@ -755,7 +760,12 @@ const char index_html[] PROGMEM = R"rawliteral(
 </html>
 
 <script>
-    function httpPOST(data, successMessage) {
+    function httpPOST(data, resultTitle, resultMessage, canClose, postprocess) {
+        document.getElementById('successModel').style.visibility = 'visible';
+        const dialogMessageTitle = document.getElementById('dialogMessageTitle');
+        const dialogMessage = document.getElementById('dialogMessage');
+        dialogMessageTitle.innerText = resultTitle;
+        dialogMessage.innerText = "Saving...";
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
         const httpRequest = new XMLHttpRequest();
         httpRequest.open("POST", srvURL, true);
@@ -765,9 +775,16 @@ const char index_html[] PROGMEM = R"rawliteral(
         httpRequest.onreadystatechange = function () {
             if (httpRequest.readyState === httpRequest.DONE) {
                 if (httpRequest.status === 200) {
-                    document.getElementById('dialogMessageTitle').innerText = successMessage;
-                    const successModel = document.getElementById('successModel');
-                    successModel.style.visibility = 'visible';
+                    dialogMessage.innerText = resultMessage;
+                    if (canClose) {
+                        document.getElementById('refreshBtn').disabled = false;
+                    }
+                    postprocess();
+                } else {
+                    dialogMessageTitle.innerText = "Failed";
+                    dialogMessage.innerText = "Ops! Something went wrong...";
+                    document.getElementById('refreshBtn').innerText = " Close";
+                    document.getElementById('refreshBtn').disabled = false;
                 }
             }
         };
@@ -858,24 +875,10 @@ const char index_html[] PROGMEM = R"rawliteral(
             tSuffix
         })
 
-        let data = '{ "inputdata" :{"configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + JSON.stringify(eventDataObj) + '}}';
+        let data = "SETTINGS=" + '{"configuration":' + extrasConfig + ',"integration":' + integration + '}';
         data.replace(/" /g, '');
         data.replace(/ "/g, '');
-        const srvURL = window.location.protocol + "//" + window.location.host + "/";
-        const httpRequest = new XMLHttpRequest();
-        httpRequest.open("POST", srvURL, true);
-        httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-        httpRequest.send("SAVE=" + data);
-        httpRequest.responseType = 'text';
-        httpRequest.onreadystatechange = function () {
-            if (httpRequest.readyState === httpRequest.DONE) {
-                if (httpRequest.status === 200) {
-                    const successModel = document.getElementById('successModel');
-                    successModel.style.visibility = 'visible';
-                    handleSuccessSave();
-                }
-            }
-        }
+        httpPOST(data, "Save settings", "Settings saved. Rebooting...", true, handleSuccessSave);
     }
 
     function showSaved() {
@@ -941,6 +944,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     const integrationResult = document.getElementById('integrationResult');
 
     let config, integrationConfig, eventDataObj;
+    let tempEventsObj = {};
 
     let entryKeyToEdit;
 
@@ -961,13 +965,21 @@ const char index_html[] PROGMEM = R"rawliteral(
         $R$: 'class="hashed hashed-green"',
     }
 
-    function populateTable() {
+    function populateTable(data) {
         tbody.innerHTML = '';
-        for (const key in eventDataObj) {
+        let events;
+        if (data) {
+            events = data
+            document.getElementById("saveEditedEventsBtn").disabled = false;
+        } else {
+            events = eventDataObj;
+            document.getElementById("saveEditedEventsBtn").disabled = true;
+        }
+        for (const key in events) {
             const row = `
                         <tr ${colorMap[key.substring(0,3)]}>
                           <td>${key}</td>
-                          <td >${eventDataObj[key]}</td>
+                          <td >${events[key]}</td>
                           <td style="display: flex; justify-content: flex-end; gap: 8px;">
                             <button class="btn btn-blue small-btn" onclick="openEditSingleEventModal('${key}')">Edit</button>
                             <button class="btn btn-red small-btn" onclick="removeEntry('${key}')">Remove</button>
@@ -979,11 +991,11 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
 
     function addEventEntry(host, data) {
-        const eventExist = host && eventDataObj.hasOwnProperty(host);
+        const eventExist = host && tempEventsObj.hasOwnProperty(host);
         if (!eventExist) {
             if (data) {
-                eventDataObj[host] = data;
-                populateTable();
+                tempEventsObj[host] = data;
+                populateTable(tempEventsObj);
             } else {
                 throw new Error("event data is empty");
             }
@@ -994,8 +1006,12 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function removeEntry(key) {
         if (confirm(`Are you sure you want to remove the event "${key}"?`)) {
-            delete eventDataObj[key];
-            populateTable();
+            if (tempEventsObj[key]) {
+                delete tempEventsObj[key];
+                populateTable(tempEventsObj);
+            } else {
+                alert(`Event "${key}" not found!`)
+            }
         }
     }
 
@@ -1048,7 +1064,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     function checkFormValidity() {
         let isValid;
         isValid = hostInput.value && eventData.value !== "";
-        const eventAlreadyExist = hostInput.value && eventDataObj.hasOwnProperty(hostInput.value);
+        const eventAlreadyExist = hostInput.value && tempEventsObj.hasOwnProperty(hostInput.value);
         eventsFormatWarn.style.visibility = 'hidden';
         eventsAlreadyExistWarn.style.visibility = eventAlreadyExist && !entryKeyToEdit ? 'visible' : 'hidden';
         eventData.classList.remove("--not-valid-event");
@@ -1121,7 +1137,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('editor').showModal();
         if (key) {
             entryKeyToEdit = key;
-            eventData.value = eventDataObj[key];
+            eventData.value = tempEventsObj[key];
             hostInput.value = key;
 
             const editEventButton = document.getElementById("editThisEvent");
@@ -1132,15 +1148,16 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function editEvent() {
         if (hostInput.value !== null && eventData.value !== null) {
-            delete eventDataObj[entryKeyToEdit];
-            eventDataObj[hostInput.value] = eventData.value;
-            populateTable();
+            delete tempEventsObj[entryKeyToEdit];
+            tempEventsObj[hostInput.value] = eventData.value;
+            populateTable(tempEventsObj);
         }
         closeEditor();
     }
 
     showSaved();
     populateTable();
+    toggleActionsColumn(false);
 
     function handleSuccessSave() {
         if (window.location.host === '192.168.4.1') {
@@ -1151,7 +1168,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             setTimeout(()=>{
                 document.querySelector('#upload-box_1').style.fill = '#3c5dd7';
             }, 4000);
-            setTimeout(startCheckRestart, 2000);
+            setTimeout(startCheckRestart, 3000);
         }
     }
 
@@ -1213,6 +1230,36 @@ const char index_html[] PROGMEM = R"rawliteral(
                 ctrl.addEventListener("change", () => ledConfig[key] = ctrl.value);
             }
         }
+    }
+
+    function toggleEditMode(state) {
+        const editActionsContainer = document.getElementById('editActionsContainer');
+        const toggleEditModeButton = document.getElementById('toggleEditModeButton');
+        if(state === 'edit') {
+            toggleActionsColumn(true);
+            editActionsContainer.style.display = '';
+            toggleEditModeButton.style.display = 'none';
+            tempEventsObj = {...eventDataObj};
+        } else {
+            editActionsContainer.style.display = 'none';
+            toggleEditModeButton.style.display = '';
+            populateTable();
+            toggleActionsColumn(false);
+        }
+    }
+
+    function saveEvents() {
+        let data = `EVENTS=${JSON.stringify(tempEventsObj)}`;
+        data.replace(/" /g, '');
+        data.replace(/ "/g, '');
+        httpPOST(data, "Save events", "Events saved", true, handleSuccessSave);
+    }
+
+    function toggleActionsColumn(showControls) {
+        const header = document.querySelector('#dataTable thead th:nth-child(3)');
+        const cells = document.querySelectorAll('#dataTable tbody td:nth-child(3)');
+        header.style.display = showControls ? '' : 'none';
+        cells.forEach(cell => cell.style.display = showControls ? 'flex' : 'none');
     }
 
 </script>)rawliteral";

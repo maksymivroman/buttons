@@ -36,7 +36,8 @@ Trigger RequiredToTriggerButton, RequiredToFind, RequiredEepromClear, RequiredTo
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
-const char *SAVE_SETTINGS = "SAVE";
+const char *SAVE_SETTINGS = "SETTINGS";
+const char *SAVE_EVENTS = "EVENTS";
 const char *CLEAR_EEPROM = "CLEAR_EEPROM";
 const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
 const char *FORMAT_FS = "FORMAT_FS";
@@ -116,7 +117,7 @@ void setup() {
 
     buttonSettings.loadEvents();
 
-    String eventsData = *buttonSettings.events();
+    auto eventsData = buttonSettings.events();
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROM_SETTINGS configuration = buttonSettings.getButtonConfig();
@@ -139,7 +140,7 @@ void setup() {
 
     htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig,
                                   buttonState.isRunOperationMode());
-    eventService.SetEvents(eventsData);
+    eventService.SetEvents(*eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", index_html, components);
@@ -181,7 +182,10 @@ void setup() {
             if (paramName == SAVE_SETTINGS) {
                 buttonSettings.saveSettings(paramMessage);
                 RequiredRestart.set();
-            } else if (paramName == ID) {
+            } else if (paramName == SAVE_EVENTS) {
+                buttonSettings.saveEvents(paramMessage);
+                eventService.SetEvents(paramMessage);
+            }else if (paramName == ID) {
                 responseData = WiFi.macAddress().c_str();
             } else if (!(RequiredToTriggerButton || RequiredToFind || RequiredEepromClear || RequiredToFormatFS)){
                 responseCode = 418;

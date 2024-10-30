@@ -22,10 +22,11 @@ class HTMLComponentBuilder {
 public:
     String componentById(const String &ref);
 
-    void setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient);
+    void setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list, EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient);
 
 private:
-    String events, networkSsid, networkPassword;
+    const String *events;
+    String networkSsid, networkPassword;
     EEPROM_SETTINGS configuration;
     NETWORKLIST networkList;
     INTEGRATIONSETTINGS integrationSettings;

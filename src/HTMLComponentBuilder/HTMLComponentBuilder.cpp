@@ -4,7 +4,7 @@
 
 #include "HTMLComponentBuilder.h"
 
-void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient) {
+void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list, EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient) {
     networkSsid = ssid;
     networkPassword = password;
     events = eventsConfig;
@@ -25,7 +25,7 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         data += R"(<input class="control mt-m" type="password" id="wifipass" value=")" + networkPassword + "\"></div>";
         return data;
     } else if (ref == "EVENTINFO") {
-        data += events;
+        data += *events;
         return data;
     } else if (ref == "WIFILIST") {
         data += wiFiList();
