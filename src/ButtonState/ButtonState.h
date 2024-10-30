@@ -14,6 +14,7 @@ class ButtonState {
 
 public:
     void setState(int state);
+    void toggleState();
     BUTTON_STATE getState() const;
     bool isPressed() const;
 
@@ -24,7 +25,7 @@ public:
     bool isRunOperationMode() const;
 
     void setToggleState(BUTTON_STATE state);
-    BUTTON_STATE toggleState();
+    BUTTON_STATE toggleToggleState();
     BUTTON_STATE getToggleMode() const;
     EVENT_TRIGGER getEventTrigger(bool isToggleMode);
 
