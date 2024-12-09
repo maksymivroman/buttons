@@ -346,6 +346,35 @@ const char index_html[] PROGMEM = R"rawliteral(
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         }
 
+        .rgb-info-square {
+            position: relative;
+            outline: 1px solid #696565;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            height: 18px;
+            width: 18px;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .marked-flag.rgb-info-square {
+            opacity: .2;
+        }
+
+        .marked-flag.rgb-info-square::before {
+            content: '';
+            top: 0;
+            left: 0;
+            position: absolute;
+            width: 26px;
+            height: 1px;
+            background-color: #a6132f;
+            transform: rotate(45deg);
+            transform-origin: top left;
+        }
+
         @media screen and (max-width: 800px) {
             .wifi-credentials {
                 flex-direction: column;
@@ -690,6 +719,9 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">WiFi mode:</h5>
             <h5 style="margin: 5px">%WIFIMODE%</h5>
+        </div>
+        <div class="flexbox-wrap" style="align-items: center; gap: 4px">
+            %RGB_FLAGS%
         </div>
     </div>
 

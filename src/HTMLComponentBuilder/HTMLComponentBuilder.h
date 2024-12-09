@@ -22,7 +22,8 @@ class HTMLComponentBuilder {
 public:
     String componentById(const String &ref);
 
-    void setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list, EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient);
+    void setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list,
+                         EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient, EEPROM_FLAGS buttonFlags);
 
 private:
     const String *events;
@@ -31,6 +32,7 @@ private:
     NETWORKLIST networkList;
     INTEGRATIONSETTINGS integrationSettings;
     bool isClientMode;
+    EEPROM_FLAGS flags;
 
     String wiFiList();
 

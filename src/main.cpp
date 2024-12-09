@@ -20,6 +20,7 @@
 #include "ExternalInterface/ExternalInterfaceService.h"
 #include "ButtonState/ButtonState.h"
 #include "ButtonTrigger/Trigger.h"
+#include "ButtonFlags/ButtonFlags.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -49,7 +50,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,3,95, true);
+Version currentFWVersion(1,3,96, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -90,6 +91,7 @@ void setup() {
     ledService.pinConfig(redPin, greenPin, bluePin);
 
     buttonSettings.loadButtonEepromSettings();
+    buttonSettings.loadButtonFlags();
     if (buttonSettings.overrideLedConfig()) ledService.applyLedMap(buttonSettings.ledMap());
 
     ledService.setLedAction(ACTIONS::LOADING, true);
@@ -139,7 +141,7 @@ void setup() {
     ledService.setLedAction(ACTIONS::DONE, true);
 
     htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig,
-                                  buttonState.isRunOperationMode());
+                                  buttonState.isRunOperationMode(), buttonSettings.buttonFlags());
     eventService.SetEvents(*eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -193,6 +195,44 @@ void setup() {
             }
         }
         logger.log("[MAIN->HTTP_POST]-> Return response code: ", responseCode);
+        request->send(responseCode, "text/html", responseData);
+    });
+
+    server.on("/flags", HTTP_POST, [](AsyncWebServerRequest *request) {
+        unsigned int params = request->params();
+        int responseCode = 200;
+        String responseData = "OK";
+        logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
+        if (params > 0) {
+            auto bf = new ButtonFlags;
+            bool hasValidFlags = [params, request, bf]() -> bool {
+                    for (unsigned int i = 0; i < params; i++) {
+                        AsyncWebParameter *param = request->getParam(i);
+                        String paramName = param->name().c_str();
+                        if (bf->isValidFlag(paramName)) return true;
+                    }
+                return false;
+            }();
+
+            if (hasValidFlags) {
+                EEPROM_FLAGS buttonFlags = buttonSettings.buttonFlags();
+                for (unsigned int i = 0; i < params; i++) {
+                    AsyncWebParameter *param = request->getParam(i);
+                    String flagName = param->name().c_str();
+                    bool value = param->value() == "true" || param->value() == "1";
+                    bf->updateFlags(&buttonFlags, flagName, value);
+                    logger.log("[MAIN->HTTP_POST] Updating Flag: ", flagName, ": ", value);
+                }
+                buttonSettings.updateFlagsEEPROM(buttonFlags);
+                RequiredRestart.set();
+                responseData = "Flags updated!";
+            } else {
+                responseData = "Flags not set!";
+            }
+        } else {
+            responseCode = 400;
+            responseData = "Bad request";
+        }
         request->send(responseCode, "text/html", responseData);
     });
 
