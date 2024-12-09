@@ -21,6 +21,7 @@ public:
     void loadEvents();
     void clearEeprom();
     void formatFS();
+
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
     bool useTelegramIntegration() const;
@@ -30,7 +31,6 @@ public:
     bool statisticEnabled() const;
     bool remoteStateChangeEnabled() const;
     bool overrideLedConfig() const;
-
     bool saveLastState() const;
     bool restoreLastStateOnLoad() const;
 

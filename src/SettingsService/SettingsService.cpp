@@ -45,6 +45,7 @@ void SettingsService::saveEvents(String events) {
     File file = SPIFFS.open("/post.json", "w");
     [[maybe_unused]] int bytesWritten = file.print(events);
     file.close();
+    this->eventsData = events;
 }
 
 void SettingsService::saveIntegrationSettings(String settings) {
@@ -59,20 +60,15 @@ void SettingsService::saveIntegrationSettings(String settings) {
 void SettingsService::saveSettings(String &settings) {
     DynamicJsonDocument jsonDoc(4096);
     deserializeJson(jsonDoc, settings);
-    JsonObject data = jsonDoc["inputdata"];
-    logger.log("[SettingsService] Save Settings data (json). Size: ", sizeof(data));
-    logger.logSerial("[SettingsService] events data json: ", data);
+    logger.log("[SettingsService] Save Settings data (json). Size: ", sizeof(jsonDoc));
 
-    String events = data["eventdata"];
-    String config = data["configuration"];
-    String integrationData = data["integration"];
+    String config = jsonDoc["configuration"];
+    String integrationData = jsonDoc["integration"];
 
     writeButtonEepromSettings(config);
 
     logger.logSerial("[SettingsService] 'configuration' data json: ", config);
-    logger.logSerial("[SettingsService] 'eventData' data json: ", events);
 
-    saveEvents(events);
     saveIntegrationSettings(integrationData);
 }
 
@@ -86,7 +82,7 @@ void SettingsService::loadButtonEepromSettings() {
 void SettingsService::writeButtonEepromSettings(String &config) {
     EEPROM_SETTINGS settings = *new EEPROM_SETTINGS;
 
-    DynamicJsonDocument jsonSettings(1024);
+    DynamicJsonDocument jsonSettings(1536);
     deserializeJson(jsonSettings, config);
 
     String wiFiName = jsonSettings["wifiSsid"] | "";
