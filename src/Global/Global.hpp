@@ -102,10 +102,19 @@ struct EEPROM_SETTINGS {
     char wifiPass[256]{};
     char hotspotSsid[32]{};
 };
+const size_t EEPROM_SETTINGS_RESERVED_SIZE = 1024;
 
 struct EEPROM_DYNAMIC {
     bool isPressedState = false;
 };
+const size_t EEPROM_DYNAMIC_RESERVED_SIZE = 64;
+
+struct EEPROM_FLAGS {
+    bool ledRDisabled = false;
+    bool ledGDisabled = false;
+    bool ledBDisabled = false;
+};
+const size_t EEPROM_FLAGS_RESERVED_SIZE = 64;
 
 struct KEYSTORESETTINGS {
     bool enabled;

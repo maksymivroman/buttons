@@ -4,14 +4,16 @@
 
 #include "HTMLComponentBuilder.h"
 
-void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list, EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient) {
-    networkSsid = ssid;
-    networkPassword = password;
-    events = eventsConfig;
-    networkList = list;
-    configuration = config;
-    integrationSettings = integrationData;
-    isClientMode = isClient;
+void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list,
+                                           EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient, EEPROM_FLAGS buttonFlags) {
+    this->networkSsid = ssid;
+    this->networkPassword = password;
+    this->events = eventsConfig;
+    this->networkList = list;
+    this->configuration = config;
+    this->integrationSettings = integrationData;
+    this->isClientMode = isClient;
+    this->flags = buttonFlags;
 }
 
 String HTMLComponentBuilder::componentById(const String &ref) {
@@ -65,6 +67,11 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         return data;
     } else if (ref == "WIFIMODE") {
         data += networkService.getWiFIMode();
+        return data;
+    } else if (ref == "RGB_FLAGS") {
+        data += R"(<div id="rFlag" class="rgb-info-square )" + String(flags.ledRDisabled ? "marked-flag":"") + R"("><h5 style="margin: 5px; color: #e50c0c;">R</h5></div>)";
+        data += R"(<div id="gFlag" class="rgb-info-square )" + String(flags.ledGDisabled ? "marked-flag":"") + R"("><h5 style="margin: 5px; color: #077307;">G</h5></div>)";
+        data += R"(<div id="bFlag" class="rgb-info-square )" + String(flags.ledBDisabled ? "marked-flag":"") + R"("><h5 style="margin: 5px; color: #4949ff;">B</h5></div>)";
         return data;
     } else if (ref == "IP") {
         switch (WiFi.getMode()) {

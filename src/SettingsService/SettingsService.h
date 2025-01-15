@@ -14,6 +14,7 @@ public:
     const String *events();
     INTEGRATIONSETTINGS integrationSettings();
     EEPROM_SETTINGS getButtonConfig();
+    EEPROM_FLAGS buttonFlags() const;
 
     void saveEvents(String events);
     void saveSettings(String &settings);
@@ -21,6 +22,8 @@ public:
     void loadEvents();
     void clearEeprom();
     void formatFS();
+
+    void updateFlagsEEPROM(EEPROM_FLAGS flags);
 
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
@@ -44,6 +47,7 @@ public:
     KEYSTORESETTINGS keystoreSettings() const;
 
     void loadButtonDynamicProps();
+    void loadButtonFlags();
     bool getLastStatePressed();
     void setLastState(int state);
 
@@ -66,11 +70,10 @@ private:
 
     EEPROM_SETTINGS buttonEepromSettings;
     EEPROM_DYNAMIC buttonDynamicEeprom;
-
-    const size_t eepromSize = 1024;
-    const size_t dynamicEepromSize = 64;
+    EEPROM_FLAGS buttonFlagsEeprom;
 
     size_t dynamicEepromStartOffset() const;
+    size_t flagsEepromStartOffset() const;
     size_t totalEepromSize() const;
 
     RGBCONFIG hexToRGB(const char hex[]);
