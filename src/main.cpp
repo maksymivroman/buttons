@@ -47,7 +47,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,3,97, true);
+Version currentFWVersion(1,4,0, true);
 
 ButtonState buttonState;
 LEDService ledService;
