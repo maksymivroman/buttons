@@ -73,7 +73,6 @@ struct EEPROM_SETTINGS {
     bool useDnsName = false;
     bool useSound = false;
     bool useCustomHSsid = false;
-    bool useTelegramIntegration = false;
     bool remoteTriggering = false;
     bool keystoreEnabled = false;
     bool sendEventOnKeystoreUpdate = false;
@@ -120,13 +119,6 @@ struct KEYSTORESETTINGS {
     bool enabled;
     bool sendEventsOnUpdate;
     bool delayEvent;
-};
-
-struct INTEGRATIONSETTINGS {
-    String tToken;
-    long long tChanelID;
-    String tPrefix;
-    String tSuffix;
 };
 
 enum class ACTIONS {
