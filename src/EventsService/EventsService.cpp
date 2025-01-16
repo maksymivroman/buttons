@@ -63,26 +63,11 @@ String EventsService::normalizeRequestHost(String host, EVENT_TRIGGER trigger) {
 }
 
 void EventsService::ProcessToSend(String &host, String &payload) {
-    if (host == "telegram") {
-        SendMessageToTelegram(payload);
-        return;
-    }
     SendHttpEvent(host, payload);
 }
 
 void EventsService::SetEvents(String eventsData) {
     events = std::move(eventsData);
-}
-
-void EventsService::SendMessageToTelegram(String message) {
-    logger.logSerial("[EventsService] SendMessageToTelegram: ", message);
-
-    if (telegramBotRef != nullptr) {
-        logger.log("[EventsService] Telegram: Integration Enabled. Sending message...");
-        telegramBotRef->sendMessage(message);
-    } else {
-        logger.log("[EventsService] Telegram: Integration Disabled");
-    }
 }
 
 void EventsService::SendHttpEvent(String &host, String &payload) {

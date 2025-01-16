@@ -5,13 +5,12 @@
 #include "HTMLComponentBuilder.h"
 
 void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list,
-                                           EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient, EEPROM_FLAGS buttonFlags) {
+                                           EEPROM_SETTINGS config, bool isClient, EEPROM_FLAGS buttonFlags) {
     this->networkSsid = ssid;
     this->networkPassword = password;
     this->events = eventsConfig;
     this->networkList = list;
     this->configuration = config;
-    this->integrationSettings = integrationData;
     this->isClientMode = isClient;
     this->flags = buttonFlags;
 }
@@ -46,9 +45,6 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         return data;
     } else if (ref == "CONFIGURATION") {
         data += createConfigurationObject(configuration);
-        return data;
-    } else if (ref == "INTEGRATION") {
-        data += createIntegrationDataObject(integrationSettings);
         return data;
     } else if (ref == "FWVERSION") {
         data += currentFWVersion.str_version();
@@ -110,7 +106,6 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
             useDnsName: <useDnsName>,
             useSound: <useSound>,
             customHSsid: <useCustomHSsid>,
-            useTelegramIntegration: <useTelegramIntegration>,
             remoteTriggering:<remoteTriggering>,
             fwVersion: <fwVersion>,
             hotspotSsid: "<hotspotSsid>",
@@ -134,7 +129,6 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     configObj.replace("<enableOtaUpdate>", String(data.enableOtaUpdate));
     configObj.replace("<useDnsName>", String(data.useDnsName));
     configObj.replace("<useSound>", String(data.useSound));
-    configObj.replace("<useTelegramIntegration>", String(data.useTelegramIntegration));
     configObj.replace("<remoteTriggering>", String(data.remoteTriggering));
     configObj.replace("<fwVersion>", String(data.fwVersion));
     configObj.replace("<hotspotSsid>", String(data.hotspotSsid));
@@ -151,21 +145,6 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     configObj.replace("<overrideLedConfig>", String(data.overrideLedConfig));
     configObj.replace("<wiFiMode>", String(data.wiFiMode));
     configObj.replace("<ledConfig>", getLedConfig(data));
-
-    return configObj;
-}
-
-String HTMLComponentBuilder::createIntegrationDataObject(INTEGRATIONSETTINGS data) {
-    String configObj = R"({
-            tToken: "<tToken>",
-            tChanelID: <tChanelID>,
-            tPrefix: "<tPrefix>",
-            tSuffix: "<tSuffix>"
-        })";
-    configObj.replace("<tToken>", String(data.tToken));
-    configObj.replace("<tChanelID>", String(data.tChanelID));
-    configObj.replace("<tPrefix>", String(data.tPrefix));
-    configObj.replace("<tSuffix>", String(data.tSuffix));
 
     return configObj;
 }

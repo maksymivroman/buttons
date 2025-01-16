@@ -21,24 +21,6 @@ const String *SettingsService::events() {
     return &this->eventsData;
 }
 
-INTEGRATIONSETTINGS SettingsService::integrationSettings() {
-    String data = dataFromFS("/integration.json");
-    DynamicJsonDocument jsonDoc(2048);
-    deserializeJson(jsonDoc, data);
-    String tToken = jsonDoc["tToken"] | "";
-    long long tChanelID = jsonDoc["tChanelID"];
-    String tPrefix = jsonDoc["tPrefix"] | "";
-    String tSuffix = jsonDoc["tSuffix"] | "";
-
-    INTEGRATIONSETTINGS settings;
-    settings.tToken = tToken;
-    settings.tChanelID = tChanelID;
-    settings.tPrefix = tPrefix;
-    settings.tSuffix = tSuffix;
-
-    return settings;
-}
-
 void SettingsService::saveEvents(String events) {
     logger.log("[SettingsService] Save Events");
     logger.logSerial("[SettingsService] saveEvents: ", events);
@@ -48,28 +30,16 @@ void SettingsService::saveEvents(String events) {
     this->eventsData = events;
 }
 
-void SettingsService::saveIntegrationSettings(String settings) {
-    logger.log("[SettingsService] Save Integration Settings");
-    logger.logSerial("[SettingsService] saveIntegrationSettings: ", settings);
-    File file = SPIFFS.open("/integration.json", "w");
-    [[maybe_unused]] int bytesWritten = file.print(settings);
-    file.close();
-}
-
-
 void SettingsService::saveSettings(String &settings) {
     DynamicJsonDocument jsonDoc(4096);
     deserializeJson(jsonDoc, settings);
     logger.log("[SettingsService] Save Settings data (json). Size: ", sizeof(jsonDoc));
 
     String config = jsonDoc["configuration"];
-    String integrationData = jsonDoc["integration"];
 
     writeButtonEepromSettings(config);
 
     logger.logSerial("[SettingsService] 'configuration' data json: ", config);
-
-    saveIntegrationSettings(integrationData);
 }
 
 void SettingsService::loadButtonEepromSettings() {
@@ -128,7 +98,6 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.statisticEnabled = jsonSettings["statisticEnabled"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
-    settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
@@ -167,10 +136,6 @@ bool SettingsService::clientWebAccessEnabled() const {
 
 bool SettingsService::useSoundNotification() const {
     return buttonEepromSettings.useSound | false;
-}
-
-bool SettingsService::useTelegramIntegration() const {
-    return buttonEepromSettings.useTelegramIntegration | false;
 }
 
 bool SettingsService::otaUpdateOnClientMode() const {

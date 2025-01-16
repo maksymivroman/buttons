@@ -384,7 +384,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                 display: none;
             }
         }
-    </style>
+</style>
 </head>
 <body>
 
@@ -568,7 +568,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
                 <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Please wait...</h1>
                 <h4 style="color: #b9b9b9; font-weight: 200" id="dialogMessage">...</h4>
-                <button disabled id="refreshBtn" type="button" class="btn btn-blue btn-min-w" onclick="location.reload()">OK</button>
+                <button disabled id="refreshBtn" type="button" class="btn btn-blue mt-m btn-min-w" onclick="location.reload()">OK</button>
             </div>
         </div>
 
@@ -607,50 +607,6 @@ const char index_html[] PROGMEM = R"rawliteral(
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
                 <h5 class="item m-0">URL structure:</h5>
                 <h5 class="item m-0">http://%IP%/external?led=${on/off}&beep={on/off}</h5>
-            </div>
-        </div>
-
-        <h2 class="section-header">Integration</h2>
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="useTelegramIntegration">
-                <label for="useTelegramIntegration">Telegram Integration (send events, message
-                    forwarding)</label>
-            </div>
-
-            <div id="telegramIntegration" class="item" style="margin-bottom: 20px; flex-wrap: wrap">
-                <div class="item --vertical" style="flex: 1; max-width: 400px;">
-                    <label for="tToken">Token</label>
-                    <input maxlength="50" type="text" id="tToken" class="control --fill"
-                           style="max-width: 375px; font-size: 0.75rem;">
-                </div>
-                <div class="item --vertical">
-                    <label for="tChanelID">Chanel ID</label>
-                    <input maxlength="32" type="number" id="tChanelID" class="control" style="font-size: 0.75rem;">
-                </div>
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h4 class="item m-0">Message forwarding:</h4>
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item m-0">URL structure:</h5>
-                <h5 class="item m-0">http://%IP%/integration?data=MESSAGE</h5>
-            </div>
-
-            <div class="item" style="margin-left: 16px;">
-                <label for="tPrefix">Message prefix</label>
-                <input maxlength="32" type="text" id="tPrefix" class="control">
-            </div>
-            <div class="item" style="margin-left: 16px;">
-                <label for="tSuffix">Message suffix</label>
-                <input maxlength="32" type="text" id="tSuffix" class="control">
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item m-0">Result:</h5>
-                <h5 id="integrationResult" class="item m-0">MESSAGE</h5>
             </div>
         </div>
 
@@ -735,11 +691,6 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <div class="flexbox-raw-centered" style="gap: 8px;">
                     <input id="nsType" type="radio" name="eventType" value="ns-event">
                     <label for="nsType" style="color: white;">NoviSign event</label>
-                </div>
-
-                <div class="flexbox-raw-centered" style="gap: 8px;">
-                    <input id="telegramType" type="radio" name="eventType" value="telegram-event">
-                    <label for="telegramType" style="color: white;">telegram event</label>
                 </div>
 
                 <div class="flexbox-raw-centered" style="gap: 8px;">
@@ -856,7 +807,6 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
-        const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
         const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
         const saveLastState = Number(document.getElementById('saveLastState').checked);
         const restoreLastStateOnLoad = Number(document.getElementById('restoreLastStateOnLoad').checked);
@@ -877,7 +827,6 @@ const char index_html[] PROGMEM = R"rawliteral(
             loggerLevel,
             wiFiMode,
             useSound,
-            useTelegramIntegration,
             customHSsid,
             enableOtaUpdate,
             remoteTriggering,
@@ -895,19 +844,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             statisticApi: statApi
         });
 
-        const tToken = document.getElementById('tToken').value;
-        const tChanelID = Number(document.getElementById('tChanelID').value);
-        const tPrefix = document.getElementById('tPrefix').value;
-        const tSuffix = document.getElementById('tSuffix').value;
-
-        const integration = JSON.stringify({
-            tToken,
-            tChanelID,
-            tPrefix,
-            tSuffix
-        })
-
-        let data = "SETTINGS=" + '{"configuration":' + extrasConfig + ',"integration":' + integration + '}';
+        let data = "SETTINGS=" + '{"configuration":' + extrasConfig + '}';
         data.replace(/" /g, '');
         data.replace(/ "/g, '');
         httpPOST(data, "Save settings", "Settings saved. Rebooting...", true, handleSuccessSave);
@@ -915,7 +852,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function showSaved() {
         const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
-            'useTelegramIntegration', 'saveLastState', 'overrideLedConfig',
+            'saveLastState', 'overrideLedConfig',
             'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
         const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode'];
         const inputsSettings = ['statisticApi', 'hotspotSsid'];
@@ -944,21 +881,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             document.getElementById('updateBtn').remove();
         }
 
-        integrationConfig = %INTEGRATION% ;
-
-        document.getElementById('tToken').value = integrationConfig.tToken;
-        document.getElementById('tChanelID').value = integrationConfig.tChanelID;
-        document.getElementById('tPrefix').value = integrationConfig.tPrefix;
-        document.getElementById('tSuffix').value = integrationConfig.tSuffix;
-
         try {
             JSON.parse('"' + eventDataObj + '"');
         } catch (e) {
             eventDataObj = {"sample_event_host": "sample_event_data"};
             console.warn('no saved events found');
         }
-
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
 
         const ledContainer = document.getElementById('led-container');
         ledConfig = {...config.ledConfig};
@@ -971,22 +899,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('wifiname').value = option.value;
     }
 
-    const tPrefixValue = document.getElementById('tPrefix');
-    const tSuffixValue = document.getElementById('tSuffix');
-    const integrationResult = document.getElementById('integrationResult');
-
-    let config, integrationConfig, eventDataObj;
+    let config, eventDataObj;
     let tempEventsObj = {};
 
     let entryKeyToEdit;
-
-    tPrefixValue.addEventListener("input", () => {
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
-    });
-
-    tSuffixValue.addEventListener("input", () => {
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
-    });
 
     const dataTable = document.getElementById('dataTable');
     const tbody = dataTable.querySelector('tbody');
@@ -1061,12 +977,6 @@ const char index_html[] PROGMEM = R"rawliteral(
                 hostInput.value = "";
                 hostInput.disabled = false;
                 nsEventTypeContainer.classList.remove("--hidden");
-                break;
-            case "telegram-event":
-                nsEventTypeContainer.classList.add("--hidden");
-                hostInput.disabled = true;
-                eventData.value = "";
-                hostInput.value = "telegram";
                 break;
             case "custom-event":
                 nsEventTypeContainer.classList.add("--hidden");
@@ -1294,7 +1204,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         cells.forEach(cell => cell.style.display = showControls ? 'flex' : 'none');
     }
 
-</script>)rawliteral";
+</script>
+)rawliteral";
 
 const char logs_page[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>

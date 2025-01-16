@@ -6,9 +6,9 @@
 #define EVENT_BUTTON_EVENTSSERVICE_H
 
 #include <Arduino.h>
-#include "TelegramIntegration/TelegramIntegration.h"
 #include <map>
 #include <array>
+#include "Global/Global.hpp"
 
 typedef std::map<EVENT_TRIGGER, std::array<char, 3>> TriggersMap;
 
@@ -19,10 +19,7 @@ public:
     void SetEvents(String eventsData);
     void SendEventsOnKeystoreChange();
 
-    TelegramIntegration *telegramBotRef = nullptr;
-
 private:
-    void SendMessageToTelegram(String message);
     void SendHttpEvent(String &host, String &payload);
     void ProcessEvents(EVENT_TRIGGER triggeredBy);
     void ProcessToSend(String &host, String &payload);

@@ -23,21 +23,19 @@ public:
     String componentById(const String &ref);
 
     void setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list,
-                         EEPROM_SETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient, EEPROM_FLAGS buttonFlags);
+                         EEPROM_SETTINGS config, bool isClient, EEPROM_FLAGS buttonFlags);
 
 private:
     const String *events;
     String networkSsid, networkPassword;
     EEPROM_SETTINGS configuration;
     NETWORKLIST networkList;
-    INTEGRATIONSETTINGS integrationSettings;
     bool isClientMode;
     EEPROM_FLAGS flags;
 
     String wiFiList();
 
     String createConfigurationObject(EEPROM_SETTINGS data);
-    String createIntegrationDataObject(INTEGRATIONSETTINGS data);
     String getLedConfig(EEPROM_SETTINGS settings);
 };
 

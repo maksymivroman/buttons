@@ -12,7 +12,6 @@ class SettingsService {
 public:
     WiFiCONFIG getWiFiConnDetails();
     const String *events();
-    INTEGRATIONSETTINGS integrationSettings();
     EEPROM_SETTINGS getButtonConfig();
     EEPROM_FLAGS buttonFlags() const;
 
@@ -27,7 +26,6 @@ public:
 
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
-    bool useTelegramIntegration() const;
     bool otaUpdateOnClientMode() const;
     bool remoteButtonTriggering() const;
     bool loggerEnabled() const;
@@ -60,7 +58,6 @@ public:
 
 private:
     void writeButtonEepromSettings(String& config);
-    void saveIntegrationSettings(String settings);
     void writeToEEPROM(EEPROM_SETTINGS settings);
 
     void updateDynamicEEPROM(EEPROM_DYNAMIC dynamicProps);

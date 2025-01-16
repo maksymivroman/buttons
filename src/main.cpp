@@ -12,7 +12,6 @@
 #include "HTMLComponentBuilder/HTMLComponentBuilder.h"
 #include "EventsService/EventsService.h"
 #include "SoundService/SoundService.h"
-#include "TelegramIntegration/TelegramIntegration.h"
 #include "TasksHandler/ButtonTask.h"
 #include "Logger/Logger.h"
 #include "Keystore/Keystore.h"
@@ -44,13 +43,11 @@ const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
 const char *FORMAT_FS = "FORMAT_FS";
 const char *ID = "ID";
 
-String integrationMessageToSend = "";
-
 unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,3,96, true);
+Version currentFWVersion(1,3,97, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -60,7 +57,6 @@ NetworkService networkService;
 HTMLComponentBuilder htmlComponent;
 SoundService notifier(buzzerPin);
 EventsService eventService;
-TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
 Statistic statistic;
 Keystore keystore(20);
@@ -69,7 +65,7 @@ Keystore keystore(20);
 Logger logger(115200, 20);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
-        SendEventsTask, IntegrationTask, CheckConnectionTask(true), ToggleStateTask(false),
+        SendEventsTask, CheckConnectionTask(true), ToggleStateTask(false),
         FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask, ResetExternalStateTask;
 
 ButtonIntervalTask MainITask;
@@ -123,7 +119,6 @@ void setup() {
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROM_SETTINGS configuration = buttonSettings.getButtonConfig();
-    INTEGRATIONSETTINGS integrationConfig = buttonSettings.integrationSettings();
     KEYSTORESETTINGS keystoreSettings = buttonSettings.keystoreSettings();
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
@@ -140,7 +135,7 @@ void setup() {
 
     ledService.setLedAction(ACTIONS::DONE, true);
 
-    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig,
+    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration,
                                   buttonState.isRunOperationMode(), buttonSettings.buttonFlags());
     eventService.SetEvents(*eventsData);
 
@@ -283,22 +278,6 @@ void setup() {
         });
     }
 
-    if(buttonSettings.useTelegramIntegration()) {
-        telegramBot.configureTelegramIntegration(buttonSettings.integrationSettings());
-        eventService.telegramBotRef = &telegramBot;
-        server.on("/integration", HTTP_GET, [](AsyncWebServerRequest *request) {
-            if (request->hasParam("data")) {
-                integrationMessageToSend += buttonSettings.integrationSettings().tPrefix;
-                integrationMessageToSend += request->getParam("data")->value();
-                integrationMessageToSend += buttonSettings.integrationSettings().tSuffix;
-                logger.log("[MAIN->HTTP GET -> integration]");
-                logger.logSerial("[HTTP GET -> integration message]: ", integrationMessageToSend);
-            }
-            else {logger.log("[MAIN->HTTP GET -> integration]: wrong GET data");}
-            request->send_P(200, "text/html", "OK");
-        });
-    }
-
     const bool buttonOTAUpdateEnabled = buttonState.isSetupOperationMode() || (buttonState.isRunOperationMode() && buttonSettings.otaUpdateOnClientMode());
     const bool serverEnabled = buttonState.isSetupOperationMode() || (buttonState.isRunOperationMode() && buttonSettings.clientWebAccessEnabled());
 
@@ -396,13 +375,6 @@ void loop() {
             ledService.setLedAction(ACTIONS::WARN);
             buttonSettings.formatFS();
             RequiredRestart.set();
-        });
-
-        IntegrationTask(integrationMessageToSend.length() != 0, [](){
-            notifier.onIntegrationMessage();
-            telegramBot.sendMessage(integrationMessageToSend);
-            integrationMessageToSend = "";
-            if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Integration: send message to telegram.");
         });
 
         OnKeystoreUpdateTask(
