@@ -9,64 +9,71 @@
 #include <ESP8266HTTPClient.h>
 #include "Global/Global.hpp"
 
-void EventsService::SendEvents() {
-    ProcessToSend();
+void EventsService::SendEvents(EVENT_TRIGGER triggeredBy) {
+    logger.log("[EventsService] SendEvents with trigger: ", triggeredBy);
+    logger.logSerial("[EventsService] SendEvents", this->events);
+    ProcessEvents(triggeredBy);
 }
 
 void EventsService::SendEventsOnKeystoreChange() {
-    ProcessToSend(true);
+    ProcessEvents(KEYSTORE_UPDATE);
 }
 
-void EventsService::ProcessToSend(boolean onlyFromKeystore) {
-    logger.log("[EventsService] SendEvents");
-    logger.logSerial("[EventsService] SendEvents", this->events);
-
+void EventsService::ProcessEvents(EVENT_TRIGGER triggeredBy) {
     StaticJsonDocument<900> doc;
     deserializeJson(doc, this->events);
-    JsonObject data = doc.as<JsonObject>();
-
-    String requestUrl;
+    auto data = doc.as<JsonObject>();
 
     for (JsonPair keyValue: data) {
-        requestUrl = keyValue.key().c_str();
-
+        String requestHost = keyValue.key().c_str();
         String requestData = data[keyValue.key().c_str()];
 
         logger.logSerial("[EventsService] request data: ", requestData);
-        logger.logSerial("[EventsService] request URL: ", requestUrl);
+        logger.logSerial("[EventsService] request URL: ", requestHost);
 
-        if (requestUrl == "telegram" && !onlyFromKeystore) {
-            SendMessageToTelegram(requestData);
-        } else if (onlyFromKeystore && requestUrl.substring(0, 1) == "$") {
-            requestUrl.remove(0, 1);
-            SendHttpEvent(requestUrl, requestData);
-        } else {
-            if(requestUrl.substring(0, 1) != "$" && !onlyFromKeystore) {
-                SendHttpEvent(requestUrl, requestData);
-            }
+        if (triggeredBy == DEFAULT_TRIGGER) {
+            auto isDefaultEvent = this->isDefaultEvent(requestHost);
+            if (isDefaultEvent) this->ProcessToSend(requestHost, requestData);
+        } else if (this->isEventMatchTrigger(triggeredBy, requestHost)) {
+            auto host = this->normalizeRequestHost(requestHost, triggeredBy);
+            this->ProcessToSend(host, requestData);
         }
     }
+}
+
+bool EventsService::isEventMatchTrigger(EVENT_TRIGGER trigger, const String &eventRequestHost) const {
+    const auto t = _triggers.at(trigger);
+    return std::equal(
+            t.begin(), t.end(),
+            eventRequestHost.c_str());
+}
+
+bool EventsService::isDefaultEvent(const String &eventRequestHost) {
+    for (auto trigger:_triggers) {
+        bool isEventWithTrigger = this->isEventMatchTrigger(trigger.first, eventRequestHost);
+        if (isEventWithTrigger) return false;
+    }
+    return true;
+}
+
+String EventsService::normalizeRequestHost(String host, EVENT_TRIGGER trigger) {
+    auto triggerStr = this->_triggers.at(trigger);
+    host.remove(0, triggerStr.size());
+    return host;
+}
+
+void EventsService::ProcessToSend(String &host, String &payload) {
+    SendHttpEvent(host, payload);
 }
 
 void EventsService::SetEvents(String eventsData) {
     events = std::move(eventsData);
 }
 
-void EventsService::SendMessageToTelegram(String message) {
-    logger.logSerial("[EventsService] SendMessageToTelegram: ", message);
-
-    if (telegramBotRef != nullptr) {
-        logger.log("[EventsService] Telegram: Integration Enabled. Sending message...");
-        telegramBotRef->sendMessage(message);
-    } else {
-        logger.log("[EventsService] Telegram: Integration Disabled");
-    }
-}
-
 void EventsService::SendHttpEvent(String &host, String &payload) {
-    logger.log("[EventsService] HTTP request");
-    logger.logSerial("[EventsService] HOST: ", host);
-    logger.logSerial("[EventsService] PAYLOAD: ", payload);
+    logger.log("[EventsService][SendHttpEvent] HTTP request");
+    logger.logSerial("[EventsService][SendHttpEvent] HOST: ", host);
+    logger.logSerial("[EventsService][SendHttpEvent] PAYLOAD: ", payload);
     const bool isSecure = host.substring(4,5) == "s";
 
     //Skip secure connection
@@ -90,6 +97,3 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
         logger.log("[EventsService] Skip secure connection!");
     }
 }
-
-
-

@@ -4,6 +4,7 @@
 
 #include "ButtonOTAUpdate/AsyncOtaUpdate.h"
 #include "Global/Global.hpp"
+#include "Global/Version.h"
 #include "HTMLPage/html-page.hpp"
 #include "LEDService/LEDService.h"
 #include "SettingsService/SettingsService.h"
@@ -11,10 +12,14 @@
 #include "HTMLComponentBuilder/HTMLComponentBuilder.h"
 #include "EventsService/EventsService.h"
 #include "SoundService/SoundService.h"
-#include "TelegramIntegration/TelegramIntegration.h"
 #include "TasksHandler/ButtonTask.h"
 #include "Logger/Logger.h"
 #include "Keystore/Keystore.h"
+#include "Statistic/Statistic.h"
+#include "ExternalInterface/ExternalInterfaceService.h"
+#include "ButtonState/ButtonState.h"
+#include "ButtonTrigger/Trigger.h"
+#include "ButtonFlags/ButtonFlags.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -25,22 +30,26 @@ const int redPin = 14;
 const int buttonPin = 5;
 const int buzzerPin = 4;
 
-bool requiredToFind, requiredRestart, requiredEepromClear, requiredToTriggerButton, requiredToFormatFS, sendEventsOnKeystoreChange, requiredToUpdateEvents;
+bool externalInterface_ledActive, externalInterface_buzzActive;
+
+Trigger RequiredToTriggerButton, RequiredToFind, RequiredEepromClear, RequiredToFormatFS, RequiredRestart, RequiredToUpdateEvents, SendEventsOnKeystoreChange;
 
 // this const used for handle POST message type
 const char *FIND_ME = "FIND";
-const char *SAVE_SETTINGS = "SAVE";
+const char *SAVE_SETTINGS = "SETTINGS";
+const char *SAVE_EVENTS = "EVENTS";
 const char *CLEAR_EEPROM = "CLEAR_EEPROM";
 const char *TRIGGER_BUTTON = "TRIGGER_BUTTON";
 const char *FORMAT_FS = "FORMAT_FS";
 const char *ID = "ID";
 
-String integrationMessageToSend = "";
-
 unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
+Version currentFWVersion(1,4,0, true);
+
+ButtonState buttonState;
 LEDService ledService;
 SettingsService buttonSettings;
 AsyncWebServer server(80);
@@ -48,24 +57,27 @@ NetworkService networkService;
 HTMLComponentBuilder htmlComponent;
 SoundService notifier(buzzerPin);
 EventsService eventService;
-TelegramIntegration telegramBot;
 AsyncOtaUpdate ButtonOTAUpdate;
+Statistic statistic;
 Keystore keystore(20);
 /**Do not set max logs items more than 20,
  * it will cause heap overflow when using Telegram integration (BearSSL requires more than 12k of RAM) */
 Logger logger(115200, 20);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
-        SendEventsTask, IntegrationTask, CheckConnectionTask(true),
-        FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask;
+        SendEventsTask, CheckConnectionTask(true), ToggleStateTask(false),
+        FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask, ResetExternalStateTask;
+
+ButtonIntervalTask MainITask;
+ButtonIntervalTask ChangeLedStateITask, ChangeSoundStateITask, ConnectToWiFiITask;
 
 String components(const String &ref) {
     return htmlComponent.componentById(ref);
 }
 
-[[noreturn]] void restart() {
+void restart() {
     optimistic_yield(1000);
-    ledService.lightOnRed(true);
+    ledService.setLedAction(ACTIONS::WARN);
     notifier.onRestart();
     EspClass::restart();
 }
@@ -73,40 +85,59 @@ String components(const String &ref) {
 void setup() {
     pinMode(buttonPin, INPUT);
     ledService.pinConfig(redPin, greenPin, bluePin);
-    ledService.blinkDone();
 
     buttonSettings.loadButtonEepromSettings();
-    buttonSettings.loadEvents();
+    buttonSettings.loadButtonFlags();
+    if (buttonSettings.overrideLedConfig()) ledService.applyLedMap(buttonSettings.ledMap());
+
+    ledService.setLedAction(ACTIONS::LOADING, true);
+
+    buttonSettings.handleVersionChange(currentFWVersion.uint_version(), currentFWVersion.EEPROMStructureChanged());
 
     if (buttonSettings.loggerEnabled()) {
         logger.start(buttonSettings.loggerLevel());
-        logger.log("BUTTON CURRENT FW: " , currentFirmwareVersion);
+        logger.log("BUTTON CURRENT FW: " , currentFWVersion.str_fullVersion());
     }
 
-    String eventsData = *buttonSettings.events();
+    if (buttonSettings.statisticEnabled()) {
+        statistic.initStat(buttonSettings.statisticApi(),STAT_HTTP_POST, buttonSettings.statisticLevel());
+    }
+
+    if (buttonSettings.saveLastState()) {
+        logger.log("[MAIN:INIT] Button Toggle mode enabled");
+        buttonSettings.loadButtonDynamicProps();
+        if(buttonSettings.restoreLastStateOnLoad()) {
+            auto state = static_cast<BUTTON_STATE>(buttonSettings.getLastStatePressed());
+            buttonState.setToggleState(state);
+            logger.log("[MAIN:INIT] Button Toggle mode restored to : ", state);
+        }
+    }
+
+    buttonSettings.loadEvents();
+
+    auto eventsData = buttonSettings.events();
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
-    EEPROMSETTINGS configuration = buttonSettings.getButtonConfig();
-    INTEGRATIONSETTINGS integrationConfig = buttonSettings.integrationSettings();
+    EEPROM_SETTINGS configuration = buttonSettings.getButtonConfig();
     KEYSTORESETTINGS keystoreSettings = buttonSettings.keystoreSettings();
     NETWORKLIST wiFiList;
     wiFiList = networkService.WiFiList();
     notifier.useSound = buttonSettings.useSoundNotification();
+    networkService.setWiFiMode(buttonSettings.wiFiMode());
 
-    if (digitalRead(buttonPin) == 1) {
-        ledService.blinkWarn();
+    buttonState.setOperationMode(static_cast<OPERATION_MODE>(digitalRead(buttonPin)));
+
+    if(buttonState.isSetupOperationMode()) {
+        ledService.setLedAction(ACTIONS::WARN, true);
         const char *networkSsid =  buttonSettings.customHotspotSsid();
         networkService.ButtonHotspot(true, networkSsid, hotspotPass);
-    } else {
-        ledService.lightOnBlue(true);
-        networkService.ConnectToWiFi(wiFiConnDetails.ssid,wiFiConnDetails.password);
     }
 
-    ledService.blinkPrimary();
+    ledService.setLedAction(ACTIONS::DONE, true);
 
-    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration, integrationConfig,
-                                  networkService.isConnectedToWiFi());
-    eventService.SetEvents(eventsData);
+    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration,
+                                  buttonState.isRunOperationMode(), buttonSettings.buttonFlags());
+    eventService.SetEvents(*eventsData);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", index_html, components);
@@ -131,7 +162,7 @@ void setup() {
         unsigned int params = request->params();
         logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
         int responseCode = 200;
-        String responseData = "done";
+        String responseData = "OK";
         if (params > 0) {
             AsyncWebParameter *param = request->getParam(0);
             String paramName = param->name().c_str();
@@ -140,26 +171,63 @@ void setup() {
             logger.log("[MAIN->HTTP_POST] ", paramName);
             logger.logSerial("[MAIN->HTTP_POST] ", paramName, ": ", paramMessage);
 
-            if (paramName == FIND_ME) {
-                requiredToFind = true;
-            } else if (paramName == TRIGGER_BUTTON) {
-                buttonSettings.remoteButtonTriggering() ? requiredToTriggerButton = true : responseCode = 403;
-            } else if (paramName == CLEAR_EEPROM) {
-                requiredEepromClear = true;
-            } else if (paramName == SAVE_SETTINGS) {
+            RequiredToTriggerButton.setIf(paramName == TRIGGER_BUTTON && buttonSettings.remoteButtonTriggering());
+            RequiredToFind.setIf(paramName == FIND_ME);
+            RequiredEepromClear.setIf(paramName == CLEAR_EEPROM);
+            RequiredToFormatFS.setIf(paramName == FORMAT_FS);
+
+            if (paramName == SAVE_SETTINGS) {
                 buttonSettings.saveSettings(paramMessage);
-                requiredRestart = true;
-            } else if (paramName == FORMAT_FS) {
-                //TODO handle diff params value to start different system tools. Rename FORMAT_FS
-                requiredToFormatFS = true;
-                requiredRestart = true;
-            } else if (paramName == ID) {
+                RequiredRestart.set();
+            } else if (paramName == SAVE_EVENTS) {
+                buttonSettings.saveEvents(paramMessage);
+                eventService.SetEvents(paramMessage);
+            }else if (paramName == ID) {
                 responseData = WiFi.macAddress().c_str();
-            } else {
+            } else if (!(RequiredToTriggerButton || RequiredToFind || RequiredEepromClear || RequiredToFormatFS)){
                 responseCode = 418;
+                responseData = "Bad request";
             }
         }
         logger.log("[MAIN->HTTP_POST]-> Return response code: ", responseCode);
+        request->send(responseCode, "text/html", responseData);
+    });
+
+    server.on("/flags", HTTP_POST, [](AsyncWebServerRequest *request) {
+        unsigned int params = request->params();
+        int responseCode = 200;
+        String responseData = "OK";
+        logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
+        if (params > 0) {
+            auto bf = new ButtonFlags;
+            bool hasValidFlags = [params, request, bf]() -> bool {
+                    for (unsigned int i = 0; i < params; i++) {
+                        AsyncWebParameter *param = request->getParam(i);
+                        String paramName = param->name().c_str();
+                        if (bf->isValidFlag(paramName)) return true;
+                    }
+                return false;
+            }();
+
+            if (hasValidFlags) {
+                EEPROM_FLAGS buttonFlags = buttonSettings.buttonFlags();
+                for (unsigned int i = 0; i < params; i++) {
+                    AsyncWebParameter *param = request->getParam(i);
+                    String flagName = param->name().c_str();
+                    bool value = param->value() == "true" || param->value() == "1";
+                    bf->updateFlags(&buttonFlags, flagName, value);
+                    logger.log("[MAIN->HTTP_POST] Updating Flag: ", flagName, ": ", value);
+                }
+                buttonSettings.updateFlagsEEPROM(buttonFlags);
+                RequiredRestart.set();
+                responseData = "Flags updated!";
+            } else {
+                responseData = "Flags not set!";
+            }
+        } else {
+            responseCode = 400;
+            responseData = "Bad request";
+        }
         request->send(responseCode, "text/html", responseData);
     });
 
@@ -179,8 +247,8 @@ void setup() {
                         keystore.addItem(paramName, paramValue);
                     }
                 }
-                if (keystoreSettings.sendEventsOnUpdate) sendEventsOnKeystoreChange = true;
-                requiredToUpdateEvents = true;
+                if (keystoreSettings.sendEventsOnUpdate) SendEventsOnKeystoreChange.set();
+                RequiredToUpdateEvents.set();
                 logger.log("[MAIN->HTTP GET][/keystore]: Update Keystore, total items - ", paramsCount);
                 request->send_P(200, "text/html", "OK");
             } else {
@@ -193,105 +261,154 @@ void setup() {
         }
     });
 
-    if(buttonSettings.useTelegramIntegration()) {
-        telegramBot.configureTelegramIntegration(buttonSettings.integrationSettings());
-        eventService.telegramBotRef = &telegramBot;
-        server.on("/integration", HTTP_GET, [](AsyncWebServerRequest *request) {
-            if (request->hasParam("data")) {
-                integrationMessageToSend += buttonSettings.integrationSettings().tPrefix;
-                integrationMessageToSend += request->getParam("data")->value();
-                integrationMessageToSend += buttonSettings.integrationSettings().tSuffix;
-                logger.log("[MAIN->HTTP GET -> integration]");
-                logger.logSerial("[HTTP GET -> integration message]: ", integrationMessageToSend);
+    if (buttonSettings.remoteStateChangeEnabled()) {
+        server.on("/external", HTTP_GET, [](AsyncWebServerRequest *request) {
+            unsigned int paramsCount = request->params();
+            if (paramsCount != 0) {
+                logger.log("[MAIN->HTTP GET][/external]: Update LED/Sound state. Params received: ", paramsCount);
+                auto * external = new ExternalInterfaceService();
+                external->handleTriggers(request, {
+                        {EXTERNAL_LED, externalInterface_ledActive},
+                        {EXTERNAL_BEEP, externalInterface_buzzActive}
+                });
+                delete external;
             }
-            else {logger.log("[MAIN->HTTP GET -> integration]: wrong GET data");}
+            logger.log("[MAIN->HTTP_POST]-> Return response code: ", 200);
             request->send_P(200, "text/html", "OK");
         });
     }
 
-    const bool serverEnabled = !networkService.isConnectedToWiFi() || (buttonSettings.clientWebAccessEnabled() &&
-                                                                       networkService.isConnectedToWiFi());
-    if ( serverEnabled ) {
-        if(!networkService.isConnectedToWiFi() || (buttonSettings.otaUpdateOnClientMode() &&
-                                                   networkService.isConnectedToWiFi())) {
+    const bool buttonOTAUpdateEnabled = buttonState.isSetupOperationMode() || (buttonState.isRunOperationMode() && buttonSettings.otaUpdateOnClientMode());
+    const bool serverEnabled = buttonState.isSetupOperationMode() || (buttonState.isRunOperationMode() && buttonSettings.clientWebAccessEnabled());
+
+    if (serverEnabled) {
+        if (buttonOTAUpdateEnabled) {
             ButtonOTAUpdate.setID(buttonSettings.customHotspotSsid());
             ButtonOTAUpdate.begin(&server);
         }
-        server.begin(); }
+        server.begin();
+    }
 
-    ledService.lightOnGreen(true);
+    auto action = []()->ACTIONS{
+        if (buttonSettings.saveLastState() && buttonState.getToggleMode() == PRESSED) return ACTIONS::IDLE_PRESSED;
+        return ACTIONS::IDLE_DEFAULT;
+    };
+    ledService.setLedAction(action());
 }
 
 void loop() {
-    delay(100);
-
-    UpdateEventsWithKeystoreTask(requiredToUpdateEvents, [](){
-        ledService.updateKeystoreProgress(true);
-        auto items = keystore.keystoreItems();
-        String events = *buttonSettings.events();
-        for (auto &item: items) {
-            const auto &key = item.first;
-            const auto &value = item.second;
-            String constructKey = "$";
-            constructKey.concat(key); constructKey.concat("$");
-            events.replace(constructKey,value);
-        }
-        eventService.SetEvents(events);
-        ledService.updateKeystoreProgress(false);
-        requiredToUpdateEvents = false;
-    });
-
-    SendEventsTask((digitalRead(buttonPin) == 1 || requiredToTriggerButton), [](){
-        if (requiredToTriggerButton) {
-            requiredToTriggerButton =!requiredToTriggerButton;
-            notifier.onRemoteTrigger();
-        }
-        ledService.eventsSendInProgress(true);
-        eventService.SendEvents();
-        ledService.eventsSendInProgress(false);
-    },networkService.isAPMode());
-
-    RequiredToFindTask(requiredToFind , [](){
-        notifier.onFindMe();
-        ledService.findMe();
-        requiredToFind = !requiredToFind;
-    });
-
-    EepromClearTask(requiredEepromClear,  [](){
-        buttonSettings.clearEeprom();
-        requiredRestart = true;
-    });
-
-    FormatFSTask(requiredToFormatFS, [](){
-        ledService.lightOnRed(true);
-        buttonSettings.formatFS();
-    });
-
-    IntegrationTask(integrationMessageToSend.length() != 0, [](){
-        notifier.onIntegrationMessage();
-        telegramBot.sendMessage(integrationMessageToSend);
-        integrationMessageToSend = "";
-    });
-
-    OnKeystoreUpdateTask(
-            sendEventsOnKeystoreChange, []() {
-                ledService.updateKeystoreProgress(true);
-                eventService.SendEventsOnKeystoreChange();
-                sendEventsOnKeystoreChange = !sendEventsOnKeystoreChange;
-                timeToExecuteTask = 0;
-                ledService.updateKeystoreProgress(false);
-            },
-            [](){},
-            []() -> bool { return millis() < timeToExecuteTask; }
-    );
+    ConnectToWiFiITask(1000, [](){
+        auto config = buttonSettings.getWiFiConnDetails();
+        networkService.initConnectionToWiFi(config);
+        logger.logSerial("[MAIN] Pending connection to ", config.ssid, " / ", config.password);
+    }, buttonState.isSetupOperationMode() || networkService.isConnectedToWiFi());
 
     CheckConnectionTask(
             networkService.isConnectedToWiFi(),
-            [](){ logger.log("[CheckConnectionTask]: Connected"); ledService.lightOnGreen(true); },
-            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.lightOnRed(true); },
-            networkService.isAPMode()
-            );
+            [](){ logger.log("[CheckConnectionTask]: Connected. IP: ", networkService.ipAddress());
+                auto action = []()->ACTIONS{
+                        if (buttonSettings.saveLastState() && buttonState.getToggleMode() == PRESSED) return ACTIONS::IDLE_PRESSED;
+                        return ACTIONS::IDLE_DEFAULT;
+                };
+                ledService.setLedAction(action());
+                },
+            [](){ logger.log("[CheckConnectionTask]: Disconnected"); ledService.setLedAction(ACTIONS::WARN); },
+            buttonState.isSetupOperationMode()
+    );
 
-    RestartTask((requiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+    MainITask(100, [&]() {
+        //TODO move to interruption
+        buttonState.setState(RequiredToTriggerButton || digitalRead(buttonPin));
 
+        ToggleStateTask(buttonState.isPressed(),[]() {
+            auto state = buttonState.toggleToggleState();
+            if (buttonSettings.restoreLastStateOnLoad()) buttonSettings.setLastState(state);
+            ledService.setLedAction(buttonState.getToggleMode() == PRESSED ? ACTIONS::IDLE_PRESSED : ACTIONS::IDLE_DEFAULT);},
+                        !buttonSettings.saveLastState());
+
+        UpdateEventsWithKeystoreTask(RequiredToUpdateEvents.get(), [](){
+            ledService.setLedAction(ACTIONS::KEYSTORE_UPDATE, false, false);
+            auto items = keystore.keystoreItems();
+            String events = *buttonSettings.events();
+            for (auto &item: items) {
+                const auto &key = item.first;
+                const auto &value = item.second;
+                String constructKey = "$";
+                constructKey.concat(key); constructKey.concat("$");
+                events.replace(constructKey,value);
+            }
+            eventService.SetEvents(events);
+            ledService.resetLedAction();
+            RequiredToUpdateEvents.reset();
+            if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Keystore update");
+        });
+
+        SendEventsTask((buttonState.isPressed()), [](){
+            if (RequiredToTriggerButton) notifier.onRemoteTrigger();
+
+            externalInterface_ledActive = false;
+            externalInterface_buzzActive = false;
+            ledService.setLedAction(ACTIONS::SEND_EVENTS, false, false);
+            eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
+            ledService.resetLedAction();
+
+            if (RequiredToTriggerButton) {
+                RequiredToTriggerButton.reset();
+                if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Send events. Triggered by: remote");
+            } else {
+                statistic.sendStat("Send events. Triggered by: physical");
+            }
+        },networkService.isAPMode());
+
+        RequiredToFindTask(RequiredToFind.get(), [](){
+            notifier.onFindMe();
+            ledService.setLedAction(ACTIONS::WARN, true);
+            RequiredToFind.reset();
+        });
+
+        EepromClearTask(RequiredEepromClear.get(),  [](){
+            buttonSettings.clearEeprom();
+            RequiredRestart.set();
+        });
+
+        FormatFSTask(RequiredToFormatFS.get(), [](){
+            ledService.setLedAction(ACTIONS::WARN);
+            buttonSettings.formatFS();
+            RequiredRestart.set();
+        });
+
+        OnKeystoreUpdateTask(
+                SendEventsOnKeystoreChange.get(), []() {
+                    ledService.setLedAction(ACTIONS::KEYSTORE_UPDATE, false, false);
+                    eventService.SendEvents(KEYSTORE_UPDATE);
+                    SendEventsOnKeystoreChange.reset();
+                    timeToExecuteTask = 0;
+                    ledService.resetLedAction();
+                },
+                [](){},
+                []() -> bool { return millis() < timeToExecuteTask; }
+        );
+
+        ChangeLedStateITask(1000, []() {
+            ledService.setLedAction(ACTIONS::EXTERNAL_INTERFACE);
+        }, !externalInterface_ledActive);
+
+        ChangeSoundStateITask(10000, []() {
+            notifier.onExternal();
+        }, !externalInterface_buzzActive);
+
+        ResetExternalStateTask(
+                !externalInterface_ledActive,
+                [](){
+                    auto action = []()->ACTIONS{
+                        if (buttonSettings.saveLastState() && buttonState.getToggleMode() == PRESSED) return ACTIONS::IDLE_PRESSED;
+                        return ACTIONS::IDLE_DEFAULT;
+                    };
+                    ledService.setLedAction(action());
+                });
+
+        RestartTask((RequiredRestart || ButtonOTAUpdate.requireToRestart), restart);
+
+
+    }, buttonState.isRunOperationMode() && !networkService.isConnectedToWiFi());
 }

@@ -53,7 +53,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             display: flex;
             padding: 5px;
             background: inherit;
-            min-height: 500px;
+            min-height: 400px;
             max-height: 50vh;
             overflow: auto;
         }
@@ -148,6 +148,18 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         .hashed {
             color: #858181;
+        }
+
+        .hashed-green {
+            background: repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgb(107, 182, 100, 0.3) 10px,
+                    rgba(107, 182, 100, 0.3) 20px
+            );
+        }
+        .hashed-gray {
             background: repeating-linear-gradient(
                     45deg,
                     transparent,
@@ -156,10 +168,18 @@ const char index_html[] PROGMEM = R"rawliteral(
                     rgba(0, 0, 0, 0.04) 20px
             );
         }
-
-        .mt-m {
-            margin-top: 16px;
+        .hashed-orange {
+            background: repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgb(243, 157, 71, 0.3) 10px,
+                    rgba(243, 157, 71, 0.3) 20px
+            );
         }
+
+        .mt-m { margin-top: 16px; }
+        .m-0 { margin: 0; }
 
         .control {
             display: block;
@@ -182,9 +202,6 @@ const char index_html[] PROGMEM = R"rawliteral(
             text-align: center;
             white-space: nowrap;
             vertical-align: middle;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
             padding: .375rem .75rem;
             font-size: 1rem;
@@ -239,6 +256,17 @@ const char index_html[] PROGMEM = R"rawliteral(
             pointer-events: none;
         }
 
+        #statisticEnabled:not(:checked) ~ #statisticLevel {
+            color: darkgray;
+            pointer-events: none;
+        }
+
+        #saveLastState:not(:checked) ~ #restoreLastStateOnLoadContainer {
+            opacity: .5;
+            pointer-events: none;
+            user-select: none;
+        }
+
         #sendEventOnKeystoreUpdate:not(:checked) ~ #delaySendEventsContainer {
             opacity: .5;
             pointer-events: none;
@@ -256,9 +284,8 @@ const char index_html[] PROGMEM = R"rawliteral(
             display: none;
         }
 
-        option {
-            font-size: 1rem;
-        }
+        option { font-size: 1rem; }
+        label { margin: 0 8px; }
 
         button, input, optgroup, select, textarea {
             margin: 0;
@@ -294,6 +321,8 @@ const char index_html[] PROGMEM = R"rawliteral(
             justify-content: space-between;
         }
 
+        .btn-min-w {min-width: 100px;}
+
         .flexbox-column-centered {
             display: flex;
             flex-flow: column;
@@ -312,6 +341,40 @@ const char index_html[] PROGMEM = R"rawliteral(
             align-items: center
         }
 
+        .led-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+
+        .rgb-info-square {
+            position: relative;
+            outline: 1px solid #696565;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            height: 18px;
+            width: 18px;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .marked-flag.rgb-info-square {
+            opacity: .2;
+        }
+
+        .marked-flag.rgb-info-square::before {
+            content: '';
+            top: 0;
+            left: 0;
+            position: absolute;
+            width: 26px;
+            height: 1px;
+            background-color: #a6132f;
+            transform: rotate(45deg);
+            transform-origin: top left;
+        }
+
         @media screen and (max-width: 800px) {
             .wifi-credentials {
                 flex-direction: column;
@@ -321,12 +384,11 @@ const char index_html[] PROGMEM = R"rawliteral(
                 display: none;
             }
         }
-    </style>
+</style>
 </head>
 <body>
 
 <div style="display: flex; flex-flow: column; overflow: auto;">
-
     <div class="header">
         <div style="display: flex; align-items: center;">
             <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="36px" height="36px" viewBox="0 3 24 24">
@@ -357,89 +419,43 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <label class="label"></label>
                 %NETWORKINFO%
             </div>
-
             <div class="item mt-m" style="min-height: 55px; flex-wrap: wrap; gap: 20px;">
                 <input type="checkbox" id="useHotspotSsid">
                 <label for="useHotspotSsid">Use custom hotspot SSID</label>
                 <input maxlength="32" type="text" id="hotspotSsid" class="control">
             </div>
-
         </div>
 
         <div style="display: flex; flex: 1; align-items: center; justify-content: space-between">
             <h2 class="section-header">Assigned events</h2>
-            <button style="display: flex; padding: 0 10px; align-self: flex-end; margin-bottom: 16px; align-items: center; gap: 4px;"
-                    type="button" class="btn btn-red" onclick="openEditor()"><h1
-                    style="margin: 0; line-height: normal; font-weight: 200;">+</h1> Add new event
-            </button>
-
-        </div>
-        <div class="event-data border">
-
-            <table id="dataTable">
-                <thead>
-                <tr>
-                    <th>host</th>
-                    <th style="width: 70%;">event data</th>
-                    <th>actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <!-- Table data -->
-                </tbody>
-            </table>
-
+            <button type="button" id="toggleEditModeButton" style="align-self: flex-end;" class="btn btn-blue btn-min-w"
+            onclick="toggleEditMode('edit')" >Edit</button>
+            <div id="editActionsContainer" style="align-self: flex-end; display: none;">
+                <button type="button" class="btn btn-blue btn-min-w" onclick="openEditor()">Add new</button>
+                <button id="saveEditedEventsBtn" type="button" class="btn btn-red btn-min-w" disabled onclick="saveEvents()">Save</button>
+                <button type="button" class="btn btn-blue btn-min-w" onclick="toggleEditMode()">Cancel</button>
+            </div>
         </div>
 
-        <h2 class="section-header">Keystore</h2>
-
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="keystoreEnabled">
-                <label for="keystoreEnabled" style="margin: 0 8px;">Enable keystore</label>
+        <div class="border">
+            <div class="event-data">
+                <table id="dataTable">
+                    <thead>
+                    <tr>
+                        <th>host</th>
+                        <th style="width: 70%;">event data</th>
+                        <th>actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Table data -->
+                    </tbody>
+                </table>
             </div>
-            <div class="item" style="flex-wrap: wrap;">
-                <input type="checkbox" id="sendEventOnKeystoreUpdate">
-                <label for="sendEventOnKeystoreUpdate" style="margin: 0 8px;">Send events on keystore update (marked with $) </label>
-
-                <div id="delaySendEventsContainer" class="item" style="margin-left: 32px;">
-                    <input type="checkbox" id="delaySendEvents">
-                    <label for="delaySendEvents" style="margin: 0 8px;">Handle delay to send events ('delay' param)</label>
-                </div>
-            </div>
-            <div class="item" style="margin-left: 32px;">
-            </div>
-            <div style="display: flex; flex-flow: row; align-items: center; flex-wrap: wrap;">
-                <h5 class="item" style="margin: 0">Update keystore URL: </h5>
-                <h5 class="item" style="margin: 0">http://%IP%/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
-            </div>
-            <h5 class="item" style="font-weight: normal; margin: 0">delay - if provided, send events will be initiated after delay, ms</h5>
-            <h5 class="item" style="font-weight: normal; margin: 0">Use $key$ expression for event data, and it will be replaced by corresponding value</h5>
         </div>
 
         <h2 class="section-header">General settings</h2>
-
-        <div class="modal" id="successModel">
-            <div style="display: flex; align-items: center; flex-flow: column">
-                <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200px" height="200px" style="fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200">
-                    <g id="Layer_x0020_1">
-                        <polygon fill="#5B5A50" points="193.05,122.02 198.24,124.05 99.92,161.86 2.62,124.46 7.84,122.52 5.7,121.72 0.16,123.79 0.16,142.69 100.09,180.95 200,142.76 200,123.79 194.3,121.66 "/>
-                        <polygon fill="#5B5B5B" points="100.7,54.44 197.22,85.03 101.01,120.73 2.98,84.29 100.7,54.44 100.7,52.91 0,83.98 0,119.58 99.92,157.05 199.85,119.58 199.85,84.91 100.7,52.91 "/>
-                        <polygon id="upload-box_1" fill="#E53324" points="99.92,180.91 0.16,142.69 0.16,161.73 100.09,200 200,161.81 200,142.77 "/>
-                        <polygon fill="#898989" points="2.98,84.29 101.01,120.73 197.22,85.03 100.7,54.44 "/>
-                    </g>
-                </svg>
-
-                <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Configuration saved!</h1>
-                <h4 style="color: #b9b9b9; font-weight: 200">Button now will reboot to apply new settings. It will take
-                    a while</h4>
-                <h4 style="color: #b9b9b9; font-weight: 200">If the Button was connected to Wi-Fi during setup, you can refresh the page to continue</h4>
-                <button disabled id="refreshBtn" type="button" class="btn btn-blue" onclick="location.reload()">Refresh page</button>
-            </div>
-        </div>
-
-        <div class="extras-container border">
-
+        <div class="extras-container border" style="padding: 24px">
             <div class="item">
                 <input type="checkbox" id="loggerEnabled">
                 <label style="margin-left: 8px; margin-right: 8px;" for="loggerEnabled">Logger</label>
@@ -447,6 +463,16 @@ const char index_html[] PROGMEM = R"rawliteral(
                     <option value="0">Serial & Local</option>
                     <option value="1">Serial (115200 8-N-1)</option>
                     <option value="2">Local log (/logs)</option>
+                </select>
+            </div>
+
+            <div class="item">
+                <label style="margin-right: 8px;" for="wiFiMode">WiFi mode</label>
+                <select class="control" style="height: auto; min-width: auto;" id="wiFiMode">
+                    <option value="0">Auto</option>
+                    <option value="1">11B</option>
+                    <option value="2">11G</option>
+                    <option value="3">11N</option>
                 </select>
             </div>
 
@@ -464,95 +490,194 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         </div>
 
+        <h2 class="section-header">Toggle mode</h2>
+
+        <div class="border" style="padding: 24px">
+            <div class="item">
+                <input type="checkbox" id="saveLastState">
+                <label for="saveLastState" >Enable Toggle mode</label>
+                <div id="restoreLastStateOnLoadContainer" class="item" style="margin-left: 32px;">
+                    <input type="checkbox" id="restoreLastStateOnLoad">
+                    <label for="restoreLastStateOnLoad">Restore last state on load</label>
+                </div>
+            </div>
+            <div class="item" style="flex-flow: column; align-items: flex-start">
+                <span>Toggle mode allows you to send events depending on the state of the Button - Pressed or Released</span>
+                <span class="mt-m">Event host should be marked by $P$ or $R$ prefix</span>
+            </div>
+            <div class="item" style="gap: 12px;">
+                <div class="hashed hashed-green" style="padding: 0 16px;">
+                    <span style="color: black; border: 1px solid lightcoral">$R$</span>
+                    <span class="hashed">http://192.1...</span>
+                </div>
+                <span>Event will be sent if the Button state is Released</span>
+            </div>
+            <div class="item" style="gap: 12px;">
+                <div class="hashed hashed-orange" style="padding: 0 16px;">
+                    <span style="color: black; border: 1px solid lightcoral">$P$</span>
+                    <span class="hashed">http://192.1...</span>
+                </div>
+                <span>Event will be sent if the Button state is Pressed</span>
+            </div>
+        </div>
+
+        <h2 class="section-header">Keystore</h2>
+
+        <div class="border" style="padding: 24px">
+            <div class="item">
+                <input type="checkbox" id="keystoreEnabled">
+                <label for="keystoreEnabled">Enable keystore</label>
+            </div>
+            <div class="item" style="flex-wrap: wrap;">
+                <input type="checkbox" id="sendEventOnKeystoreUpdate">
+                <label for="sendEventOnKeystoreUpdate">Send events on keystore update (marked with a $K$) </label>
+
+                <div id="delaySendEventsContainer" class="item" style="margin-left: 32px;">
+                    <input type="checkbox" id="delaySendEvents">
+                    <label for="delaySendEvents">Handle delay to send events ('delay' param)</label>
+                </div>
+            </div>
+            <div class="item" style="flex-flow: column; align-items: flex-start">
+                <span>Event host should be marked with $K$ prefix</span>
+            </div>
+            <div class="item" style="gap: 12px;">
+                <div class="hashed hashed-gray" style="padding: 0 16px;">
+                    <span style="color: black; border: 1px solid lightcoral">$K$</span>
+                    <span class="hashed">http://192.1...</span>
+                </div>
+                <span>Event will be sent on Keysore update</span>
+            </div>
+            <div style="display: flex; flex-flow: row; align-items: center; flex-wrap: wrap;">
+                <h5 class="item m-0">Update keystore URL: </h5>
+                <h5 class="item m-0">http://%IP%/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
+            </div>
+            <h5 class="item m-0" style="font-weight: normal;">delay - if provided, send events will be initiated after delay, ms</h5>
+            <h5 class="item m-0" style="font-weight: normal;">Use $key$ expression for event data, and it will be replaced by corresponding value</h5>
+        </div>
+
+        <div class="modal" id="successModel">
+            <div style="display: flex; align-items: center; flex-flow: column">
+                <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200px" height="200px" style="fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200">
+                    <g id="Layer_x0020_1">
+                        <polygon fill="#5B5A50" points="193.05,122.02 198.24,124.05 99.92,161.86 2.62,124.46 7.84,122.52 5.7,121.72 0.16,123.79 0.16,142.69 100.09,180.95 200,142.76 200,123.79 194.3,121.66 "/>
+                        <polygon fill="#5B5B5B" points="100.7,54.44 197.22,85.03 101.01,120.73 2.98,84.29 100.7,54.44 100.7,52.91 0,83.98 0,119.58 99.92,157.05 199.85,119.58 199.85,84.91 100.7,52.91 "/>
+                        <polygon id="upload-box_1" fill="#E53324" points="99.92,180.91 0.16,142.69 0.16,161.73 100.09,200 200,161.81 200,142.77 "/>
+                        <polygon fill="#898989" points="2.98,84.29 101.01,120.73 197.22,85.03 100.7,54.44 "/>
+                    </g>
+                </svg>
+
+                <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Please wait...</h1>
+                <h4 style="color: #b9b9b9; font-weight: 200" id="dialogMessage">...</h4>
+                <button disabled id="refreshBtn" type="button" class="btn btn-blue mt-m btn-min-w" onclick="location.reload()">OK</button>
+            </div>
+        </div>
+
         <h2 class="section-header">Remote triggering</h2>
 
         <div class="border" style="padding: 24px">
             <div class="item">
                 <input type="checkbox" id="remoteTriggering">
-                <label for="remoteTriggering" style="margin: 0 8px;">Remote button triggering</label>
+                <label for="remoteTriggering">Remote button triggering</label>
             </div>
 
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">Trigger button using POST request:</h5>
+                <h5 class="item m-0">Trigger button using POST request:</h5>
             </div>
             <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-                <h5 class="item" style="margin: 0">Content-Type: </h5>
-                <h5 class="item" style="font-weight: normal; margin: 0">application/form-data</h5>
+                <h5 class="item m-0">Content-Type: </h5>
+                <h5 class="item m-0" style="font-weight: normal;">application/form-data</h5>
             </div>
             <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-                <h5 class="item" style="margin: 0">Key/Value: </h5>
-                <h5 class="item" style="font-weight: normal; margin: 0">TRIGGER_BUTTON: AUTO</h5>
+                <h5 class="item m-0">Key/Value: </h5>
+                <h5 class="item m-0" style="font-weight: normal;">TRIGGER_BUTTON: AUTO</h5>
             </div>
         </div>
-        <h2 class="section-header">Integration</h2>
+
+        <h2 class="section-header">Remote LED and Sound notifications</h2>
+
         <div class="border" style="padding: 24px">
             <div class="item">
-                <input type="checkbox" id="useTelegramIntegration">
-                <label for="useTelegramIntegration" style="margin: 0 8px;">Telegram Integration (send events, message
-                    forwarding)</label>
-            </div>
-
-            <div id="telegramIntegration" class="item" style="margin-bottom: 20px; flex-wrap: wrap">
-                <div class="item --vertical" style="flex: 1; max-width: 400px;">
-                    <label for="tToken" style="margin: 0 8px;">Token</label>
-                    <input maxlength="50" type="text" id="tToken" class="control --fill"
-                           style="max-width: 375px; font-size: 0.75rem;">
-                </div>
-                <div class="item --vertical">
-                    <label for="tChanelID" style="margin: 0 8px;">Chanel ID</label>
-                    <input maxlength="32" type="number" id="tChanelID" class="control" style="font-size: 0.75rem;">
-                </div>
+                <input type="checkbox" id="remoteStateChange">
+                <label for="remoteStateChange">Switch LED/Sound notifications remotely</label>
             </div>
 
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h4 class="item" style="margin: 0">Message forwarding:</h4>
+                <h5 class="item m-0">Trigger button LED/Sound using GET request:</h5>
             </div>
-
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">URL structure:</h5>
-                <h5 class="item" style="margin: 0">http://%IP%/integration?data=MESSAGE</h5>
-            </div>
-
-            <div class="item" style="margin-left: 16px;">
-                <label for="tPrefix" style="margin: 0 8px;">Message prefix</label>
-                <input maxlength="32" type="text" id="tPrefix" class="control">
-            </div>
-            <div class="item" style="margin-left: 16px;">
-                <label for="tSuffix" style="margin: 0 8px;">Message suffix</label>
-                <input maxlength="32" type="text" id="tSuffix" class="control">
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item" style="margin: 0">Result:</h5>
-                <h5 id="integrationResult" class="item" style="margin: 0">MESSAGE</h5>
+                <h5 class="item m-0">URL structure:</h5>
+                <h5 class="item m-0">http://%IP%/external?led=${on/off}&beep={on/off}</h5>
             </div>
         </div>
+
+        <h2 class="section-header">Reports</h2>
+
+        <div class="border" style="padding: 24px;">
+            <div class="item">
+                <input type="checkbox" id="statisticEnabled">
+                <label for="statisticEnabled">Enable Reports</label>
+                <select class="control" style="height: auto; min-width: auto;" id="statisticLevel">
+                    <option value="0">Simple</option>
+                    <option value="1">Extended</option>
+                </select>
+            </div>
+            <div class="item --vertical" style="flex: 1; max-width: 400px;">
+                <label style="word-break: keep-all" for="statisticApi">API url</label>
+                <input maxlength="255" type="text" id="statisticApi" class="control --fill"
+                       style="max-width: 375px; font-size: 0.75rem;">
+            </div>
+        </div>
+
+        <h2 class="section-header">LED Actions configuration</h2>
+
+        <div class="border" style="padding: 24px;">
+            <div class="item">
+                <input type="checkbox" id="overrideLedConfig">
+                <label for="overrideLedConfig">Custom LED Actions</label>
+            </div>
+            <div class="led-grid-layout" id="led-container">
+                <!--led controls-->
+                no actions defined
+            </div>
+        </div>
+
         <div style="display: flex; flex: 1; justify-content: center; margin: 80px 0;">
             <button id="saveButton" type="button" class="btn btn-red" onclick="saveSettings()">Save And Reboot</button>
         </div>
 
     </div>
 
-    <div style="display: flex; justify-content: flex-start; align-items: center; width: 100vw; background: lightgray;">
-        <div class="flexbox-wrap max-h">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); background: lightgray;">
+        <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">FW version:</h5>
             <h5 style="margin: 5px">%FWVERSION% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">MAC address:</h5>
+        <div class="flexbox-wrap">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">MAC:</h5>
             <h5 style="margin: 5px">%MAC% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP address:</h5>
+        <div class="flexbox-wrap">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP:</h5>
             <h5 style="margin: 5px">%IP% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
+        <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
             <h5 style="margin: 5px">%HEAP% </h5>
         </div>
-        <div class="flexbox-wrap max-h">
+        <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Keystore keys:</h5>
             <h5 style="margin: 5px">%KSKEYS%</h5>
+        </div>
+        <div class="flexbox-wrap">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Toggle state:</h5>
+            <h5 style="margin: 5px">%TOGGLESTATE%</h5>
+        </div>
+        <div class="flexbox-wrap">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">WiFi mode:</h5>
+            <h5 style="margin: 5px">%WIFIMODE%</h5>
+        </div>
+        <div class="flexbox-wrap" style="align-items: center; gap: 4px">
+            %RGB_FLAGS%
         </div>
     </div>
 
@@ -566,11 +691,6 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <div class="flexbox-raw-centered" style="gap: 8px;">
                     <input id="nsType" type="radio" name="eventType" value="ns-event">
                     <label for="nsType" style="color: white;">NoviSign event</label>
-                </div>
-
-                <div class="flexbox-raw-centered" style="gap: 8px;">
-                    <input id="telegramType" type="radio" name="eventType" value="telegram-event">
-                    <label for="telegramType" style="color: white;">telegram event</label>
                 </div>
 
                 <div class="flexbox-raw-centered" style="gap: 8px;">
@@ -623,7 +743,12 @@ const char index_html[] PROGMEM = R"rawliteral(
 </html>
 
 <script>
-    function httpPOST(data, successMessage) {
+    function httpPOST(data, resultTitle, resultMessage, canClose, postprocess) {
+        document.getElementById('successModel').style.visibility = 'visible';
+        const dialogMessageTitle = document.getElementById('dialogMessageTitle');
+        const dialogMessage = document.getElementById('dialogMessage');
+        dialogMessageTitle.innerText = resultTitle;
+        dialogMessage.innerText = "Saving...";
         const srvURL = window.location.protocol + "//" + window.location.host + "/";
         const httpRequest = new XMLHttpRequest();
         httpRequest.open("POST", srvURL, true);
@@ -633,9 +758,16 @@ const char index_html[] PROGMEM = R"rawliteral(
         httpRequest.onreadystatechange = function () {
             if (httpRequest.readyState === httpRequest.DONE) {
                 if (httpRequest.status === 200) {
-                    document.getElementById('dialogMessageTitle').innerText = successMessage;
-                    const successModel = document.getElementById('successModel');
-                    successModel.style.visibility = 'visible';
+                    dialogMessage.innerText = resultMessage;
+                    if (canClose) {
+                        document.getElementById('refreshBtn').disabled = false;
+                    }
+                    postprocess();
+                } else {
+                    dialogMessageTitle.innerText = "Failed";
+                    dialogMessage.innerText = "Ops! Something went wrong...";
+                    document.getElementById('refreshBtn').innerText = " Close";
+                    document.getElementById('refreshBtn').disabled = false;
                 }
             }
         };
@@ -656,110 +788,98 @@ const char index_html[] PROGMEM = R"rawliteral(
         };
     }
 
+    let ledConfig = {};
     function saveSettings() {
-        const name = document.getElementById('wifiname').value;
-        const pass = document.getElementById('wifipass').value;
+        const name = document.getElementById('wifiname')?.value;
+        const pass = document.getElementById('wifipass')?.value;
         const hSsid = document.getElementById('hotspotSsid').value;
-        const clientWebAccess = document.getElementById('clientWebAccess')? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
-        const enableOtaUpdate = document.getElementById('enableOtaUpdate')? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
+
+        const clientWebAccess = document.getElementById('clientWebAccess') ? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
+        const enableOtaUpdate = document.getElementById('enableOtaUpdate') ? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
+
         const useDnsName = Number(document.getElementById('useDnsName').checked);
         const loggerEnabled = Number(document.getElementById('loggerEnabled').checked);
         const loggerLevel = Number(document.getElementById('loggerLevel').selectedIndex);
+        const wiFiMode = Number(document.getElementById('wiFiMode').selectedIndex);
+
+        const statisticEnabled = Number(document.getElementById('statisticEnabled').checked);
+        const statisticLevel = Number(document.getElementById('statisticLevel').selectedIndex);
+
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
-        const useTelegramIntegration = Number(document.getElementById('useTelegramIntegration').checked);
-        const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);        const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
+        const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
+        const saveLastState = Number(document.getElementById('saveLastState').checked);
+        const restoreLastStateOnLoad = Number(document.getElementById('restoreLastStateOnLoad').checked);
+        const remoteStateChange = Number(document.getElementById('remoteStateChange').checked);
+        const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
         const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
         const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
+        const overrideLedConfig = Number(document.getElementById('overrideLedConfig').checked);
+
+        const statApi = document.getElementById('statisticApi').value;
 
         const extrasConfig = JSON.stringify({
             clientWebAccess,
             useDnsName,
             loggerEnabled,
+            statisticEnabled,
+            statisticLevel,
             loggerLevel,
+            wiFiMode,
             useSound,
-            useTelegramIntegration,
             customHSsid,
             enableOtaUpdate,
             remoteTriggering,
+            saveLastState,
+            restoreLastStateOnLoad,
+            overrideLedConfig,
+            remoteStateChange,
             keystoreEnabled,
             sendEventOnKeystoreUpdate,
             delaySendEvents,
+            ledConfig,
             wifiSsid: name,
             wifiPass: pass,
-            hotspotSsid: hSsid
+            hotspotSsid: hSsid,
+            statisticApi: statApi
         });
 
-        const tToken = document.getElementById('tToken').value;
-        const tChanelID = Number(document.getElementById('tChanelID').value);
-        const tPrefix = document.getElementById('tPrefix').value;
-        const tSuffix = document.getElementById('tSuffix').value;
-
-        const integration = JSON.stringify({
-            tToken,
-            tChanelID,
-            tPrefix,
-            tSuffix
-        })
-
-        let data = '{ "inputdata" :{"wifiname":"' + name + '","wifipass":"' + pass + '","configuration":' + extrasConfig + ',"integration":' + integration + ',"eventdata":' + JSON.stringify(eventDataObj) + '}}';
+        let data = "SETTINGS=" + '{"configuration":' + extrasConfig + '}';
         data.replace(/" /g, '');
         data.replace(/ "/g, '');
-        const srvURL = window.location.protocol + "//" + window.location.host + "/";
-        const httpRequest = new XMLHttpRequest();
-        httpRequest.open("POST", srvURL, true);
-        httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-        httpRequest.send("SAVE=" + data);
-        httpRequest.responseType = 'text';
-        httpRequest.onreadystatechange = function () {
-            if (httpRequest.readyState === httpRequest.DONE) {
-                if (httpRequest.status === 200) {
-                    const successModel = document.getElementById('successModel');
-                    successModel.style.visibility = 'visible';
-                    handleSuccessSave();
-                }
-            }
-        }
+        httpPOST(data, "Save settings", "Settings saved. Rebooting...", true, handleSuccessSave);
     }
 
     function showSaved() {
+        const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
+            'saveLastState', 'overrideLedConfig',
+            'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
+        const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode'];
+        const inputsSettings = ['statisticApi', 'hotspotSsid'];
+        const securedCheckboxSettings = ['clientWebAccess', 'enableOtaUpdate'];
+
         config = %CONFIGURATION% ;
+        eventDataObj = Object( %EVENTINFO% );
 
-        eventDataObj = %EVENTINFO% ;
-
-        if (eventDataObj === null) {
-            eventDataObj = {};
-        }
-
-        try {
-            document.getElementById('clientWebAccess').checked = config.clientWebAccess;
-            document.getElementById('enableOtaUpdate').checked = config.enableOtaUpdate;
-        } catch (e) {
-            console.warn('some options are restricted in client mode');
+        for(let key in config) {
+            if (checkboxSettings.some(k => k === key)) {
+                document.getElementById(key).checked = config[key];
+            } else if (optionSettings.some(k => k === key)) {
+                document.getElementById(key).selectedIndex = config[key];
+            } else if (inputsSettings.some(k => k === key)) {
+                document.getElementById(key).value = config[key];
+            } else if (securedCheckboxSettings.some(k => k === key)) {
+                try {
+                    document.getElementById(key).checked = config[key];
+                } catch (e) {
+                    console.warn('some options are restricted in client mode');
+                }
+            }
         }
 
         if (!config.enableOtaUpdate && !document.getElementById('enableOtaUpdate')) {
             document.getElementById('updateBtn').remove();
         }
-
-        document.getElementById('useDnsName').checked = config.useDnsName;
-        document.getElementById('loggerEnabled').checked = config.loggerEnabled;
-        document.getElementById('loggerLevel').selectedIndex = config.loggerLevel;
-        document.getElementById('useSound').checked = config.useSound;
-        document.getElementById('useHotspotSsid').checked = config.customHSsid;
-        document.getElementById('hotspotSsid').value = config.hotspotSsid;
-        document.getElementById('useTelegramIntegration').checked = config.useTelegramIntegration;
-        document.getElementById('remoteTriggering').checked = config.remoteTriggering;
-        document.getElementById('keystoreEnabled').checked = config.keystoreEnabled;
-        document.getElementById('sendEventOnKeystoreUpdate').checked = config.sendEventOnKeystoreUpdate;
-        document.getElementById('delaySendEvents').checked = config.delaySendEvents;
-
-        integrationConfig = %INTEGRATION% ;
-
-        document.getElementById('tToken').value = integrationConfig.tToken;
-        document.getElementById('tChanelID').value = integrationConfig.tChanelID;
-        document.getElementById('tPrefix').value = integrationConfig.tPrefix;
-        document.getElementById('tSuffix').value = integrationConfig.tSuffix;
 
         try {
             JSON.parse('"' + eventDataObj + '"');
@@ -768,7 +888,9 @@ const char index_html[] PROGMEM = R"rawliteral(
             console.warn('no saved events found');
         }
 
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
+        const ledContainer = document.getElementById('led-container');
+        ledConfig = {...config.ledConfig};
+        initLedControls(ledContainer, ledConfig);
     }
 
     function update() {
@@ -777,32 +899,35 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('wifiname').value = option.value;
     }
 
-    const tPrefixValue = document.getElementById('tPrefix');
-    const tSuffixValue = document.getElementById('tSuffix');
-    const integrationResult = document.getElementById('integrationResult');
-
-    let config, integrationConfig, eventDataObj;
+    let config, eventDataObj;
+    let tempEventsObj = {};
 
     let entryKeyToEdit;
-
-    tPrefixValue.addEventListener("input", () => {
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
-    });
-
-    tSuffixValue.addEventListener("input", () => {
-        integrationResult.textContent = tPrefixValue.value + "MESSAGE" + tSuffixValue.value;
-    });
 
     const dataTable = document.getElementById('dataTable');
     const tbody = dataTable.querySelector('tbody');
 
-    function populateTable() {
+    const colorMap = {
+        $K$: 'class="hashed hashed-gray"',
+        $P$: 'class="hashed hashed-orange"',
+        $R$: 'class="hashed hashed-green"',
+    }
+
+    function populateTable(data) {
         tbody.innerHTML = '';
-        for (const key in eventDataObj) {
+        let events;
+        if (data) {
+            events = data
+            document.getElementById("saveEditedEventsBtn").disabled = false;
+        } else {
+            events = eventDataObj;
+            document.getElementById("saveEditedEventsBtn").disabled = true;
+        }
+        for (const key in events) {
             const row = `
-                        <tr ${key.startsWith("$",0) ? 'class="hashed"' : ''}>
+                        <tr ${colorMap[key.substring(0,3)]}>
                           <td>${key}</td>
-                          <td >${eventDataObj[key]}</td>
+                          <td >${events[key]}</td>
                           <td style="display: flex; justify-content: flex-end; gap: 8px;">
                             <button class="btn btn-blue small-btn" onclick="openEditSingleEventModal('${key}')">Edit</button>
                             <button class="btn btn-red small-btn" onclick="removeEntry('${key}')">Remove</button>
@@ -814,11 +939,11 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
 
     function addEventEntry(host, data) {
-        const eventExist = host && eventDataObj.hasOwnProperty(host);
+        const eventExist = host && tempEventsObj.hasOwnProperty(host);
         if (!eventExist) {
             if (data) {
-                eventDataObj[host] = data;
-                populateTable();
+                tempEventsObj[host] = data;
+                populateTable(tempEventsObj);
             } else {
                 throw new Error("event data is empty");
             }
@@ -829,8 +954,12 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function removeEntry(key) {
         if (confirm(`Are you sure you want to remove the event "${key}"?`)) {
-            delete eventDataObj[key];
-            populateTable();
+            if (tempEventsObj[key]) {
+                delete tempEventsObj[key];
+                populateTable(tempEventsObj);
+            } else {
+                alert(`Event "${key}" not found!`)
+            }
         }
     }
 
@@ -848,12 +977,6 @@ const char index_html[] PROGMEM = R"rawliteral(
                 hostInput.value = "";
                 hostInput.disabled = false;
                 nsEventTypeContainer.classList.remove("--hidden");
-                break;
-            case "telegram-event":
-                nsEventTypeContainer.classList.add("--hidden");
-                hostInput.disabled = true;
-                eventData.value = "";
-                hostInput.value = "telegram";
                 break;
             case "custom-event":
                 nsEventTypeContainer.classList.add("--hidden");
@@ -883,7 +1006,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     function checkFormValidity() {
         let isValid;
         isValid = hostInput.value && eventData.value !== "";
-        const eventAlreadyExist = hostInput.value && eventDataObj.hasOwnProperty(hostInput.value);
+        const eventAlreadyExist = hostInput.value && tempEventsObj.hasOwnProperty(hostInput.value);
         eventsFormatWarn.style.visibility = 'hidden';
         eventsAlreadyExistWarn.style.visibility = eventAlreadyExist && !entryKeyToEdit ? 'visible' : 'hidden';
         eventData.classList.remove("--not-valid-event");
@@ -956,7 +1079,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById('editor').showModal();
         if (key) {
             entryKeyToEdit = key;
-            eventData.value = eventDataObj[key];
+            eventData.value = tempEventsObj[key];
             hostInput.value = key;
 
             const editEventButton = document.getElementById("editThisEvent");
@@ -967,15 +1090,16 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function editEvent() {
         if (hostInput.value !== null && eventData.value !== null) {
-            delete eventDataObj[entryKeyToEdit];
-            eventDataObj[hostInput.value] = eventData.value;
-            populateTable();
+            delete tempEventsObj[entryKeyToEdit];
+            tempEventsObj[hostInput.value] = eventData.value;
+            populateTable(tempEventsObj);
         }
         closeEditor();
     }
 
     showSaved();
     populateTable();
+    toggleActionsColumn(false);
 
     function handleSuccessSave() {
         if (window.location.host === '192.168.4.1') {
@@ -986,7 +1110,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             setTimeout(()=>{
                 document.querySelector('#upload-box_1').style.fill = '#3c5dd7';
             }, 4000);
-            setTimeout(startCheckRestart, 2000);
+            setTimeout(startCheckRestart, 3000);
         }
     }
 
@@ -1026,7 +1150,62 @@ const char index_html[] PROGMEM = R"rawliteral(
         ).catch(_=> setTimeout(startCheckRestart,2000));
     }
 
-</script>)rawliteral";
+    function initLedControls(container, ledRBGData) {
+        const ledColorMap = {
+            ledIdleDefault: 'Idle default',
+            ledIdlePressed: 'Idle on pressed state',
+            ledLoading: 'Loading progress',
+            ledWarn: 'Warning',
+            ledDone: 'Action done',
+            ledKeystoreUpdate: 'Keystore action',
+            ledSendEvents: 'Send events progress',
+            ledExternalInterface: 'External interface trigger'
+        }
+        if (Object.keys(ledRBGData).length) {
+            container.innerText = '';
+            for (const key in ledRBGData) {
+                const ctr = `<div class="item">
+                    <input type="color" style="width: 32px; border: none" id="${key}"value="${ledRBGData[key]}">
+                    <label for="colorPckr">${ledColorMap[key] || key}</label></div>`;
+                container.insertAdjacentHTML('beforeend', ctr);
+                const ctrl = document.getElementById(key);
+                ctrl.addEventListener("change", () => ledConfig[key] = ctrl.value);
+            }
+        }
+    }
+
+    function toggleEditMode(state) {
+        const editActionsContainer = document.getElementById('editActionsContainer');
+        const toggleEditModeButton = document.getElementById('toggleEditModeButton');
+        if(state === 'edit') {
+            toggleActionsColumn(true);
+            editActionsContainer.style.display = '';
+            toggleEditModeButton.style.display = 'none';
+            tempEventsObj = {...eventDataObj};
+        } else {
+            editActionsContainer.style.display = 'none';
+            toggleEditModeButton.style.display = '';
+            populateTable();
+            toggleActionsColumn(false);
+        }
+    }
+
+    function saveEvents() {
+        let data = `EVENTS=${JSON.stringify(tempEventsObj)}`;
+        data.replace(/" /g, '');
+        data.replace(/ "/g, '');
+        httpPOST(data, "Save events", "Events saved", true, handleSuccessSave);
+    }
+
+    function toggleActionsColumn(showControls) {
+        const header = document.querySelector('#dataTable thead th:nth-child(3)');
+        const cells = document.querySelectorAll('#dataTable tbody td:nth-child(3)');
+        header.style.display = showControls ? '' : 'none';
+        cells.forEach(cell => cell.style.display = showControls ? 'flex' : 'none');
+    }
+
+</script>
+)rawliteral";
 
 const char logs_page[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>

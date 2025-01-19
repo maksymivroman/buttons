@@ -1,104 +1,84 @@
 #include <Arduino.h>
 #include "LEDService.h"
 
+unsigned char RGB_IO::read(IO_PINS pin) const {
+    return _rgbStateMap.at(pin);
+}
+
+void RGB_IO::write(IO_PINS pin, unsigned char value, bool saveState)  {
+    auto ioPin = this->ioPinConfig.at(pin);
+    analogWrite(ioPin, value);
+    if (saveState) _rgbStateMap[static_cast<IO_PINS>(pin)] = value;
+}
+
+void RGB_IO::initIOPins(unsigned char r, unsigned char g, unsigned char b) {
+    this->ioPinConfig = {{ R_PIN, r }, {G_PIN, g} , { B_PIN, b }};
+    pinMode(r, OUTPUT);
+    pinMode(g, OUTPUT);
+    pinMode(b, OUTPUT);
+}
+
+RGBCONFIG RGB_IO::readAll() const {
+    return RGBCONFIG {
+            this->read(R_PIN),
+            this->read(G_PIN),
+            this->read(B_PIN),
+    };
+}
+
+
 void LEDService::pinConfig(int r, int g, int b) {
-    pinGreen = g;
-    pinRed = r;
-    pinBlue = b;
-    pinMode(pinRed, OUTPUT);
-    pinMode(pinGreen, OUTPUT);
-    pinMode(pinBlue, OUTPUT);
+    this->initIOPins(r, g, b);
 }
 
-void LEDService::switchPin(int pin, int state) const {
-    digitalWrite(pinGreen, 0);
-    digitalWrite(pinRed, 0);
-    digitalWrite(pinBlue, 0);
-    digitalWrite(pin, state);
+void LEDService::switchPin(IO_PINS pin, int state) {
+    write(R_PIN, 0);
+    write(G_PIN, 0);
+    write(B_PIN, 0);
+    write(pin, state);
 }
 
-void LEDService::switchPin(RGBCONFIG pinsState) const {
-    digitalWrite(pinRed, pinsState.r);
-    digitalWrite(pinGreen, pinsState.g);
-    digitalWrite(pinBlue, pinsState.b);
+void LEDService::switchPin(RGBCONFIG pinsState, bool saveState) {
+    write(R_PIN, pinsState.r, saveState);
+    write(G_PIN, pinsState.g, saveState);
+    write(B_PIN, pinsState.b, saveState);
 }
 
-void LEDService::blink(int pin, int count) {
+void LEDService::setLedAction(ACTIONS action, bool blink, bool saveState) {
+    auto actionRGBConfig = this->_ledMap.at(action);
+    bool isEnabled = this->isEnabled(actionRGBConfig);
+    if (isEnabled) {
+        blink ? blinkRGB(actionRGBConfig, 5) : switchPin(actionRGBConfig, saveState);
+    }
+}
+
+void LEDService::blinkRGB(RGBCONFIG config, int count) {
+    auto state = readAll();
     for (int i = 0; i < count * 2; ++i) {
-        int state = digitalRead(pin);
-        switchPin(pin, !state);
+        i % 2 ? switchPin(config) : switchPin({0,0,0});
         delay(100);
     }
-    switchPin(pin, 0);
+    switchPin(state);
 }
 
-void LEDService::lightOnRed(bool on) {
-    const int state = on ? 1 : 0;
-    switchPin(pinRed, state);
+bool LEDService::isEnabled(RGBCONFIG config) const {
+    auto [r, g, b] = config;
+    return r + g + b > 0;
 }
 
-void LEDService::lightOnBlue(bool on) {
-    const int state = on ? 1 : 0;
-    switchPin(pinBlue, state);
+void LEDService::resetLedAction() {
+    auto state = readAll();
+    switchPin(state);
 }
 
-void LEDService::lightOnGreen(bool on) {
-    const int state = on ? 1 : 0;
-    switchPin(pinGreen, state);
-}
-
-void LEDService::lightOnPurple(bool on) {
-    const int state = on ? 1 : 0;
-    switchPin({state, 0, state});
-}
-
-void LEDService::blinkWarn() {
-    blink(pinRed, 6);
-}
-
-void LEDService::blinkPrimary() {
-    blink(pinBlue, 5);
-}
-
-void LEDService::blinkDone() {
-    blink(pinGreen, 5);
-}
-
-void LEDService::findMe() {
-    saveCurrentRGBState();
-    blinkWarn();
-    blinkPrimary();
-    restoreCurrentRGBState();
-}
-
-void LEDService::saveCurrentRGBState() {
-    rgbCurrentState = {digitalRead(pinRed),digitalRead(pinGreen),digitalRead(pinBlue)};
-}
-
-void LEDService::restoreCurrentRGBState() {
-    digitalWrite(pinRed, rgbCurrentState.r);
-    digitalWrite(pinGreen, rgbCurrentState.g);
-    digitalWrite(pinBlue, rgbCurrentState.b);
-}
-
-void LEDService::eventsSendInProgress(bool on) {
-    if (on) {
-        saveCurrentRGBState();
-        lightOnBlue(true);
-    } else {
-        restoreCurrentRGBState();
-    }
-}
-
-void LEDService::updateKeystoreProgress(bool on) {
-    if (on) {
-        saveCurrentRGBState();
-        lightOnPurple(true);
-    } else {
-        restoreCurrentRGBState();
-    }
-}
-
-void LEDService::idle() {
-//TODO standby RGB gradient
+void LEDService::applyLedMap(LED_MAP ledMap) {
+    logger.log("[LED service] apply new led map");
+    this->_ledMap.at(ACTIONS::IDLE_DEFAULT) = ledMap.IDLE_DEFAULT;
+    this->_ledMap.at(ACTIONS::IDLE_PRESSED) = ledMap.IDLE_PRESSED;
+    this->_ledMap.at(ACTIONS::LOADING) = ledMap.LOADING;
+    this->_ledMap.at(ACTIONS::WARN) = ledMap.WARN;
+    this->_ledMap.at(ACTIONS::DONE) = ledMap.DONE;
+    this->_ledMap.at(ACTIONS::KEYSTORE_UPDATE) = ledMap.KEYSTORE_UPDATE;
+    this->_ledMap.at(ACTIONS::SEND_EVENTS) = ledMap.SEND_EVENTS;
+    this->_ledMap.at(ACTIONS::EXTERNAL_INTERFACE) = ledMap.EXTERNAL_INTERFACE;
 }

@@ -9,12 +9,7 @@
 #include "SettingsService.h"
 
 WiFiCONFIG SettingsService::getWiFiConnDetails() {
-    logger.log("[SettingsService] Get WiFi credentials from settings");
-    WiFiCONFIG eepromWiFiConfig;
-
-    eepromWiFiConfig.ssid = buttonEepromSettings.wifiSsid;
-    eepromWiFiConfig.password = buttonEepromSettings.wifiPass;
-
+    WiFiCONFIG eepromWiFiConfig{buttonEepromSettings.wifiSsid, buttonEepromSettings.wifiPass};
     return eepromWiFiConfig;
 }
 
@@ -26,124 +21,112 @@ const String *SettingsService::events() {
     return &this->eventsData;
 }
 
-INTEGRATIONSETTINGS SettingsService::integrationSettings() {
-    String data = dataFromFS("/integration.json");
-    DynamicJsonDocument jsonDoc(2048);
-    deserializeJson(jsonDoc, data);
-    String tToken = jsonDoc["tToken"] | "";
-    long long tChanelID = jsonDoc["tChanelID"];
-    String tPrefix = jsonDoc["tPrefix"] | "";
-    String tSuffix = jsonDoc["tSuffix"] | "";
-
-    INTEGRATIONSETTINGS settings;
-    settings.tToken = tToken;
-    settings.tChanelID = tChanelID;
-    settings.tPrefix = tPrefix;
-    settings.tSuffix = tSuffix;
-
-    return settings;
-}
-
 void SettingsService::saveEvents(String events) {
     logger.log("[SettingsService] Save Events");
     logger.logSerial("[SettingsService] saveEvents: ", events);
     File file = SPIFFS.open("/post.json", "w");
     [[maybe_unused]] int bytesWritten = file.print(events);
     file.close();
+    this->eventsData = events;
 }
 
-void SettingsService::saveIntegrationSettings(String settings) {
-    logger.log("[SettingsService] Save Integration Settings");
-    logger.logSerial("[SettingsService] saveIntegrationSettings: ", settings);
-    File file = SPIFFS.open("/integration.json", "w");
-    [[maybe_unused]] int bytesWritten = file.print(settings);
-    file.close();
-}
-
-
-void SettingsService::saveSettings(String settings) {
+void SettingsService::saveSettings(String &settings) {
     DynamicJsonDocument jsonDoc(4096);
     deserializeJson(jsonDoc, settings);
-    JsonObject data = jsonDoc["inputdata"];
-    logger.log("[SettingsService] Save Settings data (json)");
-    logger.logSerial("[SettingsService] events data json: ", data);
+    logger.log("[SettingsService] Save Settings data (json). Size: ", sizeof(jsonDoc));
 
-    WiFiCONFIG wiFiSett;
+    String config = jsonDoc["configuration"];
 
-    const char *wiFiName = data["wifiname"];
-    const char *wiFiPassword = data["wifipass"];
-    String events = data["eventdata"];
-
-    String config = data["configuration"];
     writeButtonEepromSettings(config);
 
-    String integrationData = data["integration"];
-
-    logger.logSerial("[SettingsService] 'eventdata' data json: ",events);
     logger.logSerial("[SettingsService] 'configuration' data json: ", config);
-
-    wiFiSett.password = wiFiPassword;
-    wiFiSett.ssid = wiFiName;
-
-    logger.log("[SettingsService] data json large: ", data.size());
-    logger.logSerial("[SettingsService] 'eventData' data json: ", events);
-
-    saveEvents(events);
-    saveIntegrationSettings(integrationData);
 }
 
 void SettingsService::loadButtonEepromSettings() {
     logger.log("[SettingsService] Read EEPROM");
-    EEPROM.begin(1024);
+    EEPROM.begin(EEPROM_SETTINGS_RESERVED_SIZE);
     EEPROM.get(0, buttonEepromSettings);
     EEPROM.end();
 }
 
-void SettingsService::writeButtonEepromSettings(String &config) {
-    EEPROMSETTINGS settings = *new EEPROMSETTINGS;
+void SettingsService::loadButtonDynamicProps() {
+    logger.log("[SettingsService] Read Dynamic EEPROM");
+    EEPROM.begin(this->totalEepromSize());
+    EEPROM.get(this->dynamicEepromStartOffset(), this->buttonDynamicEeprom);
+    EEPROM.end();
+}
 
-    DynamicJsonDocument jsonSettings(1024);
+void SettingsService::loadButtonFlags() {
+    logger.log("[SettingsService] Read Dynamic EEPROM");
+    EEPROM.begin(this->totalEepromSize());
+    EEPROM.get(this->flagsEepromStartOffset(), this->buttonFlagsEeprom);
+    EEPROM.end();
+}
+
+void SettingsService::writeButtonEepromSettings(String &config) {
+    EEPROM_SETTINGS settings = *new EEPROM_SETTINGS;
+
+    DynamicJsonDocument jsonSettings(1536);
     deserializeJson(jsonSettings, config);
 
     String wiFiName = jsonSettings["wifiSsid"] | "";
     String wiFiPassword = jsonSettings["wifiPass"] | "";
     String hotspotSsid = jsonSettings["hotspotSsid"] | "";
 
-    char ssid[256], pass[256], hSsid[32];
+    String statisticApi = jsonSettings["statisticApi"] | "";
+
+    char ssid[256], pass[256], hSsid[32], statApi[256];
 
     wiFiName.toCharArray(ssid, 256);
     wiFiPassword.toCharArray(pass, 256);
     hotspotSsid.toCharArray(hSsid, 32);
+
+    statisticApi.toCharArray(statApi, 256);
 
     strcpy(settings.wifiSsid, ssid);
     strcpy(settings.wifiPass, pass);
 
     strcpy(settings.hotspotSsid, hSsid);
 
+    strcpy(settings.statisticApi, statApi);
+
     //TODO if button on client mode next settings should not be changed
     settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
 
     settings.loggerEnabled = jsonSettings["loggerEnabled"].as<bool>() | false;
+    settings.statisticEnabled = jsonSettings["statisticEnabled"].as<bool>() | false;
     settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
-    settings.useTelegramIntegration = jsonSettings["useTelegramIntegration"].as<bool>() | false;
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
     settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
-
+    settings.wiFiMode = jsonSettings["wiFiMode"].as<unsigned int>() | 0;
+    settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
+    settings.remoteStateChange = jsonSettings["remoteStateChange"].as<bool>() | false;
+    settings.saveLastState = jsonSettings["saveLastState"].as<bool>() | false;
+    settings.restoreLastStateOnLoad = jsonSettings["restoreLastStateOnLoad"].as<bool>() | false;
     settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
     settings.delaySendEvents = jsonSettings["delaySendEvents"].as<bool>() | false;
+    settings.overrideLedConfig = jsonSettings["overrideLedConfig"].as<bool>() | false;
+    strncpy(settings.ledIdleDefault, String(jsonSettings["ledConfig"]["ledIdleDefault"]).c_str(), 7);
+    strncpy(settings.ledIdlePressed, String(jsonSettings["ledConfig"]["ledIdlePressed"]).c_str(), 7);
+    strncpy(settings.ledLoading, String(jsonSettings["ledConfig"]["ledLoading"]).c_str(), 7);
+    strncpy(settings.ledWarn, String(jsonSettings["ledConfig"]["ledWarn"]).c_str(), 7);
+    strncpy(settings.ledDone, String(jsonSettings["ledConfig"]["ledDone"]).c_str(), 7);
+    strncpy(settings.ledKeystoreUpdate, String(jsonSettings["ledConfig"]["ledKeystoreUpdate"]).c_str(), 7);
+    strncpy(settings.ledSendEvents, String(jsonSettings["ledConfig"]["ledSendEvents"]).c_str(), 7);
+    strncpy(settings.ledExternalInterface, String(jsonSettings["ledConfig"]["ledExternalInterface"]).c_str(), 7);
+
+    settings.fwVersion = this->buttonEepromSettings.fwVersion;
 
     logger.log("[SettingsService] -> EEPROM config size: ", sizeof settings);
 
-    EEPROM.begin(1024);
-    EEPROM.put(0, settings);
-    EEPROM.end();
+    this->writeToEEPROM(settings);
 }
 
-EEPROMSETTINGS SettingsService::getButtonConfig() {
+EEPROM_SETTINGS SettingsService::getButtonConfig() {
     return buttonEepromSettings;
 }
 
@@ -153,10 +136,6 @@ bool SettingsService::clientWebAccessEnabled() const {
 
 bool SettingsService::useSoundNotification() const {
     return buttonEepromSettings.useSound | false;
-}
-
-bool SettingsService::useTelegramIntegration() const {
-    return buttonEepromSettings.useTelegramIntegration | false;
 }
 
 bool SettingsService::otaUpdateOnClientMode() const {
@@ -171,14 +150,50 @@ bool SettingsService::loggerEnabled() const {
     return buttonEepromSettings.loggerEnabled | false;
 }
 
+bool SettingsService::statisticEnabled() const {
+    return buttonEepromSettings.statisticEnabled | false;
+}
+
+bool SettingsService::remoteStateChangeEnabled() const {
+    return buttonEepromSettings.remoteStateChange | false;
+}
+
+bool SettingsService::saveLastState() const {
+    return buttonEepromSettings.saveLastState | false;
+}
+
+bool SettingsService::restoreLastStateOnLoad() const {
+    return buttonEepromSettings.restoreLastStateOnLoad | false;
+}
+
+bool SettingsService::overrideLedConfig() const {
+    return buttonEepromSettings.overrideLedConfig | false;
+}
+
 LoggerLevel SettingsService::loggerLevel() const {
     return static_cast<LoggerLevel>(buttonEepromSettings.loggerLevel);
 }
 
+BUTTON_WIFI_MODE SettingsService::wiFiMode() const {
+    return static_cast<BUTTON_WIFI_MODE>(buttonEepromSettings.wiFiMode);
+}
+
+unsigned int SettingsService::statisticLevel() const {
+    return buttonEepromSettings.statisticLevel;
+}
+
+String SettingsService::statisticApi() const {
+    return buttonEepromSettings.statisticApi;
+}
+
+EEPROM_FLAGS SettingsService::buttonFlags() const {
+    return this->buttonFlagsEeprom;
+}
+
 void SettingsService::clearEeprom() {
-    logger.log("[SettingsService] Start clear EEPROM [1024] ...");
-    EEPROM.begin(1024);
-    for (int i = 0; i < 1024; ++i) {
+    logger.log("[SettingsService] Start clear EEPROM. Size: ", this->totalEepromSize(), " ...");
+    EEPROM.begin(this->totalEepromSize());
+    for (int i = 0; i < this->totalEepromSize(); ++i) {
         EEPROM.write(i, 0);
     }
     EEPROM.commit();
@@ -200,6 +215,14 @@ char *SettingsService::customHotspotSsid() {
     strcpy(name, espDefaultName.c_str());
 
     return const_cast<char *>(name);
+}
+
+String SettingsService::deviceID() const{
+    String espDefaultName = "eButton-";
+    const String mac = WiFi.macAddress();
+    espDefaultName += mac.substring(mac.length() - 6, mac.length());
+    espDefaultName.replace(':', 'x');
+    return espDefaultName;
 }
 
 String SettingsService::dataFromFS(const String &fileName) {
@@ -263,4 +286,110 @@ KEYSTORESETTINGS SettingsService::keystoreSettings() const {
             buttonEepromSettings.delaySendEvents
     };
     return settings;
+}
+
+unsigned int SettingsService::fwVersion() const {
+    return buttonEepromSettings.fwVersion;
+}
+
+void SettingsService::writeToEEPROM(EEPROM_SETTINGS settings) {
+    logger.log("[SettingsService] -> Write to EEPROM ", sizeof settings, " bytes...");
+    EEPROM.begin(this->totalEepromSize());
+    EEPROM.put(0, settings);
+    EEPROM.end();
+    logger.log("[SettingsService] -> Write to EEPROM. DONE");
+}
+
+void SettingsService::updateDynamicEEPROM(EEPROM_DYNAMIC dynamicProps) {
+    logger.log("[SettingsService] -> Write to EEPROM_DYNAMIC ", sizeof dynamicProps, " bytes...");
+    EEPROM.begin(this->totalEepromSize());
+    EEPROM.put(this->dynamicEepromStartOffset(), dynamicProps);
+    EEPROM.end();
+    logger.log("[SettingsService] -> Write to EEPROM_DYNAMIC. DONE");
+}
+
+void SettingsService::updateFlagsEEPROM(EEPROM_FLAGS flags) {
+    logger.log("[SettingsService] -> Write to EEPROM_FLAGS ", sizeof flags, " bytes...");
+    EEPROM.begin(this->totalEepromSize());
+    EEPROM.put(this->flagsEepromStartOffset(), flags);
+    EEPROM.end();
+    logger.log("[SettingsService] -> Write to EEPROM_FLAGS. DONE");
+}
+
+void SettingsService::handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat = false) {
+    const bool versionChanged = buttonEepromSettings.fwVersion != currentFWVersion;
+
+    if (versionChanged && requireEEPROMFormat) {
+        EEPROM_SETTINGS defaultEEPROMConfig;
+        defaultEEPROMConfig.fwVersion = currentFWVersion;
+        this->clearEeprom();
+        this->writeToEEPROM(defaultEEPROMConfig);
+        this->buttonEepromSettings = defaultEEPROMConfig;
+    }else {
+        this->buttonEepromSettings.fwVersion = currentFWVersion;
+        this->writeToEEPROM(buttonEepromSettings);
+    }
+}
+
+String SettingsService::macAddress() const {
+    return WiFi.macAddress();
+}
+
+String SettingsService::localIPAddress() const {
+    switch (WiFi.getMode()) {
+        case WIFI_STA:
+            return WiFi.localIP().toString();
+        case WIFI_AP_STA:
+            return WiFi.softAPIP().toString();
+        default:
+            return "unknown";
+    }
+}
+
+size_t SettingsService::dynamicEepromStartOffset() const {
+    return EEPROM_SETTINGS_RESERVED_SIZE;
+}
+
+size_t SettingsService::flagsEepromStartOffset() const {
+    return EEPROM_SETTINGS_RESERVED_SIZE + EEPROM_DYNAMIC_RESERVED_SIZE;
+}
+
+bool SettingsService::getLastStatePressed() {
+    logger.log("[SettingsService] Read isPressedState: ", buttonDynamicEeprom.isPressedState);
+    return buttonDynamicEeprom.isPressedState;
+}
+
+size_t SettingsService::totalEepromSize() const {
+    return EEPROM_SETTINGS_RESERVED_SIZE + EEPROM_DYNAMIC_RESERVED_SIZE + EEPROM_FLAGS_RESERVED_SIZE;
+}
+
+void SettingsService::setLastState(int state) {
+    logger.log("[SettingsService] Set button state to ", state);
+    EEPROM_DYNAMIC props = *new EEPROM_DYNAMIC;
+    props.isPressedState = state;
+    this->updateDynamicEEPROM(props);
+    buttonDynamicEeprom.isPressedState = state;
+}
+
+RGBCONFIG SettingsService::hexToRGB(const char *hex) {
+    const char *cleanHex = (hex[0] == '#') ? &hex[1] : hex;
+    unsigned int hexValue = strtol(cleanHex, nullptr, 16);
+    return {
+            .r = static_cast<unsigned char>((hexValue >> 16) & 0xFF),
+            .g = static_cast<unsigned char>((hexValue >> 8) & 0xFF),
+            .b = static_cast<unsigned char>(hexValue & 0xFF)
+    };
+}
+
+LED_MAP SettingsService::ledMap() {
+    return {
+            {hexToRGB(buttonEepromSettings.ledIdleDefault)},
+            {hexToRGB(buttonEepromSettings.ledIdlePressed)},
+            {hexToRGB(buttonEepromSettings.ledLoading)},
+            {hexToRGB(buttonEepromSettings.ledWarn)},
+            {hexToRGB(buttonEepromSettings.ledDone)},
+            {hexToRGB(buttonEepromSettings.ledKeystoreUpdate)},
+            {hexToRGB(buttonEepromSettings.ledSendEvents)},
+            {hexToRGB(buttonEepromSettings.ledExternalInterface)}
+    };
 }

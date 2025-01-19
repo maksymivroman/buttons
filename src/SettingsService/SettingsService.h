@@ -12,33 +12,68 @@ class SettingsService {
 public:
     WiFiCONFIG getWiFiConnDetails();
     const String *events();
-    INTEGRATIONSETTINGS integrationSettings();
-    EEPROMSETTINGS getButtonConfig();
+    EEPROM_SETTINGS getButtonConfig();
+    EEPROM_FLAGS buttonFlags() const;
 
     void saveEvents(String events);
-    void saveSettings(String settings);
+    void saveSettings(String &settings);
     void loadButtonEepromSettings();
     void loadEvents();
     void clearEeprom();
     void formatFS();
+
+    void updateFlagsEEPROM(EEPROM_FLAGS flags);
+
     bool clientWebAccessEnabled() const;
     bool useSoundNotification() const;
-    bool useTelegramIntegration() const;
     bool otaUpdateOnClientMode() const;
     bool remoteButtonTriggering() const;
     bool loggerEnabled() const;
+    bool statisticEnabled() const;
+    bool remoteStateChangeEnabled() const;
+    bool overrideLedConfig() const;
+    bool saveLastState() const;
+    bool restoreLastStateOnLoad() const;
+
+    String statisticApi() const;
+    unsigned int fwVersion() const;
     LoggerLevel loggerLevel() const;
-    char * customHotspotSsid();
+    BUTTON_WIFI_MODE wiFiMode() const;
+    unsigned int statisticLevel() const;
+    char *customHotspotSsid();
+    String deviceID() const;
     KEYSTORESETTINGS keystoreSettings() const;
+
+    void loadButtonDynamicProps();
+    void loadButtonFlags();
+    bool getLastStatePressed();
+    void setLastState(int state);
+
+    void handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat);
+
+    String macAddress() const;
+    String localIPAddress() const;
+
+    LED_MAP ledMap();
 
 private:
     void writeButtonEepromSettings(String& config);
-    void saveIntegrationSettings(String settings);
+    void writeToEEPROM(EEPROM_SETTINGS settings);
+
+    void updateDynamicEEPROM(EEPROM_DYNAMIC dynamicProps);
 
     String dataFromFS(const String& fileName);
     String eventsData;
 
-    EEPROMSETTINGS buttonEepromSettings;
+    EEPROM_SETTINGS buttonEepromSettings;
+    EEPROM_DYNAMIC buttonDynamicEeprom;
+    EEPROM_FLAGS buttonFlagsEeprom;
+
+    size_t dynamicEepromStartOffset() const;
+    size_t flagsEepromStartOffset() const;
+    size_t totalEepromSize() const;
+
+    RGBCONFIG hexToRGB(const char hex[]);
 };
 
 

@@ -9,26 +9,34 @@
 #include "Global/Global.hpp"
 #include <ESP8266WiFi.h>
 #include "Keystore/Keystore.h"
+#include "Global/Version.h"
+#include "ButtonState/ButtonState.h"
+#include "NetworkService/NetworkService.h"
 
 extern Keystore keystore;
+extern Version currentFWVersion;
+extern ButtonState buttonState;
+extern NetworkService networkService;
 
 class HTMLComponentBuilder {
 public:
     String componentById(const String &ref);
 
-    void setHtmlPageData(String ssid, String password, String eventsConfig, NETWORKLIST list, EEPROMSETTINGS config, INTEGRATIONSETTINGS integrationData, bool isClient);
+    void setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list,
+                         EEPROM_SETTINGS config, bool isClient, EEPROM_FLAGS buttonFlags);
 
 private:
-    String events, networkSsid, networkPassword;
-    EEPROMSETTINGS configuration;
+    const String *events;
+    String networkSsid, networkPassword;
+    EEPROM_SETTINGS configuration;
     NETWORKLIST networkList;
-    INTEGRATIONSETTINGS integrationSettings;
     bool isClientMode;
+    EEPROM_FLAGS flags;
 
     String wiFiList();
 
-    String createConfigurationObject(EEPROMSETTINGS data);
-    String createIntegrationDataObject(INTEGRATIONSETTINGS data);
+    String createConfigurationObject(EEPROM_SETTINGS data);
+    String getLedConfig(EEPROM_SETTINGS settings);
 };
 
 
