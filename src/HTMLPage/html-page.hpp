@@ -490,6 +490,18 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         </div>
 
+        <h2 class="section-header">Serial events</h2>
+        <div class="border" style="padding: 24px">
+            <div class="item">
+                <input type="checkbox" id="serialEvents">
+                <label for="serialEvents">Enable events via Serial(115200 8-N-1)</label>
+            </div>
+            <div class="item" style="flex-flow: column; align-items: flex-start">
+                <span>Only events with type 'serial' will be sent</span>
+                <span class="mt-m">Warning! Serial logs will be disabled</span>
+            </div>
+        </div>
+
         <h2 class="section-header">Toggle mode</h2>
 
         <div class="border" style="padding: 24px">
@@ -694,6 +706,11 @@ const char index_html[] PROGMEM = R"rawliteral(
                 </div>
 
                 <div class="flexbox-raw-centered" style="gap: 8px;">
+                    <input id="serialType" type="radio" name="eventType" value="serial-event">
+                    <label for="serialType" style="color: white;">Serial event</label>
+                </div>
+
+                <div class="flexbox-raw-centered" style="gap: 8px;">
                     <input id="customType" type="radio" name="eventType" value="custom-event" checked>
                     <label for="customType" style="color: white;">Custom event</label>
                 </div>
@@ -808,6 +825,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const useSound = Number(document.getElementById('useSound').checked);
         const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
         const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
+        const serialEvents = Number(document.getElementById('serialEvents').checked);
         const saveLastState = Number(document.getElementById('saveLastState').checked);
         const restoreLastStateOnLoad = Number(document.getElementById('restoreLastStateOnLoad').checked);
         const remoteStateChange = Number(document.getElementById('remoteStateChange').checked);
@@ -837,6 +855,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             keystoreEnabled,
             sendEventOnKeystoreUpdate,
             delaySendEvents,
+            serialEvents,
             ledConfig,
             wifiSsid: name,
             wifiPass: pass,
@@ -852,7 +871,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function showSaved() {
         const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
-            'saveLastState', 'overrideLedConfig',
+            'saveLastState', 'overrideLedConfig', 'serialEvents',
             'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
         const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode'];
         const inputsSettings = ['statisticApi', 'hotspotSsid'];
@@ -977,6 +996,12 @@ const char index_html[] PROGMEM = R"rawliteral(
                 hostInput.value = "";
                 hostInput.disabled = false;
                 nsEventTypeContainer.classList.remove("--hidden");
+                break;
+            case "serial-event":
+                nsEventTypeContainer.classList.add("--hidden");
+                hostInput.disabled = true;
+                eventData.value = "[EVENT-ID]";
+                hostInput.value = "serial";
                 break;
             case "custom-event":
                 nsEventTypeContainer.classList.add("--hidden");
