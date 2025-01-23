@@ -16,11 +16,12 @@ class EventsService {
 
 public:
     void SendEvents(EVENT_TRIGGER triggeredBy = DEFAULT_TRIGGER);
-    void SetEvents(String eventsData);
+    void SetEvents(String eventsData, bool serialEnabled = true);
     void SendEventsOnKeystoreChange();
 
 private:
     void SendHttpEvent(String &host, String &payload);
+    void SendSerialEvent(String &payload);
     void ProcessEvents(EVENT_TRIGGER triggeredBy);
     void ProcessToSend(String &host, String &payload);
     bool isEventMatchTrigger(EVENT_TRIGGER trigger, const String& eventRequestHost) const;
@@ -30,6 +31,7 @@ private:
     String normalizeRequestHost(String host, EVENT_TRIGGER trigger);
 
     String events;
+    bool _serialEnabled;
 
     TriggersMap _triggers{
             {DEFAULT_TRIGGER, {}},

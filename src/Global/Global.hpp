@@ -81,6 +81,7 @@ struct EEPROM_SETTINGS {
     bool saveLastState = false;
     bool restoreLastStateOnLoad = false;
     bool overrideLedConfig = false;
+    bool serialEvents = false;
 
     unsigned int wiFiMode = 0;
     unsigned int loggerLevel = 0;

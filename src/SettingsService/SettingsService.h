@@ -34,6 +34,7 @@ public:
     bool overrideLedConfig() const;
     bool saveLastState() const;
     bool restoreLastStateOnLoad() const;
+    bool serialEvents() const;
 
     String statisticApi() const;
     unsigned int fwVersion() const;
