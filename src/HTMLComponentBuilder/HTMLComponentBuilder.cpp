@@ -120,6 +120,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
             restoreLastStateOnLoad: <restoreLastStateOnLoad>,
             wiFiMode: <wiFiMode>,
             overrideLedConfig: <overrideLedConfig>,
+            serialEvents: <serialEvents>,
             ledConfig: <ledConfig>
         })";
 
@@ -143,6 +144,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     configObj.replace("<saveLastState>", String(data.saveLastState));
     configObj.replace("<restoreLastStateOnLoad>", String(data.restoreLastStateOnLoad));
     configObj.replace("<overrideLedConfig>", String(data.overrideLedConfig));
+    configObj.replace("<serialEvents>", String(data.serialEvents));
     configObj.replace("<wiFiMode>", String(data.wiFiMode));
     configObj.replace("<ledConfig>", getLedConfig(data));
 

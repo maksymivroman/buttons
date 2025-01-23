@@ -63,11 +63,20 @@ String EventsService::normalizeRequestHost(String host, EVENT_TRIGGER trigger) {
 }
 
 void EventsService::ProcessToSend(String &host, String &payload) {
-    SendHttpEvent(host, payload);
+    if (host == "serial") {
+        if (this->_serialEnabled) {
+            SendSerialEvent(payload);
+        } else {
+            logger.log("[EventsService] Events via Serial is disabled");
+        }
+    } else {
+        SendHttpEvent(host, payload);
+    }
 }
 
-void EventsService::SetEvents(String eventsData) {
+void EventsService::SetEvents(String eventsData, bool serialEnabled) {
     events = std::move(eventsData);
+    this->_serialEnabled = serialEnabled;
 }
 
 void EventsService::SendHttpEvent(String &host, String &payload) {
@@ -96,4 +105,10 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
     } else {
         logger.log("[EventsService] Skip secure connection!");
     }
+}
+
+void EventsService::SendSerialEvent(String &payload) {
+    logger.log("[EventsService][SendSerialEvent]", payload);
+    String data = payload + "\r\n";
+    Serial.write(data.c_str());
 }

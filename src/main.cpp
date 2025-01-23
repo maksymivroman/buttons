@@ -47,7 +47,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,4,0, true);
+Version currentFWVersion(1,5,0, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -60,8 +60,6 @@ EventsService eventService;
 AsyncOtaUpdate ButtonOTAUpdate;
 Statistic statistic;
 Keystore keystore(20);
-/**Do not set max logs items more than 20,
- * it will cause heap overflow when using Telegram integration (BearSSL requires more than 12k of RAM) */
 Logger logger(115200, 20);
 
 ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
@@ -94,10 +92,20 @@ void setup() {
 
     buttonSettings.handleVersionChange(currentFWVersion.uint_version(), currentFWVersion.EEPROMStructureChanged());
 
+    const bool serialEventsEnabled = buttonSettings.serialEvents();
+
     if (buttonSettings.loggerEnabled()) {
-        logger.start(buttonSettings.loggerLevel());
-        logger.log("BUTTON CURRENT FW: " , currentFWVersion.str_fullVersion());
+        if (serialEventsEnabled && (buttonSettings.loggerLevel() == SERIAL_AND_LOCAL || buttonSettings.loggerLevel() == LOGGER_SERIAL)) {
+            logger.start(LOGGER_LOCAL);
+            Serial.begin(115200);
+        } else {
+            logger.start(buttonSettings.loggerLevel());
+        }
+    } else {
+        if (serialEventsEnabled) Serial.begin(115200);
     }
+
+    logger.log("BUTTON CURRENT FW: " , currentFWVersion.str_fullVersion());
 
     if (buttonSettings.statisticEnabled()) {
         statistic.initStat(buttonSettings.statisticApi(),STAT_HTTP_POST, buttonSettings.statisticLevel());
@@ -116,6 +124,7 @@ void setup() {
     buttonSettings.loadEvents();
 
     auto eventsData = buttonSettings.events();
+    bool serialEvents = buttonSettings.serialEvents();
 
     WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
     EEPROM_SETTINGS configuration = buttonSettings.getButtonConfig();
@@ -137,7 +146,7 @@ void setup() {
 
     htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration,
                                   buttonState.isRunOperationMode(), buttonSettings.buttonFlags());
-    eventService.SetEvents(*eventsData);
+    eventService.SetEvents(*eventsData, serialEvents);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", index_html, components);

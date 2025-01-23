@@ -110,6 +110,7 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
     settings.delaySendEvents = jsonSettings["delaySendEvents"].as<bool>() | false;
     settings.overrideLedConfig = jsonSettings["overrideLedConfig"].as<bool>() | false;
+    settings.serialEvents = jsonSettings["serialEvents"].as<bool>() | false;
     strncpy(settings.ledIdleDefault, String(jsonSettings["ledConfig"]["ledIdleDefault"]).c_str(), 7);
     strncpy(settings.ledIdlePressed, String(jsonSettings["ledConfig"]["ledIdlePressed"]).c_str(), 7);
     strncpy(settings.ledLoading, String(jsonSettings["ledConfig"]["ledLoading"]).c_str(), 7);
@@ -168,6 +169,10 @@ bool SettingsService::restoreLastStateOnLoad() const {
 
 bool SettingsService::overrideLedConfig() const {
     return buttonEepromSettings.overrideLedConfig | false;
+}
+
+bool SettingsService::serialEvents() const {
+    return buttonEepromSettings.serialEvents | false;
 }
 
 LoggerLevel SettingsService::loggerLevel() const {
