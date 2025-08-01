@@ -9,6 +9,9 @@
 #include <map>
 #include <array>
 #include "Global/Global.hpp"
+#include "NetworkService/NetworkService.h"
+
+extern NetworkService networkService;
 
 typedef std::map<EVENT_TRIGGER, std::array<char, 3>> TriggersMap;
 

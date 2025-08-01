@@ -47,7 +47,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,5,0, true);
+Version currentFWVersion(1,5,1, false);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -66,7 +66,7 @@ ButtonTask RestartTask, EepromClearTask, RequiredToFindTask,
         SendEventsTask, CheckConnectionTask(true), ToggleStateTask(false),
         FormatFSTask, OnKeystoreUpdateTask, UpdateEventsWithKeystoreTask, ResetExternalStateTask;
 
-ButtonIntervalTask MainITask;
+ButtonIntervalTask MainITask, MainStateITask;
 ButtonIntervalTask ChangeLedStateITask, ChangeSoundStateITask, ConnectToWiFiITask;
 
 String components(const String &ref) {
@@ -306,7 +306,7 @@ void setup() {
 }
 
 void loop() {
-    ConnectToWiFiITask(1000, [](){
+    ConnectToWiFiITask(1000, []() {
         auto config = buttonSettings.getWiFiConnDetails();
         networkService.initConnectionToWiFi(config);
         logger.logSerial("[MAIN] Pending connection to ", config.ssid, " / ", config.password);
@@ -325,17 +325,37 @@ void loop() {
             buttonState.isSetupOperationMode()
     );
 
-    MainITask(100, [&]() {
+    MainStateITask(100, [&]() {
         //TODO move to interruption
         buttonState.setState(RequiredToTriggerButton || digitalRead(buttonPin));
 
         ToggleStateTask(buttonState.isPressed(),[]() {
-            auto state = buttonState.toggleToggleState();
-            if (buttonSettings.restoreLastStateOnLoad()) buttonSettings.setLastState(state);
-            ledService.setLedAction(buttonState.getToggleMode() == PRESSED ? ACTIONS::IDLE_PRESSED : ACTIONS::IDLE_DEFAULT);},
+                            auto state = buttonState.toggleToggleState();
+                            if (buttonSettings.restoreLastStateOnLoad()) buttonSettings.setLastState(state);
+                            ledService.setLedAction(buttonState.getToggleMode() == PRESSED ? ACTIONS::IDLE_PRESSED : ACTIONS::IDLE_DEFAULT);},
                         !buttonSettings.saveLastState());
 
-        UpdateEventsWithKeystoreTask(RequiredToUpdateEvents.get(), [](){
+        SendEventsTask((buttonState.isPressed()), []() {
+            if (RequiredToTriggerButton) notifier.onRemoteTrigger();
+
+            externalInterface_ledActive = false;
+            externalInterface_buzzActive = false;
+            ledService.setLedAction(ACTIONS::SEND_EVENTS, false, false);
+            eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
+            ledService.resetLedAction();
+
+            if (RequiredToTriggerButton) {
+                RequiredToTriggerButton.reset();
+                if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Send events. Triggered by: remote");
+            } else {
+                statistic.sendStat("Send events. Triggered by: physical");
+            }
+        }, false);
+    });
+
+    MainITask(100, [&]() {
+
+        UpdateEventsWithKeystoreTask(RequiredToUpdateEvents.get(), []() {
             ledService.setLedAction(ACTIONS::KEYSTORE_UPDATE, false, false);
             auto items = keystore.keystoreItems();
             String events = *buttonSettings.events();
@@ -352,35 +372,18 @@ void loop() {
             if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Keystore update");
         });
 
-        SendEventsTask((buttonState.isPressed()), [](){
-            if (RequiredToTriggerButton) notifier.onRemoteTrigger();
-
-            externalInterface_ledActive = false;
-            externalInterface_buzzActive = false;
-            ledService.setLedAction(ACTIONS::SEND_EVENTS, false, false);
-            eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
-            ledService.resetLedAction();
-
-            if (RequiredToTriggerButton) {
-                RequiredToTriggerButton.reset();
-                if (buttonSettings.statisticLevel() == 1) statistic.sendStat("Send events. Triggered by: remote");
-            } else {
-                statistic.sendStat("Send events. Triggered by: physical");
-            }
-        },networkService.isAPMode());
-
-        RequiredToFindTask(RequiredToFind.get(), [](){
+        RequiredToFindTask(RequiredToFind.get(), []() {
             notifier.onFindMe();
             ledService.setLedAction(ACTIONS::WARN, true);
             RequiredToFind.reset();
         });
 
-        EepromClearTask(RequiredEepromClear.get(),  [](){
+        EepromClearTask(RequiredEepromClear.get(), []() {
             buttonSettings.clearEeprom();
             RequiredRestart.set();
         });
 
-        FormatFSTask(RequiredToFormatFS.get(), [](){
+        FormatFSTask(RequiredToFormatFS.get(), []() {
             ledService.setLedAction(ACTIONS::WARN);
             buttonSettings.formatFS();
             RequiredRestart.set();
@@ -394,7 +397,7 @@ void loop() {
                     timeToExecuteTask = 0;
                     ledService.resetLedAction();
                 },
-                [](){},
+                []() {},
                 []() -> bool { return millis() < timeToExecuteTask; }
         );
 

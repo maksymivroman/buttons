@@ -70,7 +70,11 @@ void EventsService::ProcessToSend(String &host, String &payload) {
             logger.log("[EventsService] Events via Serial is disabled");
         }
     } else {
-        SendHttpEvent(host, payload);
+        if (networkService.isConnectedToWiFi()) {
+            SendHttpEvent(host, payload);
+        } else {
+            logger.log("[EventsService] No WiFi connection. Skip to send HttpEvent");
+        }
     }
 }
 
