@@ -40,3 +40,24 @@ unsigned int Version::uint_version() const {
 bool Version::EEPROMStructureChanged() const {
     return this->requireEEPROMFormat;
 }
+
+PCBBoardVersion Version::getBoardVersion() {
+    const auto adcValue = analogRead(A0);
+    logger.logSerial("[Version] Get PCB version by ADC. ADC value: ", adcValue);
+    for (const auto& [version, adcRange] : this->_boardVersionsByADC ) {
+        if (adcValue >= adcRange.min && adcValue <= adcRange.max) {
+            logger.logSerial("[Version] Version by ADC: ", version);
+            return version;
+        }
+    }
+    logger.logSerial("[Version] Version by ADC: UNSPECIFIED");
+    return UNDEFINED;
+}
+
+String Version::getBoardName() {
+    auto version = this->getBoardVersion();
+    if (!version) {
+        return "-";
+    }
+    return "rev" + String(version);
+}

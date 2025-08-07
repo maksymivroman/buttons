@@ -49,6 +49,9 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "FWVERSION") {
         data += currentFWVersion.str_version();
         return data;
+    } else if (ref == "HWVERSION") {
+        data += currentFWVersion.getBoardName();
+        return data;
     } else if (ref == "MAC") {
         data += WiFi.macAddress();
         return data;

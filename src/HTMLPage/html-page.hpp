@@ -665,6 +665,10 @@ const char index_html[] PROGMEM = R"rawliteral(
             <h5 style="margin: 5px">%FWVERSION% </h5>
         </div>
         <div class="flexbox-wrap">
+            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">HW version:</h5>
+            <h5 style="margin: 5px">%HWVERSION% </h5>
+        </div>
+        <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">MAC:</h5>
             <h5 style="margin: 5px">%MAC% </h5>
         </div>
