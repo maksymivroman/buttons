@@ -47,7 +47,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,5,1, false);
+Version currentFWVersion(1,5,1, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -106,6 +106,7 @@ void setup() {
     }
 
     logger.log("BUTTON CURRENT FW: " , currentFWVersion.str_fullVersion());
+    logger.log("BUTTON CURRENT HW: " , currentFWVersion.getBoardName());
 
     if (buttonSettings.statisticEnabled()) {
         statistic.initStat(buttonSettings.statisticApi(),STAT_HTTP_POST, buttonSettings.statisticLevel());
