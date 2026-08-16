@@ -35,6 +35,7 @@ public:
     bool saveLastState() const;
     bool restoreLastStateOnLoad() const;
     bool serialEvents() const;
+    bool customServer() const;
 
     String statisticApi() const;
     unsigned int fwVersion() const;
@@ -57,6 +58,10 @@ public:
 
     LED_MAP ledMap();
 
+    void saveServerConfig(String path);
+
+    const SERVER_CONFIG serverConfig();
+
 private:
     void writeButtonEepromSettings(String& config);
     void writeToEEPROM(EEPROM_SETTINGS settings);
@@ -75,6 +80,10 @@ private:
     size_t totalEepromSize() const;
 
     RGBCONFIG hexToRGB(const char hex[]);
+
+    String currentServerPath = "/";
+
+    bool serverConfigLoaded{false};
 };
 
 

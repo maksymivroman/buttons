@@ -87,10 +87,8 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
     logger.log("[EventsService][SendHttpEvent] HTTP request");
     logger.logSerial("[EventsService][SendHttpEvent] HOST: ", host);
     logger.logSerial("[EventsService][SendHttpEvent] PAYLOAD: ", payload);
-    const bool isSecure = host.substring(4,5) == "s";
-
-    //Skip secure connection
-    if (!isSecure) {
+    const bool isValidUrl = host.startsWith("http://");
+    if (isValidUrl) {
         char hostUrl[128];
         host.toCharArray(hostUrl, 128);
         char event[128];
@@ -107,7 +105,7 @@ void EventsService::SendHttpEvent(String &host, String &payload) {
 
         http.end();
     } else {
-        logger.log("[EventsService] Skip secure connection!");
+        logger.log("[EventsService] Not valid url URL: ", host);
     }
 }
 

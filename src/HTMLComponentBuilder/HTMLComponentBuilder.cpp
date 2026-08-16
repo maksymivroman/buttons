@@ -67,6 +67,11 @@ String HTMLComponentBuilder::componentById(const String &ref) {
     } else if (ref == "WIFIMODE") {
         data += networkService.getWiFIMode();
         return data;
+    } else if (ref == "SERVER_PATH") {
+        String href = networkService.ipAddress();
+        String path = buttonSettings.serverConfig().serverPath;
+        data += R"(<a target="_blank" href=")" + path + R"(">)" + href + path + R"(</a>)";
+        return data;
     } else if (ref == "RGB_FLAGS") {
         data += R"(<div id="rFlag" class="rgb-info-square )" + String(flags.ledRDisabled ? "marked-flag":"") + R"("><h5 style="margin: 5px; color: #e50c0c;">R</h5></div>)";
         data += R"(<div id="gFlag" class="rgb-info-square )" + String(flags.ledGDisabled ? "marked-flag":"") + R"("><h5 style="margin: 5px; color: #077307;">G</h5></div>)";
@@ -123,6 +128,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
             restoreLastStateOnLoad: <restoreLastStateOnLoad>,
             wiFiMode: <wiFiMode>,
             overrideLedConfig: <overrideLedConfig>,
+            customServer: <customServer>,
             serialEvents: <serialEvents>,
             ledConfig: <ledConfig>
         })";
@@ -147,6 +153,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     configObj.replace("<saveLastState>", String(data.saveLastState));
     configObj.replace("<restoreLastStateOnLoad>", String(data.restoreLastStateOnLoad));
     configObj.replace("<overrideLedConfig>", String(data.overrideLedConfig));
+    configObj.replace("<customServer>", String(data.customServer));
     configObj.replace("<serialEvents>", String(data.serialEvents));
     configObj.replace("<wiFiMode>", String(data.wiFiMode));
     configObj.replace("<ledConfig>", getLedConfig(data));
