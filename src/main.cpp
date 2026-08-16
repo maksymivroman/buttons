@@ -6,6 +6,7 @@
 #include "Global/Global.hpp"
 #include "Global/Version.h"
 #include "HTMLPage/html-page.hpp"
+#include "HTMLPage/editor-page.hpp"
 #include "LEDService/LEDService.h"
 #include "SettingsService/SettingsService.h"
 #include "NetworkService/NetworkService.h"
@@ -47,7 +48,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,5,1, true);
+Version currentFWVersion(1,5,3, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -155,6 +156,11 @@ void setup() {
 
     server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", logs_page);
+    });
+
+    server.on("/events", HTTP_GET, [](AsyncWebServerRequest *request) {
+        String events = *buttonSettings.events();
+        request->send_P(200, "text/html", events.c_str());
     });
 
     server.on("/logsData", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -268,6 +274,59 @@ void setup() {
         } else {
             logger.log("[MAIN->HTTP GET][/keystore]: Keystore disabled. Forbidden.");
             request->send_P(403, "text/html", "Forbidden");
+        }
+    });
+
+    server.on("/server/editor", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", editor_html);
+    });
+
+    server.on("/server/load-config", HTTP_GET, [](AsyncWebServerRequest *request) {
+        SERVER_CONFIG cfg = buttonSettings.serverConfig();
+        String json = "{\"path\":\"" + cfg.serverPath + "\"}";
+        request->send(200, "application/json", json);
+    });
+
+    server.on("/server/load-html", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (SPIFFS.exists(SERVER_HTML_FILE)) {
+            request->send(SPIFFS, SERVER_HTML_FILE, "text/plain");
+        } else {
+            request->send(200, "text/plain", "");
+        }
+    });
+
+    server.on("/server/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", "File Uploaded");
+    }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+        if (!index) {
+            request->_tempFile = SPIFFS.open(SERVER_HTML_FILE, "w");
+            logger.log("Upload Start: %s\n", filename.c_str());
+        }
+
+        if (request->_tempFile) {
+            request->_tempFile.write(data, len);
+        }
+
+        if (final) {
+            request->_tempFile.close();
+            logger.log("Upload Finished");
+
+            if (request->hasArg("path")) {
+                buttonSettings.saveServerConfig(request->arg("path"));
+            }
+        }
+    });
+
+    server.onNotFound([](AsyncWebServerRequest *request) {
+        auto useServer = buttonSettings.customServer();
+        if (useServer && (request->url() == buttonSettings.serverConfig().serverPath)) {
+            if (SPIFFS.exists(SERVER_HTML_FILE)) {
+                request->send(SPIFFS, SERVER_HTML_FILE, "text/html");
+            } else {
+                request->send(200, "text/html", "Upload your HTML first.");
+            }
+        } else {
+            request->send(404);
         }
     });
 

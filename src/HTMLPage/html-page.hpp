@@ -653,6 +653,18 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
         </div>
 
+        <h2 class="section-header">Custom Server</h2>
+
+        <div class="border" style="padding: 24px;">
+            <div class="item">
+                <input type="checkbox" id="customServer">
+                <label for="customServer">Enable custom server</label>
+            </div>
+            <span>Server Path: </span>
+            <span>%SERVER_PATH%</span>
+            <button type="button" onclick="location.href='/server/editor'" class="btn btn-blue" style="padding: 0 4px; margin-left: 16px;">Open Editor</button>
+        </div>
+
         <div style="display: flex; flex: 1; justify-content: center; margin: 80px 0;">
             <button id="saveButton" type="button" class="btn btn-red" onclick="saveSettings()">Save And Reboot</button>
         </div>
@@ -837,6 +849,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
         const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
         const overrideLedConfig = Number(document.getElementById('overrideLedConfig').checked);
+        const customServer = Number(document.getElementById('customServer').checked);
 
         const statApi = document.getElementById('statisticApi').value;
 
@@ -855,6 +868,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             saveLastState,
             restoreLastStateOnLoad,
             overrideLedConfig,
+            customServer,
             remoteStateChange,
             keystoreEnabled,
             sendEventOnKeystoreUpdate,
@@ -875,7 +889,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function showSaved() {
         const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
-            'saveLastState', 'overrideLedConfig', 'serialEvents',
+            'saveLastState', 'overrideLedConfig', 'serialEvents', 'customServer',
             'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
         const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode'];
         const inputsSettings = ['statisticApi', 'hotspotSsid'];

@@ -14,7 +14,7 @@ WiFiCONFIG SettingsService::getWiFiConnDetails() {
 }
 
 void SettingsService::loadEvents() {
-    this->eventsData = dataFromFS("/post.json");
+    this->eventsData = dataFromFS(EVENTS_FILE_NAME);
 }
 
 const String *SettingsService::events() {
@@ -24,7 +24,7 @@ const String *SettingsService::events() {
 void SettingsService::saveEvents(String events) {
     logger.log("[SettingsService] Save Events");
     logger.logSerial("[SettingsService] saveEvents: ", events);
-    File file = SPIFFS.open("/post.json", "w");
+    File file = SPIFFS.open(EVENTS_FILE_NAME, "w");
     [[maybe_unused]] int bytesWritten = file.print(events);
     file.close();
     this->eventsData = events;
@@ -111,6 +111,7 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.delaySendEvents = jsonSettings["delaySendEvents"].as<bool>() | false;
     settings.overrideLedConfig = jsonSettings["overrideLedConfig"].as<bool>() | false;
     settings.serialEvents = jsonSettings["serialEvents"].as<bool>() | false;
+    settings.customServer = jsonSettings["customServer"].as<bool>() | false;
     strncpy(settings.ledIdleDefault, String(jsonSettings["ledConfig"]["ledIdleDefault"]).c_str(), 7);
     strncpy(settings.ledIdlePressed, String(jsonSettings["ledConfig"]["ledIdlePressed"]).c_str(), 7);
     strncpy(settings.ledLoading, String(jsonSettings["ledConfig"]["ledLoading"]).c_str(), 7);
@@ -173,6 +174,10 @@ bool SettingsService::overrideLedConfig() const {
 
 bool SettingsService::serialEvents() const {
     return buttonEepromSettings.serialEvents | false;
+}
+
+bool SettingsService::customServer() const {
+    return buttonEepromSettings.customServer | false;
 }
 
 LoggerLevel SettingsService::loggerLevel() const {
@@ -397,4 +402,30 @@ LED_MAP SettingsService::ledMap() {
             {hexToRGB(buttonEepromSettings.ledSendEvents)},
             {hexToRGB(buttonEepromSettings.ledExternalInterface)}
     };
+}
+
+const SERVER_CONFIG SettingsService::serverConfig() {
+    if (!this->serverConfigLoaded && SPIFFS.exists(SERVER_CONF_PATH)) {
+        logger.log("[SettingsService] Loading custom server config");
+        File confFile = SPIFFS.open(SERVER_CONF_PATH, "r");
+        StaticJsonDocument<128> doc;
+        deserializeJson(doc, confFile);
+        this->currentServerPath = doc["path"].as<String>();
+        confFile.close();
+    }
+    logger.log("[SettingsService] Custom server config loaded. Server path: ", this->currentServerPath);
+    this->serverConfigLoaded = true;
+    return { this->currentServerPath };
+}
+
+void SettingsService::saveServerConfig(String path) {
+    logger.log("[SettingsService] Saving custom server config: ", path);
+    File confFile = SPIFFS.open(SERVER_CONF_PATH, "w");
+    if (confFile) {
+        StaticJsonDocument<256> doc;
+        doc["path"] = path;
+        serializeJson(doc, confFile);
+        confFile.close();
+        this->currentServerPath = path;
+    }
 }

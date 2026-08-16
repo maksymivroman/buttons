@@ -13,6 +13,10 @@
 
 extern Logger logger;
 
+static const char EVENTS_FILE_NAME[] = "/post.json";
+static const char SERVER_CONF_PATH[] = "/server_conf.json";
+static const char SERVER_HTML_FILE[] = "/custom_page.html";
+
 
 enum EVENT_TRIGGER {
     DEFAULT_TRIGGER,
@@ -82,6 +86,7 @@ struct EEPROM_SETTINGS {
     bool restoreLastStateOnLoad = false;
     bool overrideLedConfig = false;
     bool serialEvents = false;
+    bool customServer = false;
 
     unsigned int wiFiMode = 0;
     unsigned int loggerLevel = 0;
@@ -131,6 +136,10 @@ enum class ACTIONS {
     KEYSTORE_UPDATE,
     SEND_EVENTS,
     EXTERNAL_INTERFACE
+};
+
+struct SERVER_CONFIG {
+    String serverPath;
 };
 
 typedef std::map<ACTIONS, RGBCONFIG> LEDConfig;
