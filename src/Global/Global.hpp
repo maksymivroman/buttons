@@ -69,6 +69,28 @@ struct LED_MAP {
     RGBCONFIG EXTERNAL_INTERFACE;
 };
 
+enum class TimeZoneId : uint8_t {
+    London = 0,
+    Berlin,
+    Kyiv,
+    Istanbul,
+    Dubai,
+    Kolkata,
+    Shanghai,
+    Tokyo,
+    NewYork,
+    Chicago,
+    LosAngeles,
+    Utc,
+    COUNT
+};
+
+struct TimeZoneEntry {
+    TimeZoneId id;
+    const char* label;
+    const char* tzRule;
+};
+
 struct EEPROM_SETTINGS {
     bool loggerEnabled = false;
     bool statisticEnabled = false;
@@ -87,6 +109,8 @@ struct EEPROM_SETTINGS {
     bool overrideLedConfig = false;
     bool serialEvents = false;
     bool customServer = false;
+
+    TimeZoneId timezone = TimeZoneId::London;
 
     unsigned int wiFiMode = 0;
     unsigned int loggerLevel = 0;

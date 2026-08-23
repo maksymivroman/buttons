@@ -183,7 +183,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
         .control {
             display: block;
-            min-width: 220px;
+            min-width: 180px;
             padding: .175rem .75rem;
             font-size: 1rem;
             line-height: 1.5;
@@ -473,6 +473,24 @@ const char index_html[] PROGMEM = R"rawliteral(
                     <option value="1">11B</option>
                     <option value="2">11G</option>
                     <option value="3">11N</option>
+                </select>
+            </div>
+
+            <div class="item">
+                <label style="margin-right: 8px; min-width: fit-content;" for="timezone">Time zone</label>
+                <select class="control" style="height: auto; max-width: 200px;" id="timezone">
+                    <option value="0">(UTC+00:00) London, Dublin (GMT/BST)</option>
+                    <option value="1">(UTC+01:00) Berlin, Warsaw, Paris (CET/CEST)</option>
+                    <option value="2" selected>(UTC+02:00) Kyiv, Athens, Bucharest (EET/EEST)</option>
+                    <option value="3">(UTC+03:00) Istanbul, Riyadh</option>
+                    <option value="4">(UTC+04:00) Dubai, Baku (GST/AZT)</option>
+                    <option value="5">(UTC+05:30) Delhi, Mumbai, Kolkata (IST)</option>
+                    <option value="6">(UTC+08:00) Beijing, Singapore, Hong Kong (CST)</option>
+                    <option value="7">(UTC+09:00) Tokyo, Seoul (JST/KST)</option>
+                    <option value="8">(UTC-05:00) New York, Toronto (EST/EDT)</option>
+                    <option value="9">(UTC-06:00) Chicago, Mexico City (CST/CDT)</option>
+                    <option value="10">(UTC-08:00) Los Angeles, Vancouver (PST/PDT)</option>
+                    <option value="11">(UTC+00:00) Fixed UTC</option>
                 </select>
             </div>
 
@@ -850,7 +868,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
         const overrideLedConfig = Number(document.getElementById('overrideLedConfig').checked);
         const customServer = Number(document.getElementById('customServer').checked);
-
+        const timezone = Number(document.getElementById('timezone').selectedIndex);
         const statApi = document.getElementById('statisticApi').value;
 
         const extrasConfig = JSON.stringify({
@@ -874,6 +892,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             sendEventOnKeystoreUpdate,
             delaySendEvents,
             serialEvents,
+            timezone,
             ledConfig,
             wifiSsid: name,
             wifiPass: pass,
@@ -891,7 +910,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
             'saveLastState', 'overrideLedConfig', 'serialEvents', 'customServer',
             'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
-        const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode'];
+        const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode', 'timezone'];
         const inputsSettings = ['statisticApi', 'hotspotSsid'];
         const securedCheckboxSettings = ['clientWebAccess', 'enableOtaUpdate'];
 

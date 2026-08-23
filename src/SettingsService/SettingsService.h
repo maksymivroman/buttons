@@ -60,6 +60,8 @@ public:
 
     void saveServerConfig(String path);
 
+    TimeZoneId timeZoneId() const;
+
     const SERVER_CONFIG serverConfig();
 
 private:

@@ -3,6 +3,7 @@
 //
 
 #include "HTMLComponentBuilder.h"
+#include "Global/TimeZones.hpp"
 
 void HTMLComponentBuilder::setHtmlPageData(String ssid, String password, const String *eventsConfig, NETWORKLIST list,
                                            EEPROM_SETTINGS config, bool isClient, EEPROM_FLAGS buttonFlags) {
@@ -72,6 +73,9 @@ String HTMLComponentBuilder::componentById(const String &ref) {
         String path = buttonSettings.serverConfig().serverPath;
         data += R"(<a target="_blank" href=")" + path + R"(">)" + href + path + R"(</a>)";
         return data;
+    } else if (ref == "TIMEZONE") {
+        data += GET_TIMEZONE(buttonSettings.timeZoneId());
+        return data;
     } else if (ref == "RGB_FLAGS") {
         data += R"(<div id="rFlag" class="rgb-info-square )" + String(flags.ledRDisabled ? "marked-flag":"") + R"("><h5 style="margin: 5px; color: #e50c0c;">R</h5></div>)";
         data += R"(<div id="gFlag" class="rgb-info-square )" + String(flags.ledGDisabled ? "marked-flag":"") + R"("><h5 style="margin: 5px; color: #077307;">G</h5></div>)";
@@ -130,6 +134,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
             overrideLedConfig: <overrideLedConfig>,
             customServer: <customServer>,
             serialEvents: <serialEvents>,
+            timezone: <timezone>,
             ledConfig: <ledConfig>
         })";
 
@@ -156,6 +161,7 @@ String HTMLComponentBuilder::createConfigurationObject(EEPROM_SETTINGS data) {
     configObj.replace("<customServer>", String(data.customServer));
     configObj.replace("<serialEvents>", String(data.serialEvents));
     configObj.replace("<wiFiMode>", String(data.wiFiMode));
+    configObj.replace("<timezone>", String(static_cast<int>(data.timezone)));
     configObj.replace("<ledConfig>", getLedConfig(data));
 
     return configObj;

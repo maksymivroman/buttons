@@ -91,8 +91,15 @@ void Logger::addMessageToLog(String &message) {
     char formattedTime[9];
     millisToHMS(millis(), formattedTime);
 
-    String messageToStore = "";
+    time_t now = time(nullptr);
+    struct tm* timeinfo = localtime(&now);
+    char dateTime[30];
+    strftime(dateTime, sizeof(dateTime), "%Y-%m-%d %H:%M:%S", timeinfo);
+
+    String messageToStore = "[";
     messageToStore.concat(formattedTime);
+    messageToStore.concat("] ");
+    messageToStore.concat(dateTime);
     messageToStore.concat(" : ");
     messageToStore.concat(message);
     this->logsData.push_back(messageToStore);
