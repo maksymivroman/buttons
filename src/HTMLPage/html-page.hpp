@@ -481,7 +481,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <select class="control" style="height: auto; max-width: 200px;" id="timezone">
                     <option value="0">(UTC+00:00) London, Dublin (GMT/BST)</option>
                     <option value="1">(UTC+01:00) Berlin, Warsaw, Paris (CET/CEST)</option>
-                    <option value="2" selected>(UTC+02:00) Kyiv, Athens, Bucharest (EET/EEST)</option>
+                    <option value="2">(UTC+02:00) Kyiv, Athens, Bucharest (EET/EEST)</option>
                     <option value="3">(UTC+03:00) Istanbul, Riyadh</option>
                     <option value="4">(UTC+04:00) Dubai, Baku (GST/AZT)</option>
                     <option value="5">(UTC+05:30) Delhi, Mumbai, Kolkata (IST)</option>
