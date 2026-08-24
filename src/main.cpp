@@ -5,6 +5,7 @@
 #include "ButtonOTAUpdate/AsyncOtaUpdate.h"
 #include "Global/Global.hpp"
 #include "Global/Version.h"
+#include "Global/TimeZones.hpp"
 #include "HTMLPage/html-page.hpp"
 #include "HTMLPage/editor-page.hpp"
 #include "LEDService/LEDService.h"
@@ -108,6 +109,10 @@ void setup() {
 
     logger.log("BUTTON CURRENT FW: " , currentFWVersion.str_fullVersion());
     logger.log("BUTTON CURRENT HW: " , currentFWVersion.getBoardName());
+
+    auto timeZoneId = GET_TIMEZONE(buttonSettings.timeZoneId());
+    logger.log("[MAIN:INIT] Config time for time zone ", timeZoneId);
+    configTime(timeZoneId.c_str(), "pool.ntp.org", "time.nist.gov");
 
     if (buttonSettings.statisticEnabled()) {
         statistic.initStat(buttonSettings.statisticApi(),STAT_HTTP_POST, buttonSettings.statisticLevel());

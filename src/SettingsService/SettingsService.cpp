@@ -112,6 +112,7 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.overrideLedConfig = jsonSettings["overrideLedConfig"].as<bool>() | false;
     settings.serialEvents = jsonSettings["serialEvents"].as<bool>() | false;
     settings.customServer = jsonSettings["customServer"].as<bool>() | false;
+    settings.timezone = static_cast<TimeZoneId>(jsonSettings["timezone"].as<unsigned int>() | 0);
     strncpy(settings.ledIdleDefault, String(jsonSettings["ledConfig"]["ledIdleDefault"]).c_str(), 7);
     strncpy(settings.ledIdlePressed, String(jsonSettings["ledConfig"]["ledIdlePressed"]).c_str(), 7);
     strncpy(settings.ledLoading, String(jsonSettings["ledConfig"]["ledLoading"]).c_str(), 7);
@@ -198,6 +199,10 @@ String SettingsService::statisticApi() const {
 
 EEPROM_FLAGS SettingsService::buttonFlags() const {
     return this->buttonFlagsEeprom;
+}
+
+TimeZoneId SettingsService::timeZoneId() const {
+    return buttonEepromSettings.timezone;
 }
 
 void SettingsService::clearEeprom() {
