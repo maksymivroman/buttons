@@ -331,7 +331,7 @@ void SettingsService::updateFlagsEEPROM(EEPROM_FLAGS flags) {
     logger.log("[SettingsService] -> Write to EEPROM_FLAGS. DONE");
 }
 
-void SettingsService::handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat = false) {
+bool SettingsService::handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat = false) {
     const bool versionChanged = buttonEepromSettings.fwVersion != currentFWVersion;
 
     if (versionChanged && requireEEPROMFormat) {
@@ -340,9 +340,11 @@ void SettingsService::handleVersionChange(unsigned int currentFWVersion, bool re
         this->clearEeprom();
         this->writeToEEPROM(defaultEEPROMConfig);
         this->buttonEepromSettings = defaultEEPROMConfig;
+        return true;
     }else {
         this->buttonEepromSettings.fwVersion = currentFWVersion;
         this->writeToEEPROM(buttonEepromSettings);
+        return false;
     }
 }
 

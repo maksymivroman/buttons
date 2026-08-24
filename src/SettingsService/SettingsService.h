@@ -51,7 +51,7 @@ public:
     bool getLastStatePressed();
     void setLastState(int state);
 
-    void handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat);
+    bool handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat);
 
     String macAddress() const;
     String localIPAddress() const;

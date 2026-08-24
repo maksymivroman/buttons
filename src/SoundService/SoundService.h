@@ -17,6 +17,7 @@ public:
     void onIntegrationMessage();
     void onRemoteTrigger();
     void onExternal();
+    void onFWUpdate(bool force = true);
 
     bool useSound = false;
 
