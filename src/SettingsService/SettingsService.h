@@ -51,7 +51,7 @@ public:
     bool getLastStatePressed();
     void setLastState(int state);
 
-    void handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat);
+    bool handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat);
 
     String macAddress() const;
     String localIPAddress() const;
@@ -66,7 +66,7 @@ public:
 
 private:
     void writeButtonEepromSettings(String& config);
-    void writeToEEPROM(EEPROM_SETTINGS settings);
+    void writeToEEPROM(const EEPROM_SETTINGS &settings);
 
     void updateDynamicEEPROM(EEPROM_DYNAMIC dynamicProps);
 

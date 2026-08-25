@@ -92,9 +92,8 @@ void setup() {
 
     ledService.setLedAction(ACTIONS::LOADING, true);
 
-    buttonSettings.handleVersionChange(currentFWVersion.uint_version(), currentFWVersion.EEPROMStructureChanged());
-
-    const bool serialEventsEnabled = buttonSettings.serialEvents();
+    auto isVersionChanged = buttonSettings.handleVersionChange(currentFWVersion.uint_version(), currentFWVersion.EEPROMStructureChanged());
+    auto serialEventsEnabled = buttonSettings.serialEvents();
 
     if (buttonSettings.loggerEnabled()) {
         if (serialEventsEnabled && (buttonSettings.loggerLevel() == SERIAL_AND_LOCAL || buttonSettings.loggerLevel() == LOGGER_SERIAL)) {
@@ -141,9 +140,11 @@ void setup() {
     notifier.useSound = buttonSettings.useSoundNotification();
     networkService.setWiFiMode(buttonSettings.wiFiMode());
 
-    buttonState.setOperationMode(static_cast<OPERATION_MODE>(digitalRead(buttonPin)));
+    auto opMode = static_cast<OPERATION_MODE>(digitalRead(buttonPin));
+    buttonState.setOperationMode(isVersionChanged ? SETUP : opMode);
 
     if(buttonState.isSetupOperationMode()) {
+        if(isVersionChanged) notifier.onFWUpdate();
         ledService.setLedAction(ACTIONS::WARN, true);
         const char *networkSsid =  buttonSettings.customHotspotSsid();
         networkService.ButtonHotspot(true, networkSsid, hotspotPass);

@@ -59,3 +59,13 @@ void SoundService::onExternal() {
         noTone(buzzerPin);
     }
 }
+
+void SoundService::onFWUpdate(bool force) {
+    if (force || useSound) {
+        for (int i = 0; i < 5; i++) {
+            tone(buzzerPin, 500 * i, 80);
+            delay(70);
+        }
+        noTone(buzzerPin);
+    }
+}
