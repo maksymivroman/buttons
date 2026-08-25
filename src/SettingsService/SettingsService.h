@@ -66,7 +66,7 @@ public:
 
 private:
     void writeButtonEepromSettings(String& config);
-    void writeToEEPROM(EEPROM_SETTINGS settings);
+    void writeToEEPROM(const EEPROM_SETTINGS &settings);
 
     void updateDynamicEEPROM(EEPROM_DYNAMIC dynamicProps);
 

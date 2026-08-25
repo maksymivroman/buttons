@@ -28,13 +28,7 @@ String Version::str_fullVersion() const {
 }
 
 unsigned int Version::uint_version() const {
-    std::ostringstream vs;
-    vs << this->major << this->minor << this->patch;
-
-    unsigned int version;
-    std::istringstream(vs.str()) >> version;
-
-    return version;
+    return this->major * 10000 + this->minor * 100 + this->patch;
 }
 
 bool Version::EEPROMStructureChanged() const {

@@ -92,9 +92,8 @@ void setup() {
 
     ledService.setLedAction(ACTIONS::LOADING, true);
 
-    const bool isVersionChanged = buttonSettings.handleVersionChange(currentFWVersion.uint_version(), currentFWVersion.EEPROMStructureChanged());
-
-    const bool serialEventsEnabled = buttonSettings.serialEvents();
+    auto isVersionChanged = buttonSettings.handleVersionChange(currentFWVersion.uint_version(), currentFWVersion.EEPROMStructureChanged());
+    auto serialEventsEnabled = buttonSettings.serialEvents();
 
     if (buttonSettings.loggerEnabled()) {
         if (serialEventsEnabled && (buttonSettings.loggerLevel() == SERIAL_AND_LOCAL || buttonSettings.loggerLevel() == LOGGER_SERIAL)) {

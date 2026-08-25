@@ -307,10 +307,11 @@ unsigned int SettingsService::fwVersion() const {
     return buttonEepromSettings.fwVersion;
 }
 
-void SettingsService::writeToEEPROM(EEPROM_SETTINGS settings) {
+void SettingsService::writeToEEPROM(const EEPROM_SETTINGS &settings) {
     logger.log("[SettingsService] -> Write to EEPROM ", sizeof settings, " bytes...");
     EEPROM.begin(this->totalEepromSize());
     EEPROM.put(0, settings);
+    EEPROM.commit();
     EEPROM.end();
     logger.log("[SettingsService] -> Write to EEPROM. DONE");
 }
@@ -335,17 +336,18 @@ bool SettingsService::handleVersionChange(unsigned int currentFWVersion, bool re
     const bool versionChanged = buttonEepromSettings.fwVersion != currentFWVersion;
 
     if (versionChanged && requireEEPROMFormat) {
-        EEPROM_SETTINGS defaultEEPROMConfig;
-        defaultEEPROMConfig.fwVersion = currentFWVersion;
-        this->clearEeprom();
-        this->writeToEEPROM(defaultEEPROMConfig);
-        this->buttonEepromSettings = defaultEEPROMConfig;
-        return true;
-    }else {
-        this->buttonEepromSettings.fwVersion = currentFWVersion;
+        buttonEepromSettings = EEPROM_SETTINGS{};
+        buttonEepromSettings.fwVersion = currentFWVersion;
         this->writeToEEPROM(buttonEepromSettings);
-        return false;
+        return true;
     }
+
+    if (versionChanged) {
+        buttonEepromSettings.fwVersion = currentFWVersion;
+        this->writeToEEPROM(buttonEepromSettings);
+    }
+
+    return false;
 }
 
 String SettingsService::macAddress() const {
