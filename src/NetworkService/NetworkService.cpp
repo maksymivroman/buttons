@@ -51,19 +51,30 @@ void NetworkService::ButtonHotspot(bool isOn, const char* ssid, const char* pass
     }
 }
 
-NETWORKLIST NetworkService::WiFiList() {
-    NETWORKLIST list;
-    list.size = WiFi.scanNetworks();
-    list.arr = new String[list.size];
+void NetworkService::getNetworksJson(JsonObject &result) {
+    int16_t n = WiFi.scanComplete();
 
-    logger.log("[NetworkService] Networks found: ", list.size);
-
-    for (int i = 0 ; i < list.size; i++) {
-        logger.logSerial("[NetworkService] SSID: ", WiFi.SSID(i).c_str());
-        list.arr[i] = WiFi.SSID(i);
+    if (n == WIFI_SCAN_FAILED) {
+        WiFi.scanNetworks(true);
+        n = 0;
+    } else if (n == WIFI_SCAN_RUNNING) {
+        n = 0;
     }
 
-    return list;
+    logger.log("[NetworkService] Networks found: ", n);
+
+    JsonArray networks = result.createNestedArray("networks");
+    for (int16_t i = 0; i < n; ++i) {
+        JsonObject item = networks.createNestedObject();
+        item["ssid"] = WiFi.SSID(i);
+        item["rssi"] = WiFi.RSSI(i);
+        item["secure"] = (WiFi.encryptionType(i) != ENC_TYPE_NONE);
+        logger.logSerial("[NetworkService] SSID: ", WiFi.SSID(i).c_str());
+    }
+
+    if (n > 0) {
+        WiFi.scanDelete();
+    }
 }
 
 bool NetworkService::isConnectedToWiFi() {
@@ -90,6 +101,7 @@ String NetworkService::ipAddress() const {
     switch (WiFi.getMode()) {
         case WIFI_STA:
             return WiFi.localIP().toString();
+        case WIFI_AP:
         case WIFI_AP_STA:
             return WiFi.softAPIP().toString();
         default:

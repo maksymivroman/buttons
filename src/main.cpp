@@ -5,7 +5,7 @@
 #include "ButtonOTAUpdate/AsyncOtaUpdate.h"
 #include "Global/Global.hpp"
 #include "Global/Version.h"
-#include "Global/TimeZones.hpp"
+#include "Global/SettingsOptions.hpp"
 #include "HTMLPage/html-page.hpp"
 #include "HTMLPage/editor-page.hpp"
 #include "LEDService/LEDService.h"
@@ -22,6 +22,7 @@
 #include "ButtonState/ButtonState.h"
 #include "ButtonTrigger/Trigger.h"
 #include "ButtonFlags/ButtonFlags.h"
+#include "ApiResponse/ApiResponse.h"
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -49,7 +50,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,5,3, true);
+Version currentFWVersion(1,6,0, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -132,11 +133,7 @@ void setup() {
     auto eventsData = buttonSettings.events();
     bool serialEvents = buttonSettings.serialEvents();
 
-    WiFiCONFIG wiFiConnDetails = buttonSettings.getWiFiConnDetails();
-    EEPROM_SETTINGS configuration = buttonSettings.getButtonConfig();
     KEYSTORESETTINGS keystoreSettings = buttonSettings.keystoreSettings();
-    NETWORKLIST wiFiList;
-    wiFiList = networkService.WiFiList();
     notifier.useSound = buttonSettings.useSoundNotification();
     networkService.setWiFiMode(buttonSettings.wiFiMode());
 
@@ -148,12 +145,12 @@ void setup() {
         ledService.setLedAction(ACTIONS::WARN, true);
         const char *networkSsid =  buttonSettings.customHotspotSsid();
         networkService.ButtonHotspot(true, networkSsid, hotspotPass);
+        WiFi.scanNetworks(true);
     }
 
     ledService.setLedAction(ACTIONS::DONE, true);
 
-    htmlComponent.setHtmlPageData(wiFiConnDetails.ssid, wiFiConnDetails.password, eventsData, wiFiList, configuration,
-                                  buttonState.isRunOperationMode(), buttonSettings.buttonFlags());
+    htmlComponent.setClientMode(buttonState.isRunOperationMode());
     eventService.SetEvents(*eventsData, serialEvents);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -165,8 +162,40 @@ void setup() {
     });
 
     server.on("/events", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String events = *buttonSettings.events();
-        request->send_P(200, "text/html", events.c_str());
+        ApiResponse::sendSuccess(request, [](JsonObject &result) {
+            buttonSettings.getEventsJson(result);
+        }, 2048);
+    });
+
+    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) {
+        ApiResponse::sendSuccess(request, [](JsonObject &result) {
+            buttonSettings.getSettingsJson(result);
+        }, 2560);
+    });
+
+    server.on("/networks", HTTP_GET, [](AsyncWebServerRequest *request) {
+        ApiResponse::sendSuccess(request, [](JsonObject &result) {
+            networkService.getNetworksJson(result);
+        }, 1536);
+    });
+
+    server.on("/status", HTTP_GET, [](AsyncWebServerRequest *request) {
+        ApiResponse::sendSuccess(request, [](JsonObject &result) {
+            result["fwVersion"] = currentFWVersion.str_version();
+            result["hwVersion"] = currentFWVersion.getBoardName();
+            result["mac"] = buttonSettings.macAddress();
+            result["ip"] = networkService.ipAddress();
+            result["heap"] = ESP.getFreeHeap();
+            result["ksKeys"] = keystore.currentItemsCount();
+            result["toggleState"] = buttonState.getToggleMode() ? "PRESSED" : "RELEASED";
+            result["wiFiMode"] = networkService.getWiFIMode();
+
+            EEPROM_FLAGS flags = buttonSettings.buttonFlags();
+            JsonObject rgbFlags = result.createNestedObject("rgbFlags");
+            rgbFlags["rDisabled"] = flags.ledRDisabled;
+            rgbFlags["gDisabled"] = flags.ledGDisabled;
+            rgbFlags["bDisabled"] = flags.ledBDisabled;
+        }, 1024);
     });
 
     server.on("/logsData", HTTP_GET, [](AsyncWebServerRequest *request) {

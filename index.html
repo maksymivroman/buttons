@@ -369,8 +369,38 @@
             transform-origin: top left;
         }
 
+        .networks-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .form-field label {
+            margin-bottom: 8px;
+        }
+
+        .form-field input, .form-field select {
+            display: block;
+            min-width: 180px;
+            padding: .175rem .75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+        }
+
         @media screen and (max-width: 800px) {
-            .wifi-credentials {
+            .networks-container {
                 flex-direction: column;
             }
 
@@ -408,10 +438,21 @@
     <div class="content">
         <h2 class="section-header">Connectivity</h2>
         <div class="connectivity-container border">
-            <div class="wifi-credentials">
-                %WIFILIST%
-                <label class="label"></label>
-                %NETWORKINFO%
+            <div class="networks-container">
+                <div class="form-field">
+                    <label for="networks">Available networks</label>
+                    <select id="networks"></select>
+                </div>
+
+                <div class="form-field">
+                    <label for="wifiSsid">SSID</label>
+                    <input id="wifiSsid">
+                </div>
+
+                <div class="form-field">
+                    <label for="wifiPass">PASSWORD</label>
+                    <input id="wifiPass" type="password">
+                </div>
             </div>
             <div class="item mt-m" style="min-height: 55px; flex-wrap: wrap; gap: 20px;">
                 <input type="checkbox" id="useHotspotSsid">
@@ -453,39 +494,17 @@
             <div class="item">
                 <input type="checkbox" id="loggerEnabled">
                 <label style="margin-left: 8px; margin-right: 8px;" for="loggerEnabled">Logger</label>
-                <select class="control" style="height: auto; min-width: auto;" id="loggerLevel">
-                    <option value="0">Serial & Local</option>
-                    <option value="1">Serial (115200 8-N-1)</option>
-                    <option value="2">Local log (/logs)</option>
-                </select>
+                <select class="control" style="height: auto; min-width: auto;" id="loggerLevel"></select>
             </div>
 
             <div class="item">
                 <label style="margin-right: 8px;" for="wiFiMode">WiFi mode</label>
-                <select class="control" style="height: auto; min-width: auto;" id="wiFiMode">
-                    <option value="0">Auto</option>
-                    <option value="1">11B</option>
-                    <option value="2">11G</option>
-                    <option value="3">11N</option>
-                </select>
+                <select class="control" style="height: auto; min-width: auto;" id="wiFiMode"></select>
             </div>
 
             <div class="item">
                 <label style="margin-right: 8px; min-width: fit-content;" for="timezone">Time zone</label>
-                <select class="control" style="height: auto; max-width: 200px;" id="timezone">
-                    <option value="0">(UTC+00:00) London, Dublin (GMT/BST)</option>
-                    <option value="1">(UTC+01:00) Berlin, Warsaw, Paris (CET/CEST)</option>
-                    <option value="2">(UTC+02:00) Kyiv, Athens, Bucharest (EET/EEST)</option>
-                    <option value="3">(UTC+03:00) Istanbul, Riyadh</option>
-                    <option value="4">(UTC+04:00) Dubai, Baku (GST/AZT)</option>
-                    <option value="5">(UTC+05:30) Delhi, Mumbai, Kolkata (IST)</option>
-                    <option value="6">(UTC+08:00) Beijing, Singapore, Hong Kong (CST)</option>
-                    <option value="7">(UTC+09:00) Tokyo, Seoul (JST/KST)</option>
-                    <option value="8">(UTC-05:00) New York, Toronto (EST/EDT)</option>
-                    <option value="9">(UTC-06:00) Chicago, Mexico City (CST/CDT)</option>
-                    <option value="10">(UTC-08:00) Los Angeles, Vancouver (PST/PDT)</option>
-                    <option value="11">(UTC+00:00) Fixed UTC</option>
-                </select>
+                <select class="control" style="height: auto; max-width: 200px;" id="timezone"></select>
             </div>
 
             <div class="item">
@@ -583,7 +602,7 @@
             </div>
             <div style="display: flex; flex-flow: row; align-items: center; flex-wrap: wrap;">
                 <h5 class="item m-0">Update keystore URL: </h5>
-                <h5 class="item m-0">http://%IP%/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
+                <h5 class="item m-0">http://<span class="device-ip">192.168.4.1</span>/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
             </div>
             <h5 class="item m-0" style="font-weight: normal;">delay - if provided, send events will be initiated after delay, ms</h5>
             <h5 class="item m-0" style="font-weight: normal;">Use $key$ expression for event data, and it will be replaced by corresponding value</h5>
@@ -640,7 +659,7 @@
             </div>
             <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
                 <h5 class="item m-0">URL structure:</h5>
-                <h5 class="item m-0">http://%IP%/external?led=${on/off}&beep={on/off}</h5>
+                <h5 class="item m-0">http://<span class="device-ip">192.168.4.1</span>/external?led=${on/off}&beep={on/off}</h5>
             </div>
         </div>
         
@@ -650,10 +669,7 @@
             <div class="item">
                 <input type="checkbox" id="statisticEnabled">
                 <label for="statisticEnabled">Enable Reports</label>
-                <select class="control" style="height: auto; min-width: auto;" id="statisticLevel">
-                    <option value="0">Simple</option>
-                    <option value="1">Extended</option>
-                </select>
+                <select class="control" style="height: auto; min-width: auto;" id="statisticLevel"></select>
             </div>
             <div class="item --vertical" style="flex: 1; max-width: 400px;">
                 <label style="word-break: keep-all" for="statisticApi">API url</label>
@@ -683,7 +699,7 @@
                 <label for="customServer">Enable custom server</label>
             </div>
             <span>Server Path: </span>
-            <span>%SERVER_PATH%</span>
+            <a id="serverPathLink" target="_blank" href="#"></a>
             <button type="button" onclick="location.href='/server/editor'" class="btn btn-blue" style="padding: 0 4px; margin-left: 16px;">Open Editor</button>
         </div>
 
@@ -696,38 +712,40 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); background: lightgray;">
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">FW version:</h5>
-            <h5 style="margin: 5px">%FWVERSION% </h5>
+            <h5 style="margin: 5px" id="fwVersion"></h5>
         </div>
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">HW version:</h5>
-            <h5 style="margin: 5px">%HWVERSION% </h5>
+            <h5 style="margin: 5px" id="hwVersion"></h5>
         </div>
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">MAC:</h5>
-            <h5 style="margin: 5px">%MAC% </h5>
+            <h5 style="margin: 5px" id="mac"></h5>
         </div>
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP:</h5>
-            <h5 style="margin: 5px">%IP% </h5>
+            <h5 style="margin: 5px" id="ip"></h5>
         </div>
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
-            <h5 style="margin: 5px">%HEAP% </h5>
+            <h5 style="margin: 5px" id="heap"></h5>
         </div>
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Keystore keys:</h5>
-            <h5 style="margin: 5px">%KSKEYS%</h5>
+            <h5 style="margin: 5px" id="ksKeys"></h5>
         </div>
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Toggle state:</h5>
-            <h5 style="margin: 5px">%TOGGLESTATE%</h5>
+            <h5 style="margin: 5px" id="toggleState"></h5>
         </div>
         <div class="flexbox-wrap">
             <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">WiFi mode:</h5>
-            <h5 style="margin: 5px">%WIFIMODE%</h5>
+            <h5 style="margin: 5px" id="wiFiModeStatus"></h5>
         </div>
         <div class="flexbox-wrap" style="align-items: center; gap: 4px">
-            %RGB_FLAGS%
+            <div id="rFlag" class="rgb-info-square"><h5 style="margin: 5px; color: #e50c0c;">R</h5></div>
+            <div id="gFlag" class="rgb-info-square"><h5 style="margin: 5px; color: #077307;">G</h5></div>
+            <div id="bFlag" class="rgb-info-square"><h5 style="margin: 5px; color: #4949ff;">B</h5></div>
         </div>
     </div>
 
@@ -845,8 +863,8 @@
 
     let ledConfig = {};
     function saveSettings() {
-        const name = document.getElementById('wifiname')?.value;
-        const pass = document.getElementById('wifipass')?.value;
+        const name = document.getElementById('wifiSsid')?.value || document.getElementById('wifiname')?.value;
+        const pass = document.getElementById('wifiPass')?.value || document.getElementById('wifipass')?.value;
         const hSsid = document.getElementById('hotspotSsid').value;
         // const clientWebAccess = Number(document.getElementById('clientWebAccess')?.checked) || config.clientWebAccess;
         // const enableOtaUpdate = Number(document.getElementById('enableOtaUpdate')?.checked) || config.enableOtaUpdate;
@@ -913,58 +931,197 @@
         httpPOST(data, "Save settings", "Settings saved. Rebooting...", true, handleSuccessSave);
     }
 
-    function showSaved() {
-        const checkboxSettings = ['useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled','useHotspotSsid',
-            'saveLastState', 'overrideLedConfig', 'serialEvents', 'customServer',
-            'remoteTriggering','restoreLastStateOnLoad','keystoreEnabled','remoteStateChange','sendEventOnKeystoreUpdate','delaySendEvents'];
-        const optionSettings = ['loggerLevel', 'statisticLevel', 'wiFiMode', 'timezone'];
-        const inputsSettings = ['statisticApi', 'hotspotSsid'];
-        const securedCheckboxSettings = ['clientWebAccess', 'enableOtaUpdate'];
-
-        config = {};//%CONFIGURATION% ;
-        // eventDataObj = Object( %EVENTINFO% );
-        eventDataObj = Object( {"$R$ssss":"wewe wee"} );
-
-        for(let key in config) {
-            if (checkboxSettings.some(k => k === key)) {
-                document.getElementById(key).checked = config[key];
-            } else if (optionSettings.some(k => k === key)) {
-                document.getElementById(key).selectedIndex = config[key];
-            } else if (inputsSettings.some(k => k === key)) {
-                document.getElementById(key).value = config[key];
-            } else if (securedCheckboxSettings.some(k => k === key)) {
-                try {
-                    document.getElementById(key).checked = config[key];
-                } catch (e) {
-                    console.warn('some options are restricted in client mode');
+    async function loadData() {
+        try {
+            const statusRes = await fetch('/status');
+            if (statusRes.ok) {
+                const statusJson = await statusRes.json();
+                if (statusJson && statusJson.result) {
+                    renderStatus(statusJson.result);
                 }
+            }
+
+            const settingsRes = await fetch('/settings');
+            if (settingsRes.ok) {
+                const settingsData = await settingsRes.json();
+                if (settingsData && settingsData.result) {
+                    config = settingsData.result;
+                    renderSettings(config);
+                }
+            }
+
+            const eventsRes = await fetch('/events');
+            if (eventsRes.ok) {
+                const eventsJson = await eventsRes.json();
+                if (eventsJson && eventsJson.result) {
+                    eventDataObj = eventsJson.result || {};
+                    populateTable(eventDataObj);
+                }
+            }
+
+            const networksRes = await fetch('/networks');
+            if (networksRes.ok) {
+                const networksJson = await networksRes.json();
+                if (networksJson && networksJson.result) {
+                    const list = Array.isArray(networksJson.result) ? networksJson.result : (networksJson.result.networks || []);
+                    if (list.length > 0) {
+                        renderWifiList(list);
+                    } else {
+                        setTimeout(async () => {
+                            try {
+                                const retryRes = await fetch('/networks');
+                                if (retryRes.ok) {
+                                    const retryJson = await retryRes.json();
+                                    const retryList = Array.isArray(retryJson.result) ? retryJson.result : (retryJson.result.networks || []);
+                                    if (retryList.length > 0) renderWifiList(retryList);
+                                }
+                            } catch (_) {}
+                        }, 2500);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error loading settings, events, networks, or status:', e);
+        }
+    }
+
+    function renderStatus(status) {
+        if (!status) return;
+
+        if (document.getElementById('fwVersion')) document.getElementById('fwVersion').textContent = status.fwVersion || '';
+        if (document.getElementById('hwVersion')) document.getElementById('hwVersion').textContent = status.hwVersion || '';
+        if (document.getElementById('mac')) document.getElementById('mac').textContent = status.mac || '';
+        if (document.getElementById('ip')) document.getElementById('ip').textContent = status.ip || '';
+        if (document.getElementById('heap')) document.getElementById('heap').textContent = status.heap !== undefined ? status.heap : '';
+        if (document.getElementById('ksKeys')) document.getElementById('ksKeys').textContent = status.ksKeys !== undefined ? status.ksKeys : '';
+        if (document.getElementById('toggleState')) document.getElementById('toggleState').textContent = status.toggleState || '';
+        if (document.getElementById('wiFiModeStatus')) document.getElementById('wiFiModeStatus').textContent = status.wiFiMode || '';
+
+        document.querySelectorAll('.device-ip').forEach(el => {
+            el.textContent = status.ip || window.location.host;
+        });
+
+        if (status.rgbFlags) {
+            const rFlag = document.getElementById('rFlag');
+            const gFlag = document.getElementById('gFlag');
+            const bFlag = document.getElementById('bFlag');
+            if (rFlag) rFlag.className = 'rgb-info-square ' + (status.rgbFlags.rDisabled ? 'marked-flag' : '');
+            if (gFlag) gFlag.className = 'rgb-info-square ' + (status.rgbFlags.gDisabled ? 'marked-flag' : '');
+            if (bFlag) bFlag.className = 'rgb-info-square ' + (status.rgbFlags.bDisabled ? 'marked-flag' : '');
+        }
+    }
+
+    function renderWifiList(networks) {
+        const select = document.getElementById('networks');
+        if (!select || !networks) return;
+        select.innerHTML = '<option value="" disabled selected>Select network...</option>';
+        networks.forEach(net => {
+            const ssid = typeof net === 'string' ? net : (net.ssid || '');
+            if (ssid) {
+                const opt = document.createElement('option');
+                opt.value = ssid;
+                const rssi = typeof net === 'object' && net.rssi !== undefined ? ` (${net.rssi} dBm)` : '';
+                const lock = typeof net === 'object' && net.secure ? ' 🔒' : '';
+                opt.textContent = `${ssid}${rssi}${lock}`;
+                select.appendChild(opt);
+            }
+        });
+    }
+
+    function renderOptions(selectId, optionsList) {
+        const select = document.getElementById(selectId);
+        if (!select || !optionsList || !optionsList.length) return;
+        select.innerHTML = '';
+        optionsList.forEach(opt => {
+            const optionEl = document.createElement('option');
+            optionEl.value = opt.value;
+            optionEl.textContent = opt.label;
+            select.appendChild(optionEl);
+        });
+    }
+
+    function renderSettings(cfg) {
+        if (!cfg) return;
+
+        if (cfg.options) {
+            renderOptions('loggerLevel', cfg.options.loggerLevels);
+            renderOptions('wiFiMode', cfg.options.wiFiModes);
+            renderOptions('timezone', cfg.options.timezones);
+            renderOptions('statisticLevel', cfg.options.statisticLevels);
+        }
+
+        const ssidEl = document.getElementById('wifiSsid') || document.getElementById('wifiname');
+        if (ssidEl && cfg.wifiSsid !== undefined) {
+            ssidEl.value = cfg.wifiSsid;
+        }
+        const passEl = document.getElementById('wifiPass') || document.getElementById('wifipass');
+        if (passEl && cfg.wifiPass !== undefined) {
+            passEl.value = cfg.wifiPass;
+        }
+        if (document.getElementById('statisticApi') && cfg.statisticApi !== undefined) {
+            document.getElementById('statisticApi').value = cfg.statisticApi;
+        }
+        if (document.getElementById('hotspotSsid') && cfg.hotspotSsid !== undefined) {
+            document.getElementById('hotspotSsid').value = cfg.hotspotSsid;
+        }
+
+        const checkboxSettings = [
+            'useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled',
+            'saveLastState', 'overrideLedConfig', 'serialEvents', 'customServer',
+            'remoteTriggering', 'restoreLastStateOnLoad', 'keystoreEnabled',
+            'remoteStateChange', 'sendEventOnKeystoreUpdate', 'delaySendEvents',
+            'clientWebAccess', 'enableOtaUpdate'
+        ];
+
+        for (const key of checkboxSettings) {
+            const el = document.getElementById(key);
+            if (el && cfg[key] !== undefined) {
+                el.checked = Boolean(cfg[key]);
             }
         }
 
-        if (!config.enableOtaUpdate && !document.getElementById('enableOtaUpdate')) {
-            document.getElementById('updateBtn').remove();
+        const hotspotCheckbox = document.getElementById('useHotspotSsid');
+        if (hotspotCheckbox && cfg.customHSsid !== undefined) {
+            hotspotCheckbox.checked = Boolean(cfg.customHSsid);
         }
 
-        try {
-            JSON.parse('"' + eventDataObj + '"');
-        } catch (e) {
-            eventDataObj = {"sample_event_host": "sample_event_data"};
-            console.warn('no saved events found');
+        if (document.getElementById('loggerLevel') && cfg.loggerLevel !== undefined) {
+            document.getElementById('loggerLevel').value = cfg.loggerLevel;
+        }
+        if (document.getElementById('wiFiMode') && cfg.wiFiMode !== undefined) {
+            document.getElementById('wiFiMode').value = cfg.wiFiMode;
+        }
+        if (document.getElementById('timezone') && cfg.timezone !== undefined) {
+            document.getElementById('timezone').value = cfg.timezone;
+        }
+        if (document.getElementById('statisticLevel') && cfg.statisticLevel !== undefined) {
+            document.getElementById('statisticLevel').value = cfg.statisticLevel;
         }
 
-        const ledContainer = document.getElementById('led-container');
-        ledConfig = {...config.ledConfig};
-        initLedControls(ledContainer, ledConfig);
-    }
+        if (!cfg.enableOtaUpdate && !document.getElementById('enableOtaUpdate')) {
+            const updateBtn = document.getElementById('updateBtn');
+            if (updateBtn) updateBtn.remove();
+        }
 
-    function update() {
-        const select = document.getElementById('networks');
-        const option = select.options[select.selectedIndex];
-        document.getElementById('wifiname').value = option.value;
+        if (cfg.ledConfig) {
+            const ledContainer = document.getElementById('led-container');
+            ledConfig = {...cfg.ledConfig};
+            initLedControls(ledContainer, ledConfig);
+        }
+
+        if (cfg.serverPath) {
+            const serverLink = document.getElementById('serverPathLink');
+            if (serverLink) {
+                const path = cfg.serverPath.startsWith('/') ? cfg.serverPath : '/' + cfg.serverPath;
+                serverLink.href = path;
+                serverLink.textContent = window.location.host + path;
+            }
+        }
     }
 
     let config, eventDataObj;
     let tempEventsObj = {};
+    let isEditMode = false;
 
     let entryKeyToEdit;
 
@@ -989,10 +1146,10 @@
         }
         for (const key in events) {
             const row = `
-                        <tr ${colorMap[key.substring(0,3)]}>
+                        <tr ${colorMap[key.substring(0,3)] || ''}>
                           <td>${key}</td>
                           <td >${events[key]}</td>
-                          <td style="display: flex; justify-content: flex-end; gap: 8px;">
+                          <td style="display: ${isEditMode ? 'flex' : 'none'}; justify-content: flex-end; gap: 8px;">
                             <button class="btn btn-blue small-btn" onclick="openEditSingleEventModal('${key}')">Edit</button>
                             <button class="btn btn-red small-btn" onclick="removeEntry('${key}')">Remove</button>
                           </td>
@@ -1000,6 +1157,7 @@
                       `;
             tbody.insertAdjacentHTML('beforeend', row);
         }
+        toggleActionsColumn(isEditMode);
     }
 
     function addEventEntry(host, data) {
@@ -1167,8 +1325,15 @@
         closeEditor();
     }
 
-    showSaved();
-    populateTable();
+    const networkSelectCtrl = document.getElementById('networks');
+    if (networkSelectCtrl) {
+        networkSelectCtrl.addEventListener('change', () => {
+            const ssidInput = document.getElementById('wifiSsid') || document.getElementById('wifiname');
+            if (ssidInput) ssidInput.value = networkSelectCtrl.value;
+        });
+    }
+
+    loadData();
     toggleActionsColumn(false);
 
     function handleSuccessSave() {
@@ -1255,8 +1420,8 @@
         } else {
             editActionsContainer.style.display = 'none';
             toggleEditModeButton.style.display = '';
-            populateTable();
             toggleActionsColumn(false);
+            populateTable();
         }
     }
 
@@ -1268,9 +1433,10 @@
     }
 
     function toggleActionsColumn(showControls) {
+        isEditMode = Boolean(showControls);
         const header = document.querySelector('#dataTable thead th:nth-child(3)');
         const cells = document.querySelectorAll('#dataTable tbody td:nth-child(3)');
-        header.style.display = showControls ? '' : 'none';
+        if (header) header.style.display = showControls ? '' : 'none';
         cells.forEach(cell => cell.style.display = showControls ? 'flex' : 'none');
     }
 

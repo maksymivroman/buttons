@@ -6,6 +6,7 @@
 #define EVENT_BUTTON_NETWORKSERVICE_H
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include "Global/Global.hpp"
 #include <map>
 
@@ -17,7 +18,7 @@ public:
     void setWiFiMode(BUTTON_WIFI_MODE mode);
     void ButtonHotspot(bool isOn, const char* ssid, const char* pass);
     void ConnectToWiFi(const String& ssid, const String& pass);
-    NETWORKLIST WiFiList();
+    void getNetworksJson(JsonObject &result);
     bool isConnectedToWiFi();
     bool isAPMode();
 

@@ -47,11 +47,6 @@ struct WiFiCONFIG {
     String password;
 };
 
-struct NETWORKLIST {
-    String *arr = nullptr;
-    int8_t size = 0;
-};
-
 struct RGBCONFIG {
     unsigned char r;
     unsigned char g;
