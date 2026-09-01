@@ -139,7 +139,7 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
         # Dynamic replacement of components
         components = load_components_from_hpp()
         for name, value in components.items():
-            content = content.replace(f"%{name}%", value)
+            content = content.replace(f"^{name}^", value)
 
         self.send_text(content, 200, "text/html")
 
@@ -258,7 +258,7 @@ def main():
     print("-" * 60)
     print(f"Registered SSR Components ({len(components)}):")
     for name in sorted(components.keys()):
-        print(f"  - %{name}%")
+        print(f"  - ^{name}^")
     print("=" * 60)
     print("Press Ctrl+C to stop the server.\n")
 

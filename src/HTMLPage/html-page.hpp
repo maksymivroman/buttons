@@ -421,7 +421,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <div style="display: flex; flex-flow: column; overflow: auto;">
     <div class="header">
         <div style="display: flex; align-items: center;">
-            %DEVICE_LOGO%
+            ^DEVICE_LOGO^
             <div style="display: flex; align-items: baseline; margin-left: 12px;">
                 <h2 style="color: white; font-weight: 200;">event button</h2>
                 <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
@@ -518,7 +518,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <label style="margin-left: 8px;" for="useSound">Use sound notification</label>
             </div>
 
-            %CLIENT_MODE_OPTIONS%
+            ^CLIENT_MODE_OPTIONS^
 
         </div>
 
@@ -1526,7 +1526,7 @@ const char logs_page[] PROGMEM = R"rawliteral(
 <div style="display: flex; flex-flow: column; overflow: auto;">
     <div class="header">
         <div style="display: flex; align-items: center;">
-            %DEVICE_LOGO%
+            ^DEVICE_LOGO^
             <div style="display: flex; align-items: baseline; margin-left: 12px;">
                 <h2 style="color: white; font-weight: 200;">event button</h2>
                 <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>

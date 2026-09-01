@@ -134,7 +134,7 @@ const char editor_html[] PROGMEM = R"rawliteral(
 
 <div class="header">
     <div class="header-title">
-        %DEVICE_LOGO%
+        ^DEVICE_LOGO^
         <h2>Event button</h2>
         <h4>| Server Editor</h4>
     </div>
