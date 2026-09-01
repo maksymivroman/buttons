@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Local Development Server for Event Button
-- Replaces %COMPONENT% placeholders dynamically from src/HTMLPage/html-page.hpp
+- Replaces ^COMPONENT^ placeholders dynamically from src/HTMLPage/index-html-page.hpp
 - Serves all frontend pages (/, /flags, /logs, /server/editor, /dashboard)
 - Provides mock API endpoints (/status, /settings, /networks, /events, /flagsData, etc.)
 """
@@ -15,12 +15,12 @@ import urllib.parse
 
 PORT = 8080
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-HTML_PAGE_HPP = os.path.join(BASE_DIR, "src", "HTMLPage", "html-page.hpp")
+HTML_PAGE_HPP = os.path.join(BASE_DIR, "src", "HTMLPage", "index-html-page.hpp")
 
 # In-memory mock state for dev server testing
 MOCK_STATE = {
     "flags": {
-        "ledRDisabled": False,
+        "ledRDisabled": True,
         "ledGDisabled": False,
         "ledBDisabled": False
     },
@@ -89,7 +89,7 @@ MOCK_STATE = {
 
 
 def load_components_from_hpp():
-    """Extracts Components from src/HTMLPage/html-page.hpp namespace Components."""
+    """Extracts Components from src/HTMLPage/index-html-page.hpp namespace Components."""
     components = {}
     if os.path.exists(HTML_PAGE_HPP):
         try:
