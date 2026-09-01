@@ -4,17 +4,19 @@
 
 #include "HTMLComponentBuilder.h"
 #include "HTMLPage/html-page.hpp"
+#include "ButtonState/ButtonState.h"
 
-void HTMLComponentBuilder::setClientMode(bool isClient) {
-    this->isClientMode = isClient;
-}
+HTMLComponentBuilder::HTMLComponentBuilder(const ButtonState &buttonState) : _buttonState(buttonState) {}
 
-String HTMLComponentBuilder::componentById(const String &ref) {
-    if (ref == "CLIENTMODEOPTIONS") {
-        if (!isClientMode) {
-            return FPSTR(Component::CLIENT_MODE_OPTIONS);
+String HTMLComponentBuilder::componentById(const String &ref) const {
+    if (ref == "CLIENT_MODE_OPTIONS") {
+        if (!_buttonState.isRunOperationMode()) {
+            return FPSTR(Components::CLIENT_MODE_OPTIONS);
         }
-        return Component::EMPTY;
+        return Components::NONE;
+    }
+    if (ref == "DEVICE_LOGO") {
+        return FPSTR(Components::DEVICE_LOGO);
     }
     return ref;
 }

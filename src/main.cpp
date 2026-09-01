@@ -8,6 +8,7 @@
 #include "Global/SettingsOptions.hpp"
 #include "HTMLPage/html-page.hpp"
 #include "HTMLPage/editor-page.hpp"
+#include "HTMLPage/flags-html-page.hpp"
 #include "LEDService/LEDService.h"
 #include "SettingsService/SettingsService.h"
 #include "NetworkService/NetworkService.h"
@@ -57,7 +58,7 @@ LEDService ledService;
 SettingsService buttonSettings;
 AsyncWebServer server(80);
 NetworkService networkService;
-HTMLComponentBuilder htmlComponent;
+HTMLComponentBuilder htmlComponent(buttonState);
 SoundService notifier(buzzerPin);
 EventsService eventService;
 AsyncOtaUpdate ButtonOTAUpdate;
@@ -149,8 +150,6 @@ void setup() {
     }
 
     ledService.setLedAction(ACTIONS::DONE, true);
-
-    htmlComponent.setClientMode(buttonState.isRunOperationMode());
     eventService.SetEvents(*eventsData, serialEvents);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -158,7 +157,7 @@ void setup() {
     });
 
     server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send_P(200, "text/html", logs_page);
+        request->send_P(200, "text/html", logs_page, components);
     });
 
     server.on("/events", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -244,30 +243,44 @@ void setup() {
         request->send(responseCode, "text/html", responseData);
     });
 
+    server.on("/flags", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", flags_page, components);
+    });
+
+    server.on("/flagsData", HTTP_GET, [](AsyncWebServerRequest *request) {
+        ApiResponse::sendSuccess(request, [](JsonObject &result) {
+            EEPROM_FLAGS flags = buttonSettings.buttonFlags();
+            result["ledRDisabled"] = flags.ledRDisabled;
+            result["ledGDisabled"] = flags.ledGDisabled;
+            result["ledBDisabled"] = flags.ledBDisabled;
+        }, 512);
+    });
+
     server.on("/flags", HTTP_POST, [](AsyncWebServerRequest *request) {
         unsigned int params = request->params();
         int responseCode = 200;
         String responseData = "OK";
         logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
         if (params > 0) {
-            auto bf = new ButtonFlags;
-            bool hasValidFlags = [params, request, bf]() -> bool {
-                    for (unsigned int i = 0; i < params; i++) {
-                        AsyncWebParameter *param = request->getParam(i);
-                        String paramName = param->name().c_str();
-                        if (bf->isValidFlag(paramName)) return true;
-                    }
-                return false;
-            }();
+            ButtonFlags bf;
+            bool hasValidFlags = false;
+            for (unsigned int i = 0; i < params; i++) {
+                AsyncWebParameter *param = request->getParam(i);
+                String paramName = param->name();
+                if (bf.isValidFlag(paramName)) {
+                    hasValidFlags = true;
+                    break;
+                }
+            }
 
             if (hasValidFlags) {
                 EEPROM_FLAGS buttonFlags = buttonSettings.buttonFlags();
                 for (unsigned int i = 0; i < params; i++) {
                     AsyncWebParameter *param = request->getParam(i);
-                    String flagName = param->name().c_str();
+                    String flagName = param->name();
                     bool value = param->value() == "true" || param->value() == "1";
-                    bf->updateFlags(&buttonFlags, flagName, value);
-                    logger.log("[MAIN->HTTP_POST] Updating Flag: ", flagName, ": ", value);
+                    bf.updateFlags(&buttonFlags, flagName, value);
+                    logger.log("[MAIN->HTTP_POST] Updating Flag: ", flagName.c_str(), ": ", value);
                 }
                 buttonSettings.updateFlagsEEPROM(buttonFlags);
                 RequiredRestart.set();
@@ -313,7 +326,7 @@ void setup() {
     });
 
     server.on("/server/editor", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send_P(200, "text/html", editor_html);
+        request->send_P(200, "text/html", editor_html, components);
     });
 
     server.on("/server/load-config", HTTP_GET, [](AsyncWebServerRequest *request) {

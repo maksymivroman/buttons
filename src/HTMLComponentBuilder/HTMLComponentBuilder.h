@@ -7,14 +7,16 @@
 
 #include <Arduino.h>
 
+class ButtonState;
+
 class HTMLComponentBuilder {
 public:
-    String componentById(const String &ref);
+    explicit HTMLComponentBuilder(const ButtonState &buttonState);
 
-    void setClientMode(bool isClient);
+    String componentById(const String &ref) const;
 
 private:
-    bool isClientMode{false};
+    const ButtonState &_buttonState;
 };
 
 #endif //EVENT_BUTTON_HTMLCOMPONENTBUILDER_H

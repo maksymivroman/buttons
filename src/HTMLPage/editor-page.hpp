@@ -134,12 +134,7 @@ const char editor_html[] PROGMEM = R"rawliteral(
 
 <div class="header">
     <div class="header-title">
-        <svg xmlns="http://www.w3.org/2000/svg" width="28px" height="28px" viewBox="0 3 24 24">
-            <g> <polygon style="fill:#FFFFFF" points="12.08,6.53 23.67,10.2 12.12,14.49 0.36,10.11 12.08,6.53 12.08,6.35 0,10.08 0,14.35 11.99,18.85 23.98,14.35 23.98,10.19 12.08,6.35 "/>
-                <polygon style="fill:#FFFFFF" points="11.99,21.71 0.02,17.12 0.02,19.41 12.01,24 24,19.42 24,17.13 "/>
-                <polygon style="fill:#FFFFFF " points="0.36,10.11 12.12,14.49 23.67,10.2 12.08,6.53 "/>
-            </g>
-        </svg>
+        %DEVICE_LOGO%
         <h2>Event button</h2>
         <h4>| Server Editor</h4>
     </div>
