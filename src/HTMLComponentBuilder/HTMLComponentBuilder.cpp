@@ -3,7 +3,7 @@
 //
 
 #include "HTMLComponentBuilder.h"
-#include "HTMLPage/html-page.hpp"
+#include "HTMLPage/index-html-page.hpp"
 #include "ButtonState/ButtonState.h"
 
 HTMLComponentBuilder::HTMLComponentBuilder(const ButtonState &buttonState) : _buttonState(buttonState) {}

@@ -1,5 +1,5 @@
-#ifndef EVENT_BUTTON_HTML_PAGE_HPP
-#define EVENT_BUTTON_HTML_PAGE_HPP
+#ifndef EVENT_BUTTON_INDEX_HTML_PAGE_HPP
+#define EVENT_BUTTON_INDEX_HTML_PAGE_HPP
 
 #include <Arduino.h>
 
@@ -1628,4 +1628,4 @@ namespace Components {
     const char NONE[] = "";
 }
 
-#endif //EVENT_BUTTON_HTML_PAGE_HPP
+#endif //EVENT_BUTTON_INDEX_HTML_PAGE_HPP

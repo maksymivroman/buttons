@@ -1,5 +1,5 @@
-#ifndef EVENT_BUTTON_EDITOR_PAGE_HPP
-#define EVENT_BUTTON_EDITOR_PAGE_HPP
+#ifndef EVENT_BUTTON_SERVER_EDITOR_PAGE_HPP
+#define EVENT_BUTTON_SERVER_EDITOR_PAGE_HPP
 
 #include <Arduino.h>
 
@@ -273,4 +273,4 @@ const char editor_html[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
-#endif //EVENT_BUTTON_EDITOR_PAGE_HPP
+#endif //EVENT_BUTTON_SERVER_EDITOR_PAGE_HPP
