@@ -3,6 +3,7 @@
 //
 
 #include <Arduino.h>
+#include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <EEPROM.h>
 #include "ArduinoJson.h"
@@ -25,7 +26,7 @@ const String *SettingsService::events() {
 void SettingsService::saveEvents(String events) {
     logger.log("[SettingsService] Save Events");
     logger.logSerial("[SettingsService] saveEvents: ", events);
-    File file = SPIFFS.open(EVENTS_FILE_NAME, "w");
+    File file = LittleFS.open(EVENTS_FILE_NAME, "w");
     [[maybe_unused]] int bytesWritten = file.print(events);
     file.close();
     this->eventsData = events;
@@ -291,23 +292,59 @@ String SettingsService::deviceID() const{
     return espDefaultName;
 }
 
+void SettingsService::formatFS() {
+    logger.log("[SettingsService][LittleFS] Prepare to Format FS");
+    bool success = LittleFS.begin();
+    if (success) {
+        logger.log("[SettingsService][LittleFS] Listing files before format:");
+        Dir root = LittleFS.openDir("/");
+        while (root.next()) {
+            logger.log("[SettingsService][LittleFS] File: ", root.fileName());
+        }
+    } else {
+        logger.log("[SettingsService][LittleFS] Filesystem not mounted, proceeding with raw format...");
+    }
+
+    logger.log("[SettingsService][LittleFS] Formatting FS...");
+    bool formatted = LittleFS.format();
+    formatted ? logger.log("DONE") : logger.log("FAILED!");
+    LittleFS.end();
+    logger.log("[SettingsService][LittleFS] Exit Format FS");
+}
+
 String SettingsService::dataFromFS(const String &fileName) {
     String data;
     const char *file = fileName.c_str();
 
-    bool success = SPIFFS.begin();
-    if (success) {
-        logger.log("[SettingsService][SPIFFS] File system mounted with success");
+    bool success = false;
+    const uint8_t maxRetries = 3;
 
-    } else {
-        logger.log("[SettingsService][SPIFFS] Error mounting the dataFile system");
+    for (uint8_t attempt = 1; attempt <= maxRetries; ++attempt) {
+        success = LittleFS.begin();
+        if (success) {
+            break;
+        }
+        logger.log("[SettingsService][LittleFS] Mount attempt failed: ", attempt);
+        delay(50);
     }
 
-    File dataFile = SPIFFS.open(file, "r");
+    if (!success) {
+        logger.log("[SettingsService][LittleFS] All mount attempts failed. Formatting via formatFS()...");
+        this->formatFS();
+        success = LittleFS.begin();
+    }
+
+    if (success) {
+        logger.log("[SettingsService][LittleFS] File system mounted with success");
+    } else {
+        logger.log("[SettingsService][LittleFS] Error mounting the dataFile system");
+    }
+
+    File dataFile = LittleFS.open(file, "r");
 
     if (!dataFile) {
-        logger.log("[SettingsService][SPIFFS] Error opening dataFile for writing. Creating new");
-        File fileWrite = SPIFFS.open(file, "w");
+        logger.log("[SettingsService][LittleFS] Error opening dataFile for writing. Creating new");
+        File fileWrite = LittleFS.open(file, "w");
         [[maybe_unused]] int bytesWritten = fileWrite.print("{}");
         fileWrite.close();
         return "{}";
@@ -315,34 +352,11 @@ String SettingsService::dataFromFS(const String &fileName) {
         while (dataFile.available()) {
             data += char(dataFile.read());
         }
-        logger.log("[SettingsService][SPIFFS] File name: ", file);
-        logger.logSerial("[SettingsService][SPIFFS] File data: ", data);
+        logger.log("[SettingsService][LittleFS] File name: ", file);
+        logger.logSerial("[SettingsService][LittleFS] File data: ", data);
         dataFile.close();
         return data;
     }
-}
-
-void SettingsService::formatFS() {
-    logger.log("[SettingsService][SPIFFS] Prepare to Format FS");
-    bool success = SPIFFS.begin();
-    if (success) {
-        logger.log("[SettingsService][SPIFFS] File system mounted with success");
-
-        Dir root = SPIFFS.openDir("/");
-        logger.log("[SettingsService][SPIFFS] Try to open...");
-
-        while (root.next()) {
-            logger.log("[SettingsService][SPIFFS] File: ", root.fileName());
-        }
-
-        logger.log("[SettingsService][SPIFFS] Formatting FS...");
-        bool formatted = SPIFFS.format();
-        formatted ? logger.log("DONE") : logger.log("FAILED!");
-        SPIFFS.end();
-    } else {
-        logger.log("[SettingsService][SPIFFS] Error mounting the dataFile system");
-    }
-    logger.log("[SettingsService][SPIFFS] Exit Format FS");
 }
 
 KEYSTORESETTINGS SettingsService::keystoreSettings() const {
@@ -454,9 +468,9 @@ LED_MAP SettingsService::ledMap() {
 }
 
 const SERVER_CONFIG SettingsService::serverConfig() {
-    if (!this->serverConfigLoaded && SPIFFS.exists(SERVER_CONF_PATH)) {
+    if (!this->serverConfigLoaded && LittleFS.exists(SERVER_CONF_PATH)) {
         logger.log("[SettingsService] Loading custom server config");
-        File confFile = SPIFFS.open(SERVER_CONF_PATH, "r");
+        File confFile = LittleFS.open(SERVER_CONF_PATH, "r");
         StaticJsonDocument<128> doc;
         deserializeJson(doc, confFile);
         this->currentServerPath = doc["path"].as<String>();
@@ -469,7 +483,7 @@ const SERVER_CONFIG SettingsService::serverConfig() {
 
 void SettingsService::saveServerConfig(String path) {
     logger.log("[SettingsService] Saving custom server config: ", path);
-    File confFile = SPIFFS.open(SERVER_CONF_PATH, "w");
+    File confFile = LittleFS.open(SERVER_CONF_PATH, "w");
     if (confFile) {
         StaticJsonDocument<256> doc;
         doc["path"] = path;
