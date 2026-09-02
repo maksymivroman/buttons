@@ -1,0 +1,251 @@
+#ifndef EVENT_BUTTON_FLAGS_HTML_PAGE_HPP
+#define EVENT_BUTTON_FLAGS_HTML_PAGE_HPP
+
+#include <Arduino.h>
+
+const char flags_page[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Event button | Flags</title>
+    <style>
+        *, ::after, ::before {
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            background: #eeeaea;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            max-height: 50px;
+            background-color: #1e5e9d;
+            width: 100%;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .content {
+            display: flex;
+            flex-flow: column;
+            width: 100%;
+            padding: 16px;
+            overflow: auto;
+        }
+
+        .section-header {
+            font-weight: 200;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        .border {
+            border: 1px solid lightgray;
+            border-radius: 5px;
+            box-shadow: 0 2px 7px #13537a24;
+            background: white;
+        }
+
+        .flags-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .item label {
+            cursor: pointer;
+            font-size: 1rem;
+            user-select: none;
+        }
+
+        .item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .btn {
+            color: #fff;
+            display: inline-block;
+            font-weight: 400;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            padding: .375rem .75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: .25rem;
+            cursor: pointer;
+            transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out;
+        }
+
+        .btn-red {
+            background-color: #cb1d38;
+            border: 1px solid #cb1d38;
+        }
+
+        .btn-red:hover:not(:disabled) {
+            background-color: #a6132f;
+        }
+
+        .btn-red:disabled {
+            background-color: #e08392;
+            cursor: not-allowed;
+        }
+
+        .status-msg {
+            margin-top: 16px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .status-msg.success {
+            color: #2e7d32;
+            display: block;
+        }
+
+        .status-msg.error {
+            color: #c62828;
+            display: block;
+        }
+
+        @media screen and (max-width: 800px) {
+            .setup-logo {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div style="display: flex; flex-flow: column; overflow: auto; width: 100%;">
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            ^DEVICE_LOGO^
+            <div style="display: flex; align-items: baseline; margin-left: 12px;">
+                <h2 style="color: white; font-weight: 200;">event button</h2>
+                <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
+                <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Flags</h4>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button style="align-self: flex-end;" type="button" class="btn btn-red"
+                    onclick="location.href='/'">Back
+            </button>
+        </div>
+    </div>
+
+    <div class="content">
+        <h2 class="section-header">Hardware Flags</h2>
+        <div class="border" style="padding: 24px;">
+            <div class="flags-container">
+                <div class="item">
+                    <input type="checkbox" id="ledRDisabled">
+                    <label for="ledRDisabled">Disable Red LED</label>
+                </div>
+                <div class="item">
+                    <input type="checkbox" id="ledGDisabled">
+                    <label for="ledGDisabled">Disable Green LED</label>
+                </div>
+                <div class="item">
+                    <input type="checkbox" id="ledBDisabled">
+                    <label for="ledBDisabled">Disable Blue LED</label>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <button id="saveFlagsBtn" type="button" class="btn btn-red" onclick="saveFlags()">Save Flags</button>
+                </div>
+                <div id="statusMsg" class="status-msg"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<script>
+    async function loadFlags() {
+        try {
+            const res = await fetch('/flagsData');
+            if (res.ok) {
+                const data = await res.json();
+                const flags = data.result || data;
+                if (flags) {
+                    if (flags.ledRDisabled !== undefined) document.getElementById('ledRDisabled').checked = Boolean(flags.ledRDisabled);
+                    if (flags.ledGDisabled !== undefined) document.getElementById('ledGDisabled').checked = Boolean(flags.ledGDisabled);
+                    if (flags.ledBDisabled !== undefined) document.getElementById('ledBDisabled').checked = Boolean(flags.ledBDisabled);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load flags:', e);
+        }
+    }
+
+    async function saveFlags() {
+        const btn = document.getElementById('saveFlagsBtn');
+        const statusEl = document.getElementById('statusMsg');
+        btn.disabled = true;
+        statusEl.className = 'status-msg';
+        statusEl.textContent = '';
+
+        const ledRDisabled = document.getElementById('ledRDisabled').checked ? '1' : '0';
+        const ledGDisabled = document.getElementById('ledGDisabled').checked ? '1' : '0';
+        const ledBDisabled = document.getElementById('ledBDisabled').checked ? '1' : '0';
+
+        const body = `ledRDisabled=${ledRDisabled}&ledGDisabled=${ledGDisabled}&ledBDisabled=${ledBDisabled}`;
+
+        try {
+            const res = await fetch('/flags', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                },
+                body: body
+            });
+
+            if (res.ok) {
+                statusEl.className = 'status-msg success';
+                statusEl.textContent = 'Flags updated successfully! Device is restarting...';
+                setTimeout(() => {
+                    location.href = '/';
+                }, 4000);
+            } else {
+                statusEl.className = 'status-msg error';
+                statusEl.textContent = 'Failed to update flags. Status: ' + res.status;
+                btn.disabled = false;
+            }
+        } catch (e) {
+            statusEl.className = 'status-msg error';
+            statusEl.textContent = 'Error updating flags: ' + e;
+            btn.disabled = false;
+        }
+    }
+
+    loadFlags();
+</script>
+)rawliteral";
+
+#endif //EVENT_BUTTON_FLAGS_HTML_PAGE_HPP

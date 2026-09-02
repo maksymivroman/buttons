@@ -6,13 +6,15 @@
 #define EVENT_BUTTON_SETTINGSSERVICE_H
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include "Global/Global.hpp"
 
 class SettingsService {
 public:
     WiFiCONFIG getWiFiConnDetails();
     const String *events();
-    EEPROM_SETTINGS getButtonConfig();
+    void getSettingsJson(JsonObject &result);
+    void getEventsJson(JsonObject &result);
     EEPROM_FLAGS buttonFlags() const;
 
     void saveEvents(String events);
@@ -54,7 +56,6 @@ public:
     bool handleVersionChange(unsigned int currentFWVersion, bool requireEEPROMFormat);
 
     String macAddress() const;
-    String localIPAddress() const;
 
     LED_MAP ledMap();
 

@@ -7,6 +7,7 @@
 #include <EEPROM.h>
 #include "ArduinoJson.h"
 #include "SettingsService.h"
+#include "Global/SettingsOptions.hpp"
 
 WiFiCONFIG SettingsService::getWiFiConnDetails() {
     WiFiCONFIG eepromWiFiConfig{buttonEepromSettings.wifiSsid, buttonEepromSettings.wifiPass};
@@ -129,8 +130,58 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     this->writeToEEPROM(settings);
 }
 
-EEPROM_SETTINGS SettingsService::getButtonConfig() {
-    return buttonEepromSettings;
+void SettingsService::getSettingsJson(JsonObject &result) {
+    result["wifiSsid"] = buttonEepromSettings.wifiSsid;
+    result["wifiPass"] = buttonEepromSettings.wifiPass;
+    result["hotspotSsid"] = buttonEepromSettings.hotspotSsid;
+    result["customHSsid"] = buttonEepromSettings.useCustomHSsid;
+    result["statisticApi"] = buttonEepromSettings.statisticApi;
+    result["clientWebAccess"] = buttonEepromSettings.clientWebAccess;
+    result["enableOtaUpdate"] = buttonEepromSettings.enableOtaUpdate;
+    result["loggerEnabled"] = buttonEepromSettings.loggerEnabled;
+    result["loggerLevel"] = buttonEepromSettings.loggerLevel;
+    result["statisticEnabled"] = buttonEepromSettings.statisticEnabled;
+    result["statisticLevel"] = buttonEepromSettings.statisticLevel;
+    result["useDnsName"] = buttonEepromSettings.useDnsName;
+    result["useSound"] = buttonEepromSettings.useSound;
+    result["remoteTriggering"] = buttonEepromSettings.remoteTriggering;
+    result["remoteStateChange"] = buttonEepromSettings.remoteStateChange;
+    result["saveLastState"] = buttonEepromSettings.saveLastState;
+    result["restoreLastStateOnLoad"] = buttonEepromSettings.restoreLastStateOnLoad;
+    result["keystoreEnabled"] = buttonEepromSettings.keystoreEnabled;
+    result["sendEventOnKeystoreUpdate"] = buttonEepromSettings.sendEventOnKeystoreUpdate;
+    result["delaySendEvents"] = buttonEepromSettings.delaySendEvents;
+    result["overrideLedConfig"] = buttonEepromSettings.overrideLedConfig;
+    result["serialEvents"] = buttonEepromSettings.serialEvents;
+    result["customServer"] = buttonEepromSettings.customServer;
+    result["serverPath"] = this->serverConfig().serverPath;
+    result["wiFiMode"] = buttonEepromSettings.wiFiMode;
+    result["timezone"] = static_cast<unsigned int>(buttonEepromSettings.timezone);
+    result["fwVersion"] = buttonEepromSettings.fwVersion;
+
+    JsonObject ledConfig = result.createNestedObject("ledConfig");
+    ledConfig["ledIdleDefault"] = buttonEepromSettings.ledIdleDefault;
+    ledConfig["ledIdlePressed"] = buttonEepromSettings.ledIdlePressed;
+    ledConfig["ledLoading"] = buttonEepromSettings.ledLoading;
+    ledConfig["ledWarn"] = buttonEepromSettings.ledWarn;
+    ledConfig["ledDone"] = buttonEepromSettings.ledDone;
+    ledConfig["ledKeystoreUpdate"] = buttonEepromSettings.ledKeystoreUpdate;
+    ledConfig["ledSendEvents"] = buttonEepromSettings.ledSendEvents;
+    ledConfig["ledExternalInterface"] = buttonEepromSettings.ledExternalInterface;
+
+    JsonObject options = result.createNestedObject("options");
+    SettingsOptions::populateOptionsJson(options);
+}
+
+void SettingsService::getEventsJson(JsonObject &result) {
+    DynamicJsonDocument doc(2048);
+    DeserializationError error = deserializeJson(doc, this->eventsData);
+    if (!error && doc.is<JsonObject>()) {
+        JsonObject obj = doc.as<JsonObject>();
+        for (JsonPair kv : obj) {
+            result[kv.key()] = kv.value();
+        }
+    }
 }
 
 bool SettingsService::clientWebAccessEnabled() const {
@@ -352,17 +403,6 @@ bool SettingsService::handleVersionChange(unsigned int currentFWVersion, bool re
 
 String SettingsService::macAddress() const {
     return WiFi.macAddress();
-}
-
-String SettingsService::localIPAddress() const {
-    switch (WiFi.getMode()) {
-        case WIFI_STA:
-            return WiFi.localIP().toString();
-        case WIFI_AP_STA:
-            return WiFi.softAPIP().toString();
-        default:
-            return "unknown";
-    }
 }
 
 size_t SettingsService::dynamicEepromStartOffset() const {

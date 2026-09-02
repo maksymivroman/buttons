@@ -6,11 +6,13 @@
 #include <ESP8266WiFi.h>
 #include "Statistic.h"
 #include "SettingsService/SettingsService.h"
+#include "NetworkService/NetworkService.h"
 #include "Global/Global.hpp"
 #include "Global/Version.h"
 
 extern Version currentFWVersion;
 extern SettingsService buttonSettings;
+extern NetworkService networkService;
 
 void Statistic::initStat(String apiUrl, http_stat_method method, unsigned int statisticLevel) {
     this->apiUrl = apiUrl;
@@ -57,7 +59,7 @@ String Statistic::prepareData(const String &data, bool asUrlParams) {
 
     statData.replace("<deviceID>", buttonSettings.deviceID());
     statData.replace("<host>", WiFi.hostname().c_str());
-    statData.replace("<ip>", buttonSettings.localIPAddress());
+    statData.replace("<ip>", networkService.ipAddress());
     statData.replace("<mac>", buttonSettings.macAddress());
     statData.replace("<data>", data);
 
