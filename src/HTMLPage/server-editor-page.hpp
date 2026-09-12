@@ -5,59 +5,154 @@
 
 const char editor_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>Event button | Server Editor</title>
+    <title>action button | Server Editor</title>
     <style>
-        :root { --blue: #1e5e9d; --red: #cb1d38; --bg: #eeeaea; }
+        :root {
+            --main: #333c45;
+            --background: #eeeaea;
+            --accent: #6e79d6;
+        }
+
+        *, ::after, ::before {
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+        }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0;
-            background: var(--bg);
+            background: var(--background);
             display: flex;
             flex-direction: column;
+            align-items: center;
             height: 100vh;
+            overflow: auto;
         }
 
         .header {
-            height: 55px;
-            background-color: var(--blue);
-            padding: 0 16px;
+            max-height: 46px;
+            background-color: var(--main);
+            width: 100%;
+            padding: 0 8px 0 8px;
             display: flex;
             align-items: center;
+            flex: 1;
             justify-content: space-between;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            z-index: 10;
+            position: fixed;
+            z-index: 100;
         }
 
-        .header-title { display: flex; align-items: center; gap: 10px; font-weight: 300; }
-        .header-title h2 { margin: 0; font-size: 1.2rem; }
-        .header-title h4 { margin: 0; color: lightgray; font-size: 1rem; }
+        .header-text {
+            color: white;
+            font-weight: 200;
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+        }
+
+        .flex-col {
+            display: flex;
+            flex-flow: column;
+        }
 
         .btn {
             color: #fff;
-            border: none;
-            padding: 8px 16px;
-            font-size: 0.95rem;
-            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-weight: 400;
+            min-width: 110px;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            padding: .275rem .65rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border-radius: 1rem;
             cursor: pointer;
-            transition: 0.2s;
+            transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
-        .btn:disabled { background-color: gray; cursor: not-allowed; }
-        .btn-red { background-color: var(--red); }
-        .btn-red:hover:not(:disabled) { background-color: #a6132f; }
 
-        .content {
+        .btn-light {
+            background-color: #fff;
+            border: 1px solid #fff;
+            color: #000;
+        }
+
+        .btn-light:hover:not(:disabled) {
+            background-color: #d0d0d0;
+            border-color: #d0d0d0;
+            cursor: pointer;
+        }
+
+        .btn-dark {
+            background-color: #4d5156;
+            border: 1px solid #4d5156;
+            color: #fff;
+        }
+
+        .btn-dark:hover:not(:disabled) {
+            background-color: #3b3e42;
+            border-color: #3b3e42;
+            cursor: pointer;
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+            border: 1px solid var(--accent);
+            color: #fff;
+        }
+
+        .btn-accent:hover:not(:disabled) {
+            background-color: #5863c4;
+            border-color: #5863c4;
+            cursor: pointer;
+        }
+
+        .btn:disabled {
+            color: lightgray;
+            background-color: gray;
+            border: 1px solid gray;
+            cursor: not-allowed;
+        }
+
+        .main {
             display: flex;
-            flex-direction: column;
-            padding: 16px;
-            flex-grow: 1;
-            overflow: hidden;
-            gap: 16px;
+            flex: 1;
+            width: 100%;
+            padding: 1rem;
+            flex-flow: column;
+            align-items: flex-start;
+            margin-top: 46px;
+            height: calc(100vh - 46px);
+        }
+
+        .section-container {
+            display: flex;
+            flex-flow: column;
+            margin-top: 1rem;
+            align-items: flex-start;
+            border-bottom: 4px solid var(--main);
+            width: 100%;
+        }
+
+        .section-header {
+            background-color: var(--main);
+            color: white;
+            padding: 4px 12px 2px 10px;
+            font-size: 1rem;
+            font-weight: 500;
         }
 
         .border {
@@ -65,7 +160,8 @@ const char editor_html[] PROGMEM = R"rawliteral(
             border: 1px solid lightgray;
             border-radius: 5px;
             box-shadow: 0 2px 7px #13537a24;
-            padding: 16px;
+            padding: 12px;
+            width: 100%;
         }
 
         .settings-row {
@@ -73,16 +169,21 @@ const char editor_html[] PROGMEM = R"rawliteral(
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
+            margin: 12px 0;
         }
 
         .control {
-            padding: 8px 12px;
-            font-size: 1rem;
+            padding: 6px 10px;
+            font-size: 0.9rem;
             border: 1px solid #ced4da;
             border-radius: 4px;
             min-width: 250px;
+            outline: none;
         }
-        .control:focus { outline: none; border-color: var(--blue); }
+
+        .control:focus {
+            border-color: var(--accent);
+        }
 
         .editor-container {
             flex-grow: 1;
@@ -90,13 +191,18 @@ const char editor_html[] PROGMEM = R"rawliteral(
             flex-direction: column;
             padding: 0;
             overflow: hidden;
+            border-radius: 5px;
+            border: 1px solid lightgray;
+            box-shadow: 0 2px 7px #13537a24;
+            width: 100%;
         }
 
         .editor-header {
-            padding: 10px 16px;
-            background: #f8f9fa;
+            padding: 8px 16px;
+            background: #fafafa;
             border-bottom: 1px solid lightgray;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 0.9rem;
             color: #333;
             display: flex;
             justify-content: space-between;
@@ -110,6 +216,7 @@ const char editor_html[] PROGMEM = R"rawliteral(
             background: #e9ecef;
             padding: 2px 8px;
             border-radius: 10px;
+            margin-left: 8px;
         }
 
         #codeEditor {
@@ -124,34 +231,47 @@ const char editor_html[] PROGMEM = R"rawliteral(
             background: #1e1e1e;
             color: #d4d4d4;
             box-sizing: border-box;
+            outline: none;
         }
-        #codeEditor:focus { outline: none; }
 
         #status { font-size: 0.85rem; }
+
+        @media screen and (max-width: 800px) {
+            .--hidden-sm {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="header-title">
+    <div class="flex-center">
         ^DEVICE_LOGO^
-        <h2>Event button</h2>
-        <h4>| Server Editor</h4>
+        <div style="display: flex; align-items: baseline; margin-left: 12px;">
+            <h2 class="header-text">action button</h2>
+            <h2 class="header-text --hidden-sm">&nbsp|&nbsp</h2>
+            <h4 class="header-text --hidden-sm">Server Editor</h4>
+        </div>
     </div>
-    <div>
-        <button id="saveBtn" class="btn btn-red">Save & Apply</button>
-        <button class="btn btn-red" onclick="location.href='/'">Back</button>
+    <div class="flex-center" style="gap: 10px;">
+        <button class="btn btn-light" onclick="location.href='/'">Back</button>
+        <button id="saveBtn" class="btn btn-accent">Save & Apply</button>
     </div>
 </div>
 
-<div class="content">
-    <div class="border settings-row">
-        <label for="dashPath" style="font-weight: bold; color: #333;">Server URL:</label>
-        <input type="text" id="dashPath" class="control" value="/dashboard" placeholder="server url">
-        <a id="previewLink" href="/dashboard" target="_blank" style="color: var(--blue); margin-left: auto;">Open ↗</a>
+<div class="main">
+    <div class="section-container">
+        <span class="section-header">Onboard Server Page</span>
     </div>
 
-    <div class="border editor-container">
+    <div class="border settings-row">
+        <label for="dashPath" style="font-weight: bold; color: #333; font-size: 0.9rem;">Server URL:</label>
+        <input type="text" id="dashPath" class="control" value="/dashboard" placeholder="server url">
+        <a id="previewLink" href="/dashboard" target="_blank" style="color: var(--accent); margin-left: auto; text-decoration: none; font-weight: 500;">Open ↗</a>
+    </div>
+
+    <div class="editor-container">
         <div class="editor-header">
             <div>
                 HTML Code
@@ -176,9 +296,7 @@ const char editor_html[] PROGMEM = R"rawliteral(
             e.preventDefault();
             const start = this.selectionStart;
             const end = this.selectionEnd;
-
             this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-
             this.selectionStart = this.selectionEnd = start + 4;
             updateCharCount();
         }

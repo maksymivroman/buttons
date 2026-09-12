@@ -10,38 +10,31 @@
 #include <array>
 #include "Global/Global.hpp"
 #include "NetworkService/NetworkService.h"
+#include "ArduinoJson.h"
 
 extern NetworkService networkService;
 
-typedef std::map<EVENT_TRIGGER, std::array<char, 3>> TriggersMap;
+
+typedef enum ACTION_RESULT {
+    SUCCESS, IGNORED, FAILED
+} ActionResult;
 
 class EventsService {
 
 public:
-    void SendEvents(EVENT_TRIGGER triggeredBy = DEFAULT_TRIGGER);
     void SetEvents(String eventsData, bool serialEnabled = true);
-    void SendEventsOnKeystoreChange();
+    void performAction(ACTION_TRIGGER actionTrigger);
 
 private:
-    void SendHttpEvent(String &host, String &payload);
-    void SendSerialEvent(String &payload);
-    void ProcessEvents(EVENT_TRIGGER triggeredBy);
-    void ProcessToSend(String &host, String &payload);
-    bool isEventMatchTrigger(EVENT_TRIGGER trigger, const String& eventRequestHost) const;
+    void executeActions(const JsonObject &event);
+    ActionResult httpRequest(const String &host = "", const String &payload = "");
+    ActionResult serial(const String &payload = "");
 
-    bool isDefaultEvent(const String& eventRequestHost);
-
-    String normalizeRequestHost(String host, EVENT_TRIGGER trigger);
+    /** @warning Not implemented*/
+    ActionResult io() { return IGNORED; };
 
     String events;
     bool _serialEnabled;
-
-    TriggersMap _triggers{
-            {DEFAULT_TRIGGER, {}},
-            {KEYSTORE_UPDATE, {'$', 'K', '$'}},
-            {STATE_RELEASED, {'$', 'P', '$'}},
-            {STATE_PRESSED, {'$', 'R', '$'}},
-    };
 
 };
 

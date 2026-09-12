@@ -3,8 +3,14 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>Event button | Setup</title>
+    <title>action button | Setup</title>
     <style>
+        :root {
+            --main: #333c45;
+            --background: #eeeaea;
+            --accent: #6e79d6;
+        }
+
         html {
             font-size: 16px;
         }
@@ -12,195 +18,63 @@
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0;
-            background: #eeeaea;
+            background: var(--background);
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
+            overflow: auto;
+        }
+
+        a {
+            color: #5151cb;
+            cursor: pointer;
         }
 
         .header {
-            max-height: 50px;
-            background-color: #1e5e9d;
-            width: 100vw;
-            padding: 0 12px 0 12px;
+            max-height: 46px;
+            background-color: var(--main);
+            width: 100%;
+            padding: 0 8px 0 8px;
             display: flex;
             align-items: center;
             flex: 1;
             justify-content: space-between;
+            position: fixed;
+            z-index: 100;
         }
 
-        .section-header {
-            font-weight: 200;
-            margin-top: 36px;
+        .header-text {
+            color: white; font-weight: 200;
         }
 
-        .content {
-            display: flex;
-            flex-flow: column;
-            width: 100vw;
-            padding: 16px;
-            overflow: auto;
+        .label-m {
+            font-size: .9rem !important;
         }
 
-        .event-data {
-            display: flex;
-            padding: 5px;
-            background: inherit;
-            min-height: 400px;
-            max-height: 50vh;
-            overflow: auto;
-        }
-
-        .border {
-            border: 1px solid lightgray;
-            border-radius: 5px;
-            box-shadow: 0 2px 7px #13537a24;
-        }
-
-        .wifi-credentials {
-            display: flex;
-            align-items: flex-start;
-            align-content: space-between;
-        }
-
-        .main-container {
-            padding: 0 8px;
-        }
-
-        .modal {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 18px;
-            background: rgba(0, 0, 0, 0.9);
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            visibility: hidden;
-        }
-
-        .extras-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, 320px);
-            margin-bottom: 16px;
-            padding: 24px;
-        }
-
-        .connectivity-container {
-            display: flex;
-            flex: 1;
-            flex-flow: column;
-            align-content: flex-start;
-            flex-wrap: wrap;
-            padding: 24px;
-        }
-
-        .item {
+        .flex-center {
             display: flex;
             align-items: center;
-            padding: 8px;
-            margin-right: 20px;
         }
 
-        .--vertical {
+        .flex-col {
+            display: flex;
             flex-flow: column;
-            align-items: flex-start;
-        }
-
-        .--fill {
-            width: -webkit-fill-available;
-        }
-
-        .--hidden {
-            visibility: hidden;
-        }
-
-        .--display-none {
-            display: none !important;
-        }
-
-        .--not-valid-event {
-            border: 1px solid red;
-        }
-
-        table {
-            background: inherit;
-            width: 100vw;
-            height: fit-content;
-        }
-
-        th {
-            border-bottom: 1px solid gray;
-        }
-
-        td {
-            border-bottom: 1px solid lightgray;
-        }
-
-        .hashed {
-            color: #858181;
-        }
-
-        .hashed-green {
-            background: repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 10px,
-                    rgb(107, 182, 100, 0.3) 10px,
-                    rgba(107, 182, 100, 0.3) 20px
-            );
-        }
-        .hashed-gray {
-            background: repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 10px,
-                    rgba(0, 0, 0, 0.04) 10px,
-                    rgba(0, 0, 0, 0.04) 20px
-            );
-        }
-        .hashed-orange {
-            background: repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 10px,
-                    rgb(243, 157, 71, 0.3) 10px,
-                    rgba(243, 157, 71, 0.3) 20px
-            );
-        }
-
-        .mt-m { margin-top: 16px; }
-        .m-0 { margin: 0; }
-
-        .control {
-            display: block;
-            min-width: 180px;
-            padding: .175rem .75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #495057;
-            background-color: #fff;
-            background-clip: padding-box;
-            border: 1px solid #ced4da;
-            border-radius: .25rem;
-            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
 
         .btn {
             color: #fff;
             display: inline-block;
             font-weight: 400;
+            min-width: 110px;
             text-align: center;
             white-space: nowrap;
             vertical-align: middle;
             user-select: none;
-            padding: .375rem .75rem;
-            font-size: 1rem;
+            padding: .275rem .65rem;
+            font-size: 0.9rem;
             line-height: 1.5;
-            border-radius: .25rem;
+            border-radius: 1rem;
             transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
 
@@ -210,82 +84,266 @@
             border: 1px solid gray;
         }
 
-        .btn-red {
-            background-color: #cb1d38;
-            border: 1px solid #cb1d38;
+        .btn-light {
+            background-color: #fff;
+            border: 1px solid #fff;
+            color: #000;
         }
 
-        .btn-blue {
-            background-color: #1e5e9d;
-            border: 1px solid #165c9f;
+        .btn-dark {
+            background-color: #4d5156;
+            border: 1px solid #4d5156;
+            color: #fff;
         }
 
-        .small-btn {
-            max-height: 24px;
-            padding: 0 10px;
+        .btn-accent {
+            background-color: #6e79d6;
+            border: 1px solid #6e79d6;
+            color: #fff;
         }
 
-        .btn-red:hover:not(:disabled) {
-            background-color: #a6132f;
+        .btn-light:hover:not(:disabled) {
+            background-color: #d0d0d0;
+            cursor: pointer;
         }
 
-        .btn-blue:hover:not(:disabled) {
-            background-color: #083867;
+        .btn-dark:hover:not(:disabled) {
+            background-color: #494a4b;
+            cursor: pointer;
         }
 
-        .label {
-            font-size: 1rem;
-            display: inline-block;
-            margin-top: .5rem;
+        .main {
+            display: flex;
+            flex: 1;
+            width: 100%;
+            padding: 1rem;
+            flex-flow: column;
+            align-items: flex-start;
+        }
+
+        .general-settings {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            flex-flow: row;
+        }
+
+        .settings-container {
+            display: flex;
+            flex-flow: column;
+            gap: 8px;
+            width: 100%;
+            min-width: 10rem;
+        }
+
+        .info-status-container {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            padding: 5px;
+            min-width: 400px;
+            border-radius: 16px;
+            border: 1px solid #add0ad;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .system-info-container {
+            justify-content: center;
+            width: 100%;
+            gap: 16px;
+            font-size: 12px;
+        }
+
+        .system-info {
+            margin-right: 5px;
+            color: #aba5a5;
+        }
+
+        .system-info-title {
+            margin-right: 5px;
+            color: white;
+        }
+
+        .feature-info {
+            display: flex;
+            margin-left: 12px;
+            font-size: 14px;
+        }
+
+        .checkbox-form-field {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-form-field .modern-checkbox {
+            appearance: none;
+            background-color: #8f939b;
+            border-radius: 72px;
+            border-style: none;
+            flex-shrink: 0;
+            height: 20px;
+            margin: 0;
+            position: relative;
+            width: 30px;
+        }
+
+        .checkbox-form-field .modern-checkbox::before {
+            bottom: -6px;
+            content: "";
+            left: -6px;
+            position: absolute;
+            right: -6px;
+            top: -6px;
+        }
+
+        .checkbox-form-field .modern-checkbox,
+        .checkbox-form-field .modern-checkbox::after {
+            transition: all 100ms ease-out;
+        }
+
+        .checkbox-form-field .modern-checkbox::after {
+            background-color: #fff;
+            border-radius: 50%;
+            content: "";
+            height: 14px;
+            left: 3px;
+            position: absolute;
+            top: 3px;
+            width: 14px;
+        }
+
+        .checkbox-form-field input[type=checkbox] {
+            cursor: default;
+        }
+
+        .checkbox-form-field .modern-checkbox:hover {
+            background-color: #818285;
+            transition-duration: 0s;
+        }
+
+        .checkbox-form-field .modern-checkbox:checked {
+            background-color: #6e79d6;
+        }
+
+        .checkbox-form-field .modern-checkbox:checked::after {
+            background-color: #fff;
+            left: 13px;
+        }
+
+        .checkbox-form-field :focus:not(.focus-visible) {
+            outline: 0;
+        }
+
+        .checkbox-form-field .modern-checkbox:checked:hover:not(:disabled) {
+            background-color: #535db3;
+        }
+
+        .checkbox-form-field .modern-checkbox:disabled {
+            background-color: #adadaf;
+        }
+
+        .checkbox-form-field > label {
             align-self: flex-start;
-            font-weight: 600;
+            margin: 4px;
+            font-size: 0.7rem;
         }
+
+        .section-container {
+            display: flex;
+            flex-flow: column;
+            margin-top: 2rem;
+            align-items: flex-start;
+            border-bottom: 4px solid var(--main);
+            width: 100%;
+        }
+
+        .section-header {
+            background-color: var(--main);
+            color: white;
+            padding: 4px 12px 2px 10px;
+        }
+
+        .content {
+            display: flex;
+            flex-flow: column;
+            width: 100%;
+            padding: 16px;
+            overflow: auto;
+        }
+
+        .event-data {
+            display: block;
+            padding: 12px;
+            background: inherit;
+            width: 100%;
+        }
+
+        .modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 18px;
+            background: rgba(4, 6, 14, 0.98);
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            visibility: hidden;
+            z-index: 111;
+            gap: 42px;
+        }
+
+        table {
+            background: inherit;
+            width: 100%;
+            height: fit-content;
+            border-collapse: collapse;
+        }
+
+        th {
+            border-bottom: 2px solid gray;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        td {
+            border-bottom: 1px solid lightgray;
+            padding: 8px 10px;
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 3px;
+            white-space: nowrap;
+            margin: 2px 2px;
+        }
+
+        .badge-trigger {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid #bbdefb;
+        }
+
+        .badge-action {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            border: 1px solid #c8e6c9;
+        }
+
+        .mt-m { margin-top: 16px; }
+        .mt-l { margin-top: 36px; }
 
         input[type=checkbox]:disabled + label {
             color: darkgray;
-        }
-
-        #loggerEnabled:not(:checked) ~ #loggerLevel {
-            color: darkgray;
-            pointer-events: none;
-        }
-
-        #statisticEnabled:not(:checked) ~ #statisticLevel {
-            color: darkgray;
-            pointer-events: none;
-        }
-
-        #saveLastState:not(:checked) ~ #restoreLastStateOnLoadContainer {
-            opacity: .5;
-            pointer-events: none;
-            user-select: none;
-        }
-
-        #sendEventOnKeystoreUpdate:not(:checked) ~ #delaySendEventsContainer {
-            opacity: .5;
-            pointer-events: none;
-            user-select: none;
-        }
-
-        input:disabled {
-            color: dimgray;
-            background-color: lightgray;
-            user-select: none;
-        }
-
-        input[type=checkbox]:not(:checked) + label + input {
-            color: darkgray;
-            display: none;
-        }
-
-        option { font-size: 1rem; }
-        label { margin: 0 8px; }
-
-        button, input, optgroup, select, textarea {
-            margin: 0;
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
         }
 
         *, ::after, ::before {
@@ -296,48 +354,18 @@
             text-transform: none;
         }
 
-        select.control:not([size]):not([multiple]) {
-            height: calc(2.25rem + 2px);
-        }
-
-        .flexbox-wrap {
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        .max-h {
-            height: 100%;
-            align-content: space-between;
-        }
-
-        .max-w {
-            width: 100%;
-            justify-content: space-between;
-        }
-
         .btn-min-w {min-width: 100px;}
-
-        .flexbox-column-centered {
-            display: flex;
-            flex-flow: column;
-            /*justify-content: center;*/
-            align-items: center
-        }
-
-        .flexbox-column-start {
-            display: flex;
-            flex-flow: column;
-        }
-
-        .flexbox-raw-centered {
-            display: flex;
-            justify-content: center;
-            align-items: center
-        }
 
         .led-grid-layout {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            width: 80%;
+        }
+
+        .color-picker-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .rgb-info-square {
@@ -351,6 +379,7 @@
             justify-content: center;
             overflow: hidden;
             user-select: none;
+            background: gray;
         }
 
         .marked-flag.rgb-info-square {
@@ -369,42 +398,37 @@
             transform-origin: top left;
         }
 
-        .networks-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
         .form-field {
+            background: #fff;
             display: flex;
-            flex-direction: column;
-            min-width: 200px;
-            flex: 1;
+            flex-flow: column;
+            border-radius: 4px;
+            padding: 0;
         }
 
-        .form-field label {
-            margin-bottom: 8px;
+        .form-field > label {
+            align-self: flex-start;
+            margin: 2px;
+            color: #365781;
+            font-size: 0.7rem;
         }
 
-        .form-field input, .form-field select {
-            display: block;
-            min-width: 180px;
-            padding: .175rem .75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #495057;
-            background-color: #fff;
-            background-clip: padding-box;
-            border: 1px solid #ced4da;
-            border-radius: .25rem;
+        .form-field > input,
+        .form-field > select,
+        .form-field > textarea{
+            background: transparent;
+            border: none;
+            outline: none;
+        }
+
+        .form-field > input:focus,
+        .form-field > select:focus,
+        .form-field > textarea:focus{
+            box-shadow: inset 0 -2px 0 #4a90e2;
         }
 
         @media screen and (max-width: 800px) {
-            .networks-container {
-                flex-direction: column;
-            }
-
-            .setup-logo {
+            .--hidden-sm {
                 display: none;
             }
         }
@@ -412,28 +436,26 @@
 </head>
 <body>
 
-<div style="display: flex; flex-flow: column; overflow: auto;">
     <div class="header">
-        <div style="display: flex; align-items: center;">
+        <div class="flex-center">
             ^DEVICE_LOGO^
             <div style="display: flex; align-items: baseline; margin-left: 12px;">
-                <h2 style="color: white; font-weight: 200;">event button</h2>
-                <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
-                <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Setup</h4>
+                <h2 class="header-text" >action button</h2>
+                <h2 class="header-text --hidden-sm">&nbsp|&nbsp</h2>
+                <h4 class="header-text --hidden-sm">Setup</h4>
             </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <button style="align-self: flex-end;" type="button" class="btn btn-red" onclick="find()">Find me</button>
-            <button id="updateBtn" style="align-self: flex-end;" type="button" class="btn btn-red"
-                    onclick="location.href='/update'">FW Update
-            </button>
+        <div class="flex-center" style="gap: 10px;">
+            <button id="updateBtn" type="button" class="btn btn-light" onclick="location.href='/update'">FW Update</button>
+            <button type="button" class="btn btn-light" onclick="find()">Find me</button>
+            <button type="button" class="btn btn-light" onclick="location.href='/logs'">Logs</button>
+            <button type="button" class="btn btn-accent" onclick="saveSettings()">Save & Reboot</button>
         </div>
     </div>
 
-    <div class="content">
-        <h2 class="section-header">Connectivity</h2>
-        <div class="connectivity-container border">
-            <div class="networks-container">
+    <div class="main" style="margin-top: 46px;">
+        <div class="general-settings">
+            <div class="settings-container">
                 <div class="form-field">
                     <label for="networks">Available networks</label>
                     <select id="networks"></select>
@@ -449,363 +471,283 @@
                     <input id="wifiPass" type="password">
                 </div>
             </div>
-            <div class="item mt-m" style="min-height: 55px; flex-wrap: wrap; gap: 20px;">
-                <input type="checkbox" id="useHotspotSsid">
-                <label for="useHotspotSsid">Use custom hotspot SSID</label>
-                <input maxlength="32" type="text" id="hotspotSsid" class="control">
+
+            <div class="settings-container">
+                <div class="form-field">
+                    <label for="wiFiMode">WiFi mode</label>
+                    <select id="wiFiMode"></select>
+                </div>
+                <div class="form-field">
+                    <label for="timezone">Time zone</label>
+                    <select id="timezone"></select>
+                </div>
+                <div class="form-field">
+                    <label for="loggerLevel">Debug logs</label>
+                    <select id="loggerLevel"></select>
+                </div>
+            </div>
+
+            <div class="settings-container">
+                <div class="form-field">
+                    <label for="hotspotSsid">Device ID</label>
+                    <input maxlength="32" type="text" id="hotspotSsid">
+                </div>
+
+                <div class="checkbox-form-field">
+                    <input type="checkbox" id="useHotspotSsid" class="modern-checkbox">
+                    <label for="useHotspotSsid">Device ID for SSID</label>
+                </div>
+            </div>
+
+            <div class="settings-container">
+                <div class="checkbox-form-field">
+                    <input type="checkbox" id="useDnsName" class="modern-checkbox" disabled>
+                    <label for="useDnsName">DNS host name (btn.iot)</label>
+                </div>
+
+                <div class="checkbox-form-field">
+                    <input type="checkbox" id="useSound" class="modern-checkbox">
+                    <label for="useSound">Sound notification</label>
+                </div>
+
+                ^CLIENT_MODE_OPTIONS^
             </div>
         </div>
+    </div>
 
-        <div style="display: flex; flex: 1; align-items: center; justify-content: space-between">
-            <h2 class="section-header">Assigned events</h2>
-            <button type="button" id="toggleEditModeButton" style="align-self: flex-end;" class="btn btn-blue btn-min-w"
-            onclick="toggleEditMode('edit')" >Edit</button>
-            <div id="editActionsContainer" style="align-self: flex-end; display: none;">
-                <button type="button" class="btn btn-blue btn-min-w" onclick="openEditor()">Add new</button>
-                <button id="saveEditedEventsBtn" type="button" class="btn btn-red btn-min-w" disabled onclick="saveEvents()">Save</button>
-                <button type="button" class="btn btn-blue btn-min-w" onclick="toggleEditMode()">Cancel</button>
-            </div>
-        </div>
+    <div class="section-container">
+        <span class="section-header">Actions</span>
+    </div>
 
-        <div class="border">
+    <div class="flex-col" style="width: 100%;">
+        <button type="button" style="align-self: flex-end; margin: 1rem;" class="btn btn-dark" onclick="location.href='/editor'">Edit</button>
             <div class="event-data">
                 <table id="dataTable">
                     <thead>
                     <tr>
-                        <th>host</th>
-                        <th style="width: 70%;">event data</th>
-                        <th>actions</th>
+                        <th style="width: 20%;">Name</th>
+                        <th style="width: 25%;">Host</th>
+                        <th style="width: 25%;">Payload</th>
+                        <th style="width: 15%;">Triggers</th>
+                        <th style="width: 15%;">Actions</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <!-- Table data -->
+                    <tbody id="eventsListBody">
+                    <!-- Read-only events list -->
                     </tbody>
                 </table>
             </div>
+    </div>
+
+    <div class="section-container">
+        <span class="section-header">Serial port actions</span>
+    </div>
+
+    <div class="main">
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="serialEvents" class="modern-checkbox">
+            <label for="serialEvents" class="label-m">Enable data via Serial(115200 8-N-1)</label>
         </div>
+        <span class="mt-m">Warning! Serial logs will be disabled</span>
+    </div>
 
-        <h2 class="section-header">General settings</h2>
-        <div class="extras-container border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="loggerEnabled">
-                <label style="margin-left: 8px; margin-right: 8px;" for="loggerEnabled">Logger</label>
-                <select class="control" style="height: auto; min-width: auto;" id="loggerLevel"></select>
-            </div>
 
-            <div class="item">
-                <label style="margin-right: 8px;" for="wiFiMode">WiFi mode</label>
-                <select class="control" style="height: auto; min-width: auto;" id="wiFiMode"></select>
-            </div>
-
-            <div class="item">
-                <label style="margin-right: 8px; min-width: fit-content;" for="timezone">Time zone</label>
-                <select class="control" style="height: auto; max-width: 200px;" id="timezone"></select>
-            </div>
-
-            <div class="item">
-                <input type="checkbox" id="useDnsName" name="dnsName" disabled>
-                <label style="margin-left: 8px;" for="useDnsName">use DNS host name (btn.iot)</label>
-            </div>
-
-            <div class="item">
-                <input type="checkbox" id="useSound" name="dnsName">
-                <label style="margin-left: 8px;" for="useSound">Use sound notification</label>
-            </div>
-
-            ^CLIENT_MODE_OPTIONS^
-
-            <!--            <div class="item">-->
-            <!--                <input type="checkbox" id="clientWebAccess" name="hotspotAccess">-->
-            <!--                <label style="margin-left: 8px;" for="clientWebAccess">web access on Wi-Fi client mode</label>-->
-            <!--            </div>-->
-            <!--            -->
-            <!--            <div class="item">-->
-            <!--                <input type="checkbox" id="enableOtaUpdate" name="dnsName" disabled>-->
-            <!--                <label style="margin-left: 8px;" for="enableOtaUpdate">Firmware Update on Wi-Fi client mode</label>-->
-            <!--            </div>-->
-
+    <div class="section-container">
+        <span class="section-header">Switch mode</span>
+    </div>
+    <div class="main" style="gap: .75rem;">
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="saveLastState" class="modern-checkbox">
+            <label for="saveLastState" class="label-m">Enable Switch mode</label>
         </div>
-
-        <h2 class="section-header">Serial events</h2>
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="serialEvents">
-                <label for="serialEvents">Enable events via Serial(115200 8-N-1)</label>
-            </div>
-            <div class="item" style="flex-flow: column; align-items: flex-start">
-                <span>Only events with type 'serial' will be sent</span>
-                <span class="mt-m">Warning! Serial logs will be disabled</span>
-            </div>
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="restoreLastStateOnLoad" class="modern-checkbox">
+            <label for="restoreLastStateOnLoad" class="label-m">Restore last state on load</label>
         </div>
+        <div class="feature-info">
+            <span>Switch mode allows you to perform action depending on the Button state - ON/OFF</span>
+        </div>
+        <div class="info-status-container">
+            <svg xmlns="http://www.w3.org/2000/svg" color="#add0ad" width="20px" height="20px" viewBox="0 0 24 24"><title>info</title><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 7h.01"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 11h2v5m-2 0h4"/></g></svg>
+            <span>Switch state:</span>
+            <span style="font-weight: 600;" id="toggleState"></span>
+        </div>
+    </div>
 
-        <h2 class="section-header">Toggle mode</h2>
-
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="saveLastState">
-                <label for="saveLastState" >Enable Toggle mode</label>
-                <div id="restoreLastStateOnLoadContainer" class="item" style="margin-left: 32px;">
-                    <input type="checkbox" id="restoreLastStateOnLoad">
-                    <label for="restoreLastStateOnLoad">Restore last state on load</label>
-                </div>
+    <div class="section-container">
+        <span class="section-header">Keystore</span>
+    </div>
+    <div class="main" style="gap: .75rem;">
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="keystoreEnabled" class="modern-checkbox">
+            <label for="keystoreEnabled" class="label-m">Enable keystore</label>
+        </div>
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="sendEventOnKeystoreUpdate" class="modern-checkbox">
+            <label for="sendEventOnKeystoreUpdate" class="label-m">Perform action on keystore update</label>
+        </div>
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="delaySendEvents" class="modern-checkbox">
+            <label for="delaySendEvents" class="label-m">Handle delay before perform action ('delay' param)</label>
+        </div>
+        <div class="feature-info flex-col">
+            <div class="flex-center">
+                <span>Update keystore URL: </span>
+                <strong style="margin-left: 12px;">http://<span class="device-ip">192.168.4.1</span>/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</strong>
             </div>
-            <div class="item" style="flex-flow: column; align-items: flex-start">
-                <span>Toggle mode allows you to send events depending on the state of the Button - Pressed or Released</span>
-                <span class="mt-m">Event host should be marked by $P$ or $R$ prefix</span>
-            </div>
-            <div class="item" style="gap: 12px;">
-                <div class="hashed hashed-green" style="padding: 0 16px;">
-                    <span style="color: black; border: 1px solid lightcoral">$R$</span>
-                    <span class="hashed">http://192.1...</span>
-                </div>
-                <span>Event will be sent if the Button state is Released</span>
-            </div>
-            <div class="item" style="gap: 12px;">
-                <div class="hashed hashed-orange" style="padding: 0 16px;">
-                    <span style="color: black; border: 1px solid lightcoral">$P$</span>
-                    <span class="hashed">http://192.1...</span>
-                </div>
-                <span>Event will be sent if the Button state is Pressed</span>
+            <div class="flex-col">
+                <span>Use <strong>$key$</strong>  expression in action payload data, and it will be replaced by corresponding value</span>
+                <span><strong>delay</strong> - if provided, action will be initiated after delay, ms</span>
             </div>
         </div>
+        <div class="info-status-container">
+            <svg xmlns="http://www.w3.org/2000/svg" color="#add0ad" width="20px" height="20px" viewBox="0 0 24 24"><title>info</title><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 7h.01"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 11h2v5m-2 0h4"/></g></svg>
+            <span>Stored keys:</span>
+            <span style="font-weight: 600;" id="ksKeys"></span>
+        </div>
+    </div>
 
-        <h2 class="section-header">Keystore</h2>
-
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="keystoreEnabled">
-                <label for="keystoreEnabled">Enable keystore</label>
-            </div>
-            <div class="item" style="flex-wrap: wrap;">
-                <input type="checkbox" id="sendEventOnKeystoreUpdate">
-                <label for="sendEventOnKeystoreUpdate">Send events on keystore update (marked with a $K$) </label>
-
-                <div id="delaySendEventsContainer" class="item" style="margin-left: 32px;">
-                    <input type="checkbox" id="delaySendEvents">
-                    <label for="delaySendEvents">Handle delay to send events ('delay' param)</label>
-                </div>
-            </div>
-            <div class="item" style="flex-flow: column; align-items: flex-start">
-                <span>Event host should be marked with $K$ prefix</span>
-            </div>
-            <div class="item" style="gap: 12px;">
-                <div class="hashed hashed-gray" style="padding: 0 16px;">
-                    <span style="color: black; border: 1px solid lightcoral">$K$</span>
-                    <span class="hashed">http://192.1...</span>
-                </div>
-                <span>Event will be sent on Keysore update</span>
-            </div>
-            <div style="display: flex; flex-flow: row; align-items: center; flex-wrap: wrap;">
-                <h5 class="item m-0">Update keystore URL: </h5>
-                <h5 class="item m-0">http://<span class="device-ip">192.168.4.1</span>/keystore?delay=DELAY&key1=DATA&key2=DATA&key3...</h5>
-            </div>
-            <h5 class="item m-0" style="font-weight: normal;">delay - if provided, send events will be initiated after delay, ms</h5>
-            <h5 class="item m-0" style="font-weight: normal;">Use $key$ expression for event data, and it will be replaced by corresponding value</h5>
+    <div class="section-container">
+        <span class="section-header">Remote triggering</span>
+    </div>
+    <div class="main" style="gap: .75rem;">
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="remoteTriggering" class="modern-checkbox">
+            <label for="remoteTriggering" class="label-m">Trigger Button remotely</label>
         </div>
 
+        <div class="feature-info flex-col">
+            <span style="margin-bottom: 12px;">Trigger button with POST request:</span>
+            <div class="feature-info">
+                <strong>Content-Type: </strong>
+                <span>application/form-data</span>
+            </div>
+            <div class="feature-info">
+                <strong>Key/Value: </strong>
+                <span>TRIGGER_BUTTON: AUTO</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-container">
+        <span class="section-header">Income LED and Sound notifications</span>
+    </div>
+    <div class="main" style="gap: .75rem;">
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="remoteStateChange" class="modern-checkbox">
+            <label for="remoteStateChange" class="label-m">Switch LED/Sound notifications remotely</label>
+        </div>
+
+        <div class="feature-info flex-col">
+            <span style="margin-bottom: 12px;">Toggle button LED/Sound using GET request:</span>
+            <div class="feature-info">
+                <span>URL:</span>
+                <strong>http://<span class="device-ip">192.168.4.1</span>/external?led=${on/off}&beep={on/off}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-container">
+        <span class="section-header">Dev Reports</span>
+    </div>
+    <div class="main" style="gap: .75rem;">
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="statisticEnabled" class="modern-checkbox">
+            <label for="statisticEnabled" class="label-m">Enable Dev Reports</label>
+        </div>
+        <div class="flex-center" style="gap: .75rem;">
+            <div class="form-field">
+                <label for="statisticApi">API url</label>
+                <input style="min-width: 300px;" maxlength="255" type="text" id="statisticApi">
+            </div>
+            <div class="form-field" style="min-width: 200px;">
+                <label for="statisticLevel">Report Type</label>
+                <select id="statisticLevel"></select>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-container">
+        <span class="section-header">LED configuration</span>
+    </div>
+    <div class="main">
+        <div class="checkbox-form-field" style="margin-bottom: 12px;">
+            <input type="checkbox" id="overrideLedConfig" class="modern-checkbox">
+            <label for="overrideLedConfig" class="label-m">Custom LED Actions</label>
+        </div>
+        <div class="led-grid-layout" id="led-container">
+            <!--led controls-->
+            no actions defined
+        </div>
+    </div>
+
+    <div class="section-container">
+        <span class="section-header">Onboard Server</span>
+    </div>
+    <div class="main" style="gap: 8px;">
+        <div class="checkbox-form-field">
+            <input type="checkbox" id="customServer" class="modern-checkbox">
+            <label for="customServer" class="label-m">Enable Onboard server</label>
+        </div>
+        <div class="flex-center">
+            <span>Server Path: &nbsp</span>
+            <a id="serverPathLink" target="_blank" href="#"></a>
+            <svg xmlns="http://www.w3.org/2000/svg" color="#5151cb" width="1em" height="1em" viewBox="0 0 24 24"><title>open</title><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4m-8-2l8-8m0 0v5m0-5h-5"/></svg>
+            <button style="margin-left: 16px;" type="button" onclick="location.href='/server/editor'" class="btn btn-dark">Open Editor</button>
+        </div>
+    </div>
+
+    <div class="content">
         <div class="modal" id="successModel">
-            <div style="display: flex; align-items: center; flex-flow: column">
-                <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200px" height="200px" style="fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200">
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200px" height="200px"
+                 style="fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 200 200">
                     <g id="Layer_x0020_1">
-                        <polygon fill="#5B5A50" points="193.05,122.02 198.24,124.05 99.92,161.86 2.62,124.46 7.84,122.52 5.7,121.72 0.16,123.79 0.16,142.69 100.09,180.95 200,142.76 200,123.79 194.3,121.66 "/>
-                        <polygon fill="#5B5B5B" points="100.7,54.44 197.22,85.03 101.01,120.73 2.98,84.29 100.7,54.44 100.7,52.91 0,83.98 0,119.58 99.92,157.05 199.85,119.58 199.85,84.91 100.7,52.91 "/>
-                        <polygon id="upload-box_1" fill="#E53324" points="99.92,180.91 0.16,142.69 0.16,161.73 100.09,200 200,161.81 200,142.77 "/>
+                        <polygon fill="#5B5A50"
+                                 points="193.05,122.02 198.24,124.05 99.92,161.86 2.62,124.46 7.84,122.52 5.7,121.72 0.16,123.79 0.16,142.69 100.09,180.95 200,142.76 200,123.79 194.3,121.66 "/>
+                        <polygon fill="#5B5B5B"
+                                 points="100.7,54.44 197.22,85.03 101.01,120.73 2.98,84.29 100.7,54.44 100.7,52.91 0,83.98 0,119.58 99.92,157.05 199.85,119.58 199.85,84.91 100.7,52.91 "/>
+                        <polygon id="upload-box_1" fill="#E53324"
+                                 points="99.92,180.91 0.16,142.69 0.16,161.73 100.09,200 200,161.81 200,142.77 "/>
                         <polygon fill="#898989" points="2.98,84.29 101.01,120.73 197.22,85.03 100.7,54.44 "/>
                     </g>
                 </svg>
 
-                <h1 style="color: #b9b9b9;" id="dialogMessageTitle">Please wait...</h1>
-                <h4 style="color: #b9b9b9; font-weight: 200" id="dialogMessage">...</h4>
-                <button disabled id="refreshBtn" type="button" class="btn btn-blue mt-m btn-min-w" onclick="location.reload()">OK</button>
+            <div class="flex-col">
+                <h2 style="color: #b9b9b9;" id="dialogMessageTitle">Please wait...</h2>
+                <span style="color: #b9b9b9; font-weight: 200" id="dialogMessage">Settings saved. Rebooting...</span>
+                <button disabled id="refreshBtn" type="button" class="btn btn-accent mt-l"
+                        onclick="location.reload()">OK
+                </button>
             </div>
-        </div>
-
-        <h2 class="section-header">Remote triggering</h2>
-
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="remoteTriggering">
-                <label for="remoteTriggering">Remote button triggering</label>
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item m-0">Trigger button using POST request:</h5>
-            </div>
-            <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-                <h5 class="item m-0">Content-Type: </h5>
-                <h5 class="item m-0" style="font-weight: normal;">application/form-data</h5>
-            </div>
-            <div style="display: flex; flex-flow: row; align-items: center; margin: 0 32px;">
-                <h5 class="item m-0">Key/Value: </h5>
-                <h5 class="item m-0" style="font-weight: normal;">TRIGGER_BUTTON: AUTO</h5>
-            </div>
-        </div>
-
-        <h2 class="section-header">Remote LED and Sound notifications</h2>
-
-        <div class="border" style="padding: 24px">
-            <div class="item">
-                <input type="checkbox" id="remoteStateChange">
-                <label for="remoteStateChange">Switch LED/Sound notifications remotely</label>
-            </div>
-
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item m-0">Trigger button LED/Sound using GET request:</h5>
-            </div>
-            <div style="display: flex; flex-flow: row; align-items: center; margin-left: 16px;">
-                <h5 class="item m-0">URL structure:</h5>
-                <h5 class="item m-0">http://<span class="device-ip">192.168.4.1</span>/external?led=${on/off}&beep={on/off}</h5>
-            </div>
-        </div>
-        
-        <h2 class="section-header">Reports</h2>
-
-        <div class="border" style="padding: 24px;">
-            <div class="item">
-                <input type="checkbox" id="statisticEnabled">
-                <label for="statisticEnabled">Enable Reports</label>
-                <select class="control" style="height: auto; min-width: auto;" id="statisticLevel"></select>
-            </div>
-            <div class="item --vertical" style="flex: 1; max-width: 400px;">
-                <label style="word-break: keep-all" for="statisticApi">API url</label>
-                <input maxlength="255" type="text" id="statisticApi" class="control --fill"
-                       style="max-width: 375px; font-size: 0.75rem;">
-            </div>
-        </div>
-
-        <h2 class="section-header">LED Actions configuration</h2>
-
-        <div class="border" style="padding: 24px;">
-            <div class="item">
-                <input type="checkbox" id="overrideLedConfig">
-                <label for="overrideLedConfig">Custom LED Actions</label>
-            </div>
-            <div class="led-grid-layout" id="led-container">
-                <!--led controls-->
-                no actions defined
-            </div>
-        </div>
-
-        <h2 class="section-header">Custom Server</h2>
-
-        <div class="border" style="padding: 24px;">
-            <div class="item">
-                <input type="checkbox" id="customServer">
-                <label for="customServer">Enable custom server</label>
-            </div>
-            <span>Server Path: </span>
-            <a id="serverPathLink" target="_blank" href="#"></a>
-            <button type="button" onclick="location.href='/server/editor'" class="btn btn-blue" style="padding: 0 4px; margin-left: 16px;">Open Editor</button>
-        </div>
-
-        <div style="display: flex; flex: 1; justify-content: center; margin: 80px 0;">
-            <button id="saveButton" type="button" class="btn btn-red" onclick="saveSettings()">Save And Reboot</button>
         </div>
 
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); background: lightgray;">
-        <div class="flexbox-wrap">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">FW version:</h5>
-            <h5 style="margin: 5px" id="fwVersion"></h5>
-        </div>
-        <div class="flexbox-wrap">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">HW version:</h5>
-            <h5 style="margin: 5px" id="hwVersion"></h5>
-        </div>
-        <div class="flexbox-wrap">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">MAC:</h5>
-            <h5 style="margin: 5px" id="mac"></h5>
-        </div>
-        <div class="flexbox-wrap">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">IP:</h5>
-            <h5 style="margin: 5px" id="ip"></h5>
-        </div>
-        <div class="flexbox-wrap">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Free HEAP:</h5>
-            <h5 style="margin: 5px" id="heap"></h5>
-        </div>
-        <div class="flexbox-wrap">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Keystore keys:</h5>
-            <h5 style="margin: 5px" id="ksKeys"></h5>
-        </div>
-        <div class="flexbox-wrap">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">Toggle state:</h5>
-            <h5 style="margin: 5px" id="toggleState"></h5>
-        </div>
-        <div class="flexbox-wrap">
-            <h5 style="color: #cb1d38; font-weight: 200; margin: 5px">WiFi mode:</h5>
-            <h5 style="margin: 5px" id="wiFiModeStatus"></h5>
-        </div>
-        <div class="flexbox-wrap" style="align-items: center; gap: 4px">
-            <div id="rFlag" class="rgb-info-square"><h5 style="margin: 5px; color: #e50c0c;">R</h5></div>
-            <div id="gFlag" class="rgb-info-square"><h5 style="margin: 5px; color: #077307;">G</h5></div>
-            <div id="bFlag" class="rgb-info-square"><h5 style="margin: 5px; color: #4949ff;">B</h5></div>
+    <div class="main" style="background: #475d72;">
+        <div class="flex-center system-info-container">
+            <div class="flex-center">
+                <span class="system-info-title">HW version:</span>
+                <span class="system-info" id="hwVersion"></span>
+            </div>
+            <div class="flex-center">
+                <span class="system-info-title">FW version:</span>
+                <span class="system-info" id="fwVersion"></span>
+            </div>
+            <div class="flex-center">
+                <span class="system-info-title">Free HEAP:</span>
+                <span class="system-info" id="heap"></span>
+            </div>
+            <div class="flex-center">
+                <span class="system-info-title">MAC:</span>
+                <span class="system-info" id="mac"></span>
+            </div>
+            <div class="flex-center" style="align-items: center; gap: 4px">
+                <div id="rFlag" class="rgb-info-square"><h5 style="color: #e50c0c;">R</h5></div>
+                <div id="gFlag" class="rgb-info-square"><h5 style="color: #077307;">G</h5></div>
+                <div id="bFlag" class="rgb-info-square"><h5 style="color: #4949ff;">B</h5></div>
+            </div>
         </div>
     </div>
-
-</div>
-
-<dialog id="editor" style="background-color: #444444;">
-    <div class="flexbox-column-centered">
-        <h1 style="color: white; font-weight: 200; margin-bottom: 64px;">Add new event</h1>
-        <div class="flexbox-column-centered" style="align-items: flex-start; gap: 8px;">
-            <div class="flexbox-raw-centered" style="align-items: flex-start; gap: 24px; margin-bottom: 64px;">
-                <div class="flexbox-raw-centered" style="gap: 8px;">
-                    <input id="nsType" type="radio" name="eventType" value="ns-event">
-                    <label for="nsType" style="color: white;">NoviSign event</label>
-                </div>
-
-                <div class="flexbox-raw-centered" style="gap: 8px;">
-                    <input id="serialType" type="radio" name="eventType" value="serial-event">
-                    <label for="serialType" style="color: white;">Serial event</label>
-                </div>
-
-                <div class="flexbox-raw-centered" style="gap: 8px;">
-                    <input id="customType" type="radio" name="eventType" value="custom-event" checked>
-                    <label for="customType" style="color: white;">Custom event</label>
-                </div>
-            </div>
-
-            <div class="flexbox-wrap max-w">
-                <div class="flexbox-column-start">
-                    <label style="color: white; margin-bottom: 8px;" for="eventHost">Event host/integration type</label>
-                    <input type="text" id="eventHost" class="control" style="min-width: 300px;">
-                </div>
-                <div id="nsType-eventType" class="flexbox-column-start --hidden">
-                    <label style="color: white; margin-bottom: 8px;" for="eventType">Event type</label>
-                    <input type="text" id="eventType" class="control" style="min-width: 300px;" value="DYNAMIC_EVENT">
-                </div>
-            </div>
-            <label style="color: white; margin-top: 16px;" for="events">Event data</label>
-            <textarea id="events" cols=75 rows=10></textarea>
-            <span id="eventsFormatWarn" style="color: red; visibility: hidden; line-height: normal;">Events data not
-                valid</span>
-            <span id="eventAlreadyExist" style="color: red; visibility: hidden; line-height: normal;">Event already exists for this host</span>
-            <div style="margin-top: 24px;">
-                <input type="checkbox" id="eventJsonFormat" name="dnsName" value="1">
-                <label style="margin-left: 8px; color: white" for="eventJsonFormat">Format as JSON</label>
-            </div>
-        </div>
-
-        <div class="flexbox-wrap" style="gap: 32px; align-self: flex-end;">
-            <button id="editThisEvent" type="button" class="btn btn-red --hidden"
-                    style="min-width: 100px; margin-top: 32px;"
-                    onclick="editEvent()">Edit
-            </button>
-            <button id="addNewEvent" type="button" class="btn btn-red" style="min-width: 100px; margin-top: 32px;"
-                    disabled
-                    onclick="addToEventList()">Add
-            </button>
-            <button type="button" class="btn btn-red" style="min-width: 100px; margin-top: 32px;"
-                    onclick="closeEditor()">Cancel
-            </button>
-        </div>
-    </div>
-</dialog>
-
-</div>
-<div id="body"></div>
 
 </body>
 </html>
@@ -857,71 +799,107 @@
     }
 
     let ledConfig = {};
-    function saveSettings() {
-        const name = document.getElementById('wifiSsid')?.value || document.getElementById('wifiname')?.value;
-        const pass = document.getElementById('wifiPass')?.value || document.getElementById('wifipass')?.value;
-        const hSsid = document.getElementById('hotspotSsid').value;
 
-        const clientWebAccess = document.getElementById('clientWebAccess') ? Number(document.getElementById('clientWebAccess')?.checked) : config.clientWebAccess;
-        const enableOtaUpdate = document.getElementById('enableOtaUpdate') ? Number(document.getElementById('enableOtaUpdate')?.checked) : config.enableOtaUpdate;
+    function collectSettingsPayload() {
+        const name = document.getElementById('wifiSsid')?.value || document.getElementById('wifiname')?.value || '';
+        const pass = document.getElementById('wifiPass')?.value || document.getElementById('wifipass')?.value || '';
+        const hSsid = document.getElementById('hotspotSsid')?.value || '';
 
-        const useDnsName = Number(document.getElementById('useDnsName').checked);
-        const loggerEnabled = Number(document.getElementById('loggerEnabled').checked);
-        const loggerLevel = Number(document.getElementById('loggerLevel').selectedIndex);
-        const wiFiMode = Number(document.getElementById('wiFiMode').selectedIndex);
+        const clientWebAccess = document.getElementById('clientWebAccess') ? Boolean(document.getElementById('clientWebAccess')?.checked) : Boolean(config.clientWebAccess);
+        const enableOtaUpdate = document.getElementById('enableOtaUpdate') ? Boolean(document.getElementById('enableOtaUpdate')?.checked) : Boolean(config.enableOtaUpdate);
 
-        const statisticEnabled = Number(document.getElementById('statisticEnabled').checked);
-        const statisticLevel = Number(document.getElementById('statisticLevel').selectedIndex);
+        const loggerLevel = Number(document.getElementById('loggerLevel')?.selectedIndex ?? 0);
+        const wiFiMode = Number(document.getElementById('wiFiMode')?.selectedIndex ?? 0);
 
-        const useSound = Number(document.getElementById('useSound').checked);
-        const customHSsid = Number(document.getElementById('useHotspotSsid').checked);
-        const remoteTriggering = Number(document.getElementById('remoteTriggering').checked);
-        const serialEvents = Number(document.getElementById('serialEvents').checked);
-        const saveLastState = Number(document.getElementById('saveLastState').checked);
-        const restoreLastStateOnLoad = Number(document.getElementById('restoreLastStateOnLoad').checked);
-        const remoteStateChange = Number(document.getElementById('remoteStateChange').checked);
-        const keystoreEnabled = Number(document.getElementById('keystoreEnabled').checked);
-        const sendEventOnKeystoreUpdate = Number(document.getElementById('sendEventOnKeystoreUpdate').checked);
-        const delaySendEvents = Number(document.getElementById('delaySendEvents').checked);
-        const overrideLedConfig = Number(document.getElementById('overrideLedConfig').checked);
-        const customServer = Number(document.getElementById('customServer').checked);
-        const timezone = Number(document.getElementById('timezone').selectedIndex);
+        const statisticEnabled = Boolean(document.getElementById('statisticEnabled')?.checked);
+        const statisticLevel = Number(document.getElementById('statisticLevel')?.selectedIndex ?? 0);
 
-        const statApi = document.getElementById('statisticApi').value;
+        const useSound = Boolean(document.getElementById('useSound')?.checked);
+        const customHSsid = Boolean(document.getElementById('useHotspotSsid')?.checked);
+        const remoteTriggering = Boolean(document.getElementById('remoteTriggering')?.checked);
+        const serialEvents = Boolean(document.getElementById('serialEvents')?.checked);
+        const saveLastState = Boolean(document.getElementById('saveLastState')?.checked);
+        const restoreLastStateOnLoad = Boolean(document.getElementById('restoreLastStateOnLoad')?.checked);
+        const remoteStateChange = Boolean(document.getElementById('remoteStateChange')?.checked);
+        const keystoreEnabled = Boolean(document.getElementById('keystoreEnabled')?.checked);
+        const sendEventOnKeystoreUpdate = Boolean(document.getElementById('sendEventOnKeystoreUpdate')?.checked);
+        const delaySendEvents = Boolean(document.getElementById('delaySendEvents')?.checked);
+        const overrideLedConfig = Boolean(document.getElementById('overrideLedConfig')?.checked);
+        const customServer = Boolean(document.getElementById('customServer')?.checked);
+        const timezone = Number(document.getElementById('timezone')?.selectedIndex ?? 0);
 
-        const extrasConfig = JSON.stringify({
-            clientWebAccess,
-            useDnsName,
-            loggerEnabled,
-            statisticEnabled,
-            statisticLevel,
-            loggerLevel,
-            wiFiMode,
-            useSound,
-            customHSsid,
-            enableOtaUpdate,
-            remoteTriggering,
-            saveLastState,
-            restoreLastStateOnLoad,
-            overrideLedConfig,
-            customServer,
-            remoteStateChange,
-            keystoreEnabled,
-            sendEventOnKeystoreUpdate,
-            delaySendEvents,
-            serialEvents,
-            timezone,
-            ledConfig,
+        const statApi = document.getElementById('statisticApi')?.value || '';
+
+        return {
             wifiSsid: name,
             wifiPass: pass,
             hotspotSsid: hSsid,
-            statisticApi: statApi
-        });
+            customHSsid,
+            statisticApi: statApi,
+            clientWebAccess,
+            enableOtaUpdate,
+            loggerLevel,
+            wiFiMode,
+            statisticEnabled,
+            statisticLevel,
+            useSound,
+            remoteTriggering,
+            remoteStateChange,
+            saveLastState,
+            restoreLastStateOnLoad,
+            keystoreEnabled,
+            sendEventOnKeystoreUpdate,
+            delaySendEvents,
+            overrideLedConfig,
+            serialEvents,
+            customServer,
+            timezone,
+            ledConfig
+        };
+    }
 
-        let data = "SETTINGS=" + '{"configuration":' + extrasConfig + '}';
-        data.replace(/" /g, '');
-        data.replace(/ "/g, '');
-        httpPOST(data, "Save settings", "Settings saved. Rebooting...", true, handleSuccessSave);
+    async function saveSettings() {
+        const dialog = document.getElementById('successModel');
+        const dialogMessageTitle = document.getElementById('dialogMessageTitle');
+        const dialogMessage = document.getElementById('dialogMessage');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        dialog.style.visibility = 'visible';
+        dialogMessageTitle.innerText = "Save settings";
+        dialogMessage.innerText = "Saving settings...";
+        refreshBtn.disabled = true;
+
+        const payload = collectSettingsPayload();
+
+        try {
+            const response = await fetch('/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json().catch(() => ({}));
+                dialogMessage.innerText = data.result || "Settings saved. Rebooting...";
+                refreshBtn.disabled = false;
+                refreshBtn.innerText = "OK";
+            } else {
+                const errData = await response.json().catch(() => ({}));
+                const errMsg = errData.error || `Server returned error (${response.status})`;
+                dialogMessageTitle.innerText = "Failed";
+                dialogMessage.innerText = errMsg;
+                refreshBtn.innerText = "Close";
+                refreshBtn.disabled = false;
+            }
+        } catch (err) {
+            console.error('Error saving settings:', err);
+            dialogMessageTitle.innerText = "Failed";
+            dialogMessage.innerText = "Network error: Could not save settings";
+            refreshBtn.innerText = "Close";
+            refreshBtn.disabled = false;
+        }
     }
 
     async function loadData() {
@@ -943,12 +921,13 @@
                 }
             }
 
-            const eventsRes = await fetch('/events');
+            const eventsRes = await fetch('/actions');
             if (eventsRes.ok) {
                 const eventsJson = await eventsRes.json();
                 if (eventsJson && eventsJson.result) {
-                    eventDataObj = eventsJson.result || {};
-                    populateTable(eventDataObj);
+                    populateTable(eventsJson.result);
+                } else if (Array.isArray(eventsJson)) {
+                    populateTable(eventsJson);
                 }
             }
 
@@ -974,7 +953,7 @@
                 }
             }
         } catch (e) {
-            console.error('Error loading settings, events, networks, or status:', e);
+            console.error('Error loading settings, actions, networks, or status:', e);
         }
     }
 
@@ -984,11 +963,9 @@
         if (document.getElementById('fwVersion')) document.getElementById('fwVersion').textContent = status.fwVersion || '';
         if (document.getElementById('hwVersion')) document.getElementById('hwVersion').textContent = status.hwVersion || '';
         if (document.getElementById('mac')) document.getElementById('mac').textContent = status.mac || '';
-        if (document.getElementById('ip')) document.getElementById('ip').textContent = status.ip || '';
         if (document.getElementById('heap')) document.getElementById('heap').textContent = status.heap !== undefined ? status.heap : '';
         if (document.getElementById('ksKeys')) document.getElementById('ksKeys').textContent = status.ksKeys !== undefined ? status.ksKeys : '';
         if (document.getElementById('toggleState')) document.getElementById('toggleState').textContent = status.toggleState || '';
-        if (document.getElementById('wiFiModeStatus')) document.getElementById('wiFiModeStatus').textContent = status.wiFiMode || '';
 
         document.querySelectorAll('.device-ip').forEach(el => {
             el.textContent = status.ip || window.location.host;
@@ -1059,7 +1036,7 @@
         }
 
         const checkboxSettings = [
-            'useDnsName', 'loggerEnabled', 'useSound', 'statisticEnabled',
+            'useSound', 'statisticEnabled',
             'saveLastState', 'overrideLedConfig', 'serialEvents', 'customServer',
             'remoteTriggering', 'restoreLastStateOnLoad', 'keystoreEnabled',
             'remoteStateChange', 'sendEventOnKeystoreUpdate', 'delaySendEvents',
@@ -1112,210 +1089,51 @@
         }
     }
 
-    let config, eventDataObj;
-    let tempEventsObj = {};
-    let isEditMode = false;
+    let config;
 
-    let entryKeyToEdit;
-
-    const dataTable = document.getElementById('dataTable');
-    const tbody = dataTable.querySelector('tbody');
-
-    const colorMap = {
-        $K$: 'class="hashed hashed-gray"',
-        $P$: 'class="hashed hashed-orange"',
-        $R$: 'class="hashed hashed-green"',
-    }
-
-    function populateTable(data) {
+    function populateTable(events) {
+        const tbody = document.getElementById('eventsListBody') || document.querySelector('#dataTable tbody');
+        if (!tbody) return;
         tbody.innerHTML = '';
-        let events;
-        if (data) {
-            events = data
-            document.getElementById("saveEditedEventsBtn").disabled = false;
-        } else {
-            events = eventDataObj;
-            document.getElementById("saveEditedEventsBtn").disabled = true;
+        if (!events || (Array.isArray(events) && events.length === 0)) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888; padding: 20px;">No events configured. Click "Edit" to configure events.</td></tr>';
+            return;
         }
-        for (const key in events) {
-            const row = `
-                        <tr ${colorMap[key.substring(0,3)] || ''}>
-                          <td>${key}</td>
-                          <td >${events[key]}</td>
-                          <td style="display: ${isEditMode ? 'flex' : 'none'}; justify-content: flex-end; gap: 8px;">
-                            <button class="btn btn-blue small-btn" onclick="openEditSingleEventModal('${key}')">Edit</button>
-                            <button class="btn btn-red small-btn" onclick="removeEntry('${key}')">Remove</button>
-                          </td>
-                        </tr>
-                      `;
-            tbody.insertAdjacentHTML('beforeend', row);
-        }
-        toggleActionsColumn(isEditMode);
-    }
 
-    function addEventEntry(host, data) {
-        const eventExist = host && tempEventsObj.hasOwnProperty(host);
-        if (!eventExist) {
-            if (data) {
-                tempEventsObj[host] = data;
-                populateTable(tempEventsObj);
-            } else {
-                throw new Error("event data is empty");
-            }
-        } else {
-            throw new Error("event already exist");
+        if (Array.isArray(events)) {
+            events.forEach(ev => {
+                const name = escapeHtml(ev.name || 'Event');
+                const host = escapeHtml(ev.host || '-');
+                const payload = escapeHtml(ev.payload || '-');
+                const triggers = Array.isArray(ev.triggers) && ev.triggers.length > 0
+                    ? ev.triggers.map(t => `<span class="badge badge-trigger">${escapeHtml(t)}</span>`).join(' ')
+                    : '-';
+                const actions = Array.isArray(ev.actions) && ev.actions.length > 0
+                    ? ev.actions.map(a => `<span class="badge badge-action">${escapeHtml(a)}</span>`).join(' ')
+                    : '-';
+                const disabledStyle = ev.enabled === false ? 'opacity: 0.55;' : '';
+                const row = `
+                    <tr style="${disabledStyle}">
+                        <td><strong>${name}</strong></td>
+                        <td style="word-break: break-all;">${host}</td>
+                        <td style="font-family: monospace; font-size: 0.85rem; word-break: break-all;">${payload}</td>
+                        <td>${triggers}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
         }
     }
 
-    function removeEntry(key) {
-        if (confirm(`Are you sure you want to remove the event "${key}"?`)) {
-            if (tempEventsObj[key]) {
-                delete tempEventsObj[key];
-                populateTable(tempEventsObj);
-            } else {
-                alert(`Event "${key}" not found!`)
-            }
-        }
-    }
-
-    const eventData = document.getElementById("events");
-    const nsEventTypeContainer = document.getElementById("nsType-eventType");
-    const hostInput = document.getElementById("eventHost");
-    const addNewEventButton = document.getElementById("addNewEvent");
-    const eventsFormatWarn = document.getElementById("eventsFormatWarn");
-    const eventsAlreadyExistWarn = document.getElementById("eventAlreadyExist");
-
-    document.getElementsByName("eventType").forEach(e => e.addEventListener("input", (el) => {
-        switch (el.target.value) {
-            case "ns-event":
-                eventData.value = "[{\"name\":\"propName_1\",\"value\":\"val_forProp_1\"}]";
-                hostInput.value = "";
-                hostInput.disabled = false;
-                nsEventTypeContainer.classList.remove("--hidden");
-                break;
-            case "serial-event":
-                nsEventTypeContainer.classList.add("--hidden");
-                hostInput.disabled = true;
-                eventData.value = "[EVENT-ID]";
-                hostInput.value = "serial";
-                break;
-            case "custom-event":
-                nsEventTypeContainer.classList.add("--hidden");
-                hostInput.disabled = false;
-                eventData.value = "";
-                hostInput.value = "";
-                break;
-        }
-        checkFormValidity();
-    }))
-
-    document.getElementById("eventJsonFormat").addEventListener("change", () => {
-        checkFormValidity();
-    })
-
-    hostInput.addEventListener("input", () => {
-        checkFormValidity();
-    });
-
-    eventData.addEventListener("input", () => {
-        if (document.getElementById("eventJsonFormat").checked) {
-            autoFormatEventData();
-        }
-        checkFormValidity();
-    });
-
-    function checkFormValidity() {
-        let isValid;
-        isValid = hostInput.value && eventData.value !== "";
-        const eventAlreadyExist = hostInput.value && tempEventsObj.hasOwnProperty(hostInput.value);
-        eventsFormatWarn.style.visibility = 'hidden';
-        eventsAlreadyExistWarn.style.visibility = eventAlreadyExist && !entryKeyToEdit ? 'visible' : 'hidden';
-        eventData.classList.remove("--not-valid-event");
-
-        if (document.getElementById("eventJsonFormat").checked) {
-            try {
-                JSON.parse(eventData.value);
-            } catch (e) {
-                eventsFormatWarn.style.visibility = 'visible';
-                eventData.classList.add("--not-valid-event");
-                isValid = false;
-            }
-        }
-        addNewEventButton.disabled = !isValid || eventAlreadyExist;
-    }
-
-    function autoFormatEventData() {
-        try {
-            const obj = JSON.parse(eventData.value);
-            eventData.value = JSON.stringify(obj, undefined, 4);
-        } catch (e) {
-        }
-    }
-
-    function addToEventList() {
-        let data = eventData.value;
-        if (document.getElementById("nsType").checked) {
-            const type = document.getElementById("eventType").value;
-            const obj = JSON.parse(eventData.value);
-            data = `{'eventName':'${type}','eventData':${JSON.stringify(obj, undefined, null)}}`;
-        }
-        try {
-            addEventEntry(hostInput.value, data);
-            /**reset controls*/
-            if (document.getElementById("customType").checked) {
-                eventData.value = "";
-                hostInput.value = "";
-            } else {
-                document.getElementById("customType").click();
-            }
-
-        } catch (e) {
-            alert(e);
-        }
-        closeEditor();
-    }
-
-    function openEditor() {
-        checkFormValidity();
-        document.getElementById('editor').showModal();
-    }
-
-    function closeEditor() {
-        resetControls();
-        entryKeyToEdit = null;
-        document.getElementById('editor').close();
-    }
-
-    function resetControls() {
-        eventData.value = "";
-        hostInput.value = "";
-        document.getElementById("editThisEvent").classList.add('--hidden');
-        addNewEventButton.classList.remove('--display-none');
-        document.getElementById("customType").click();
-        document.getElementById("eventJsonFormat").checked = false;
-        checkFormValidity();
-    }
-
-    function openEditSingleEventModal(key) {
-        document.getElementById('editor').showModal();
-        if (key) {
-            entryKeyToEdit = key;
-            eventData.value = tempEventsObj[key];
-            hostInput.value = key;
-
-            const editEventButton = document.getElementById("editThisEvent");
-            editEventButton.classList.remove('--hidden');
-            addNewEventButton.classList.add('--display-none');
-        }
-    }
-
-    function editEvent() {
-        if (hostInput.value !== null && eventData.value !== null) {
-            delete tempEventsObj[entryKeyToEdit];
-            tempEventsObj[hostInput.value] = eventData.value;
-            populateTable(tempEventsObj);
-        }
-        closeEditor();
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     const networkSelectCtrl = document.getElementById('networks');
@@ -1327,20 +1145,6 @@
     }
 
     loadData();
-    toggleActionsColumn(false);
-
-    function handleSuccessSave() {
-        if (window.location.host === '192.168.4.1') {
-            changeButtonColor(()=>{
-                document.querySelector('#refreshBtn').disabled = false;
-            });
-        } else {
-            setTimeout(()=>{
-                document.querySelector('#upload-box_1').style.fill = '#3c5dd7';
-            }, 4000);
-            setTimeout(startCheckRestart, 3000);
-        }
-    }
 
     function changeButtonColor(fn) {
         setTimeout(()=>{
@@ -1381,67 +1185,31 @@
     function initLedControls(container, ledRBGData) {
         const ledColorMap = {
             ledIdleDefault: 'Idle default',
-            ledIdlePressed: 'Idle on pressed state',
+            ledIdlePressed: 'Idle on Switch ON',
             ledLoading: 'Loading progress',
             ledWarn: 'Warning',
             ledDone: 'Action done',
             ledKeystoreUpdate: 'Keystore action',
-            ledSendEvents: 'Send events progress',
-            ledExternalInterface: 'External interface trigger'
+            ledSendEvents: 'Actions progress',
+            ledExternalInterface: 'External LED/Sound'
         }
         if (Object.keys(ledRBGData).length) {
             container.innerText = '';
             for (const key in ledRBGData) {
-                const ctr = `<div class="item">
-                    <input type="color" style="width: 32px; border: none" id="${key}"value="${ledRBGData[key]}">
-                    <label for="colorPckr">${ledColorMap[key] || key}</label></div>`;
+                const ctr = `<div class="flex-center">
+                    <input type="color" style="visibility: hidden;" id="${key}"value="${ledRBGData[key]}">
+                    <label class="color-picker-button" for="${key}">
+                    <svg for="ledIdleDefault" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="36px" height="36px" viewBox="0 3 24 24">
+                        <g> <polygon style="fill:#475d72" points="12.08,6.53 23.67,10.2 12.12,14.49 0.36,10.11 12.08,6.53 12.08,6.35 0,10.08 0,14.35 11.99,18.85 23.98,14.35 23.98,10.19 12.08,6.35 "></polygon>
+                            <polygon style="fill:${ledRBGData[key]}" points="11.99,21.71 0.02,17.12 0.02,19.41 12.01,24 24,19.42 24,17.13 "></polygon>
+                            <polygon style="fill:#475d72" points="0.36,10.11 12.12,14.49 23.67,10.2 12.08,6.53 "></polygon>
+                        </g>
+                    </svg>${ledColorMap[key] || key}</label></div>`;
                 container.insertAdjacentHTML('beforeend', ctr);
                 const ctrl = document.getElementById(key);
                 ctrl.addEventListener("change", () => ledConfig[key] = ctrl.value);
             }
         }
     }
-
-    function toggleEditMode(state) {
-        const editActionsContainer = document.getElementById('editActionsContainer');
-        const toggleEditModeButton = document.getElementById('toggleEditModeButton');
-        if(state === 'edit') {
-            toggleActionsColumn(true);
-            editActionsContainer.style.display = '';
-            toggleEditModeButton.style.display = 'none';
-            tempEventsObj = {...eventDataObj};
-        } else {
-            editActionsContainer.style.display = 'none';
-            toggleEditModeButton.style.display = '';
-            toggleActionsColumn(false);
-            populateTable();
-        }
-    }
-
-    function saveEvents() {
-        let data = `EVENTS=${JSON.stringify(tempEventsObj)}`;
-        data.replace(/" /g, '');
-        data.replace(/ "/g, '');
-        httpPOST(data, "Save events", "Events saved", true, handleSuccessSave);
-    }
-
-    function toggleActionsColumn(showControls) {
-        isEditMode = Boolean(showControls);
-        const header = document.querySelector('#dataTable thead th:nth-child(3)');
-        const cells = document.querySelectorAll('#dataTable tbody td:nth-child(3)');
-        if (header) header.style.display = showControls ? '' : 'none';
-        cells.forEach(cell => cell.style.display = showControls ? 'flex' : 'none');
-    }
-
-    //events 2.0 - actions
-    // {
-    //     name: string;
-    //     host: string;
-    //     payload: string;
-    //     triggers: Trigger[];
-    //     actions: Actions[];
-    //     enabled: boolean;
-    //     scheduler: {} | null;
-    // }
 
 </script>

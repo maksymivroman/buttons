@@ -8,7 +8,7 @@
 #include "Global/Global.hpp"
 #include <map>
 
-typedef std::map<BUTTON_STATE, EVENT_TRIGGER> EventTriggerMap;
+typedef std::map<BUTTON_STATE, ACTION_TRIGGER> ActionTriggerMap;
 
 class ButtonState {
 
@@ -27,15 +27,15 @@ public:
     void setToggleState(BUTTON_STATE state);
     BUTTON_STATE toggleToggleState();
     BUTTON_STATE getToggleMode() const;
-    EVENT_TRIGGER getEventTrigger(bool isToggleMode);
+    ACTION_TRIGGER getActionTrigger(bool isToggleMode);
 
 private:
     int currentButtonState = 0;
     int toggleableState = 0;
     OPERATION_MODE _operationMode {RUN};
-    EventTriggerMap triggerByState = {
-            {NOT_PRESSED, STATE_RELEASED},
-            {PRESSED, STATE_PRESSED}
+    ActionTriggerMap actionTriggerByState = {
+            {NOT_PRESSED, ACTION_TRIGGER::SWITCH_OFF},
+            {PRESSED, ACTION_TRIGGER::SWITCH_ON}
     };
 };
 

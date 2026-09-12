@@ -15,9 +15,11 @@ public:
     const String *events();
     void getSettingsJson(JsonObject &result);
     void getEventsJson(JsonObject &result);
+    void getEventsArray(JsonArray &result);
     EEPROM_FLAGS buttonFlags() const;
 
     void saveEvents(String events);
+    void saveSettings(JsonObjectConst &settings);
     void saveSettings(String &settings);
     void loadButtonEepromSettings();
     void loadEvents();
@@ -67,6 +69,7 @@ public:
 
 private:
     void writeButtonEepromSettings(String& config);
+    void writeButtonEepromSettings(JsonObjectConst &config);
     void writeToEEPROM(const EEPROM_SETTINGS &settings);
 
     void updateDynamicEEPROM(EEPROM_DYNAMIC dynamicProps);

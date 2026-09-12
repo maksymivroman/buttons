@@ -38,9 +38,27 @@ public:
         request->send(response);
     }
 
+    template<typename PopulateFn>
+    static void sendSuccessArray(AsyncWebServerRequest *request, PopulateFn populateResult, size_t bufferSize = 2048) {
+        auto *response = new AsyncJsonResponse(false, bufferSize);
+        JsonObject root = response->getRoot();
+        root["status"] = 200;
+        root["error"] = nullptr;
+        JsonArray result = root.createNestedArray("result");
+        populateResult(result);
+        response->setLength();
+        request->send(response);
+    }
+
     static void sendSuccess(AsyncWebServerRequest *request, const String &message = "OK", size_t bufferSize = 256);
+    static void sendSuccess(AsyncWebServerRequest *request, const char *message, size_t bufferSize = 256) {
+        sendSuccess(request, String(message), bufferSize);
+    }
 
     static void sendError(AsyncWebServerRequest *request, int statusCode, const String &errorMessage, size_t bufferSize = 256);
+    static void sendError(AsyncWebServerRequest *request, int statusCode, const char *errorMessage, size_t bufferSize = 256) {
+        sendError(request, statusCode, String(errorMessage), bufferSize);
+    }
 
 private:
     AsyncJsonResponse *_response{nullptr};
