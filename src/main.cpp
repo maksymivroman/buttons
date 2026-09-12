@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
 
@@ -336,8 +337,8 @@ void setup() {
     });
 
     server.on("/server/load-html", HTTP_GET, [](AsyncWebServerRequest *request) {
-        if (SPIFFS.exists(SERVER_HTML_FILE)) {
-            request->send(SPIFFS, SERVER_HTML_FILE, "text/plain");
+        if (LittleFS.exists(SERVER_HTML_FILE)) {
+            request->send(LittleFS, SERVER_HTML_FILE, "text/plain");
         } else {
             request->send(200, "text/plain", "");
         }
@@ -347,7 +348,7 @@ void setup() {
         request->send(200, "text/plain", "File Uploaded");
     }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
         if (!index) {
-            request->_tempFile = SPIFFS.open(SERVER_HTML_FILE, "w");
+            request->_tempFile = LittleFS.open(SERVER_HTML_FILE, "w");
             logger.log("Upload Start: %s\n", filename.c_str());
         }
 
@@ -368,8 +369,8 @@ void setup() {
     server.onNotFound([](AsyncWebServerRequest *request) {
         auto useServer = buttonSettings.customServer();
         if (useServer && (request->url() == buttonSettings.serverConfig().serverPath)) {
-            if (SPIFFS.exists(SERVER_HTML_FILE)) {
-                request->send(SPIFFS, SERVER_HTML_FILE, "text/html");
+            if (LittleFS.exists(SERVER_HTML_FILE)) {
+                request->send(LittleFS, SERVER_HTML_FILE, "text/html");
             } else {
                 request->send(200, "text/html", "Upload your HTML first.");
             }

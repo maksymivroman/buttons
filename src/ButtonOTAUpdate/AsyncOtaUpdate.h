@@ -11,11 +11,10 @@
 #include "ESP8266WiFi.h"
 #include "ESPAsyncTCP.h"
 #include "flash_hal.h"
-#include "FS.h"
+#include <LittleFS.h>
 
 #include "Hash.h"
 #include "ESPAsyncWebServer.h"
-#include "FS.h"
 
 #include "UpdateWebPage.h"
 #include "Global/Global.hpp"
