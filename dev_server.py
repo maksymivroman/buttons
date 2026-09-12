@@ -51,6 +51,16 @@ MOCK_STATE = {
         "hotspotSsid": "EventButton-AP",
         "customHSsid": False,
         "serverPath": "/dashboard",
+        "ledConfig": {
+            "ledIdleDefault": "#ffffff",
+            "ledIdlePressed": "#00ff00",
+            "ledLoading": "#0000ff",
+            "ledWarn": "#ffcc00",
+            "ledDone": "#00ff00",
+            "ledKeystoreUpdate": "#ff00ff",
+            "ledSendEvents": "#00ffff",
+            "ledExternalInterface": "#ffffff"
+        },
         "options": {
             "loggerLevels": [
                 {"value": 0, "label": "OFF"},
@@ -74,11 +84,26 @@ MOCK_STATE = {
             ]
         }
     },
-    "events": {
-        "S01": "PRESS:CLICK",
-        "S02": "HOLD:2000",
-        "N01": "SCENE:OFFICE_LIGHTS_TOGGLE"
-    },
+    "events": [
+        {
+            "name": "Toggle Light",
+            "host": "http://192.168.1.50/api/relay/toggle",
+            "payload": "{\"action\": \"toggle\"}",
+            "triggers": ["SINGLE_PRESS"],
+            "actions": ["HTTP_REQUEST"],
+            "enabled": True,
+            "scheduler": None
+        },
+        {
+            "name": "Notify Switch On",
+            "host": "http://192.168.1.10/notify",
+            "payload": "SWITCH ON OCCURRED",
+            "triggers": ["SWITCH_ON"],
+            "actions": ["HTTP_REQUEST", "SERIAL_DATA"],
+            "enabled": True,
+            "scheduler": None
+        }
+    ],
     "logs": {
         "100": "[INIT] DevServer started in mock mode",
         "101": "[WIFI] Connected to DevNet_5G (RSSI: -52 dBm)",
@@ -110,6 +135,9 @@ def load_components_from_hpp():
 
 
 class DevServerHandler(http.server.SimpleHTTPRequestHandler):
+    def address_string(self):
+        return self.client_address[0]
+
     def send_json(self, data, code=200):
         body = json.dumps(data).encode("utf-8")
         self.send_response(code)
@@ -143,13 +171,29 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
 
         self.send_text(content, 200, "text/html")
 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
     def do_GET(self):
         url = urllib.parse.urlparse(self.path)
         path = url.path
 
-        # 1. HTML Routes
+        # 1. HTML Page Routes
         if path in ("/", "/index", "/index.html"):
             return self.serve_html_with_components(os.path.join(BASE_DIR, "index.html"))
+
+        if path in ("/editor", "/editor.html", "/actionEditor", "/actionEditor.html", "/action-editor"):
+            return self.serve_html_with_components(os.path.join(BASE_DIR, "actionEditor.html"))
+
+        if path in ("/server/editor", "/server/editor.html", "/server-editor"):
+            editor_path = os.path.join(BASE_DIR, "src", "editor.html")
+            if not os.path.exists(editor_path):
+                editor_path = os.path.join(BASE_DIR, "editor.html")
+            return self.serve_html_with_components(editor_path)
 
         if path in ("/flags", "/flags.html"):
             return self.serve_html_with_components(os.path.join(BASE_DIR, "flags.html"))
@@ -157,16 +201,10 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
         if path in ("/logs", "/logs.html"):
             return self.serve_html_with_components(os.path.join(BASE_DIR, "logs.html"))
 
-        if path in ("/server/editor", "/editor", "/editor.html"):
-            editor_path = os.path.join(BASE_DIR, "src", "editor.html")
-            if not os.path.exists(editor_path):
-                editor_path = os.path.join(BASE_DIR, "editor.html")
-            return self.serve_html_with_components(editor_path)
-
         if path in ("/dashboard", "/dashboard.html"):
             return self.serve_html_with_components(os.path.join(BASE_DIR, "dashboard.html"))
 
-        # 2. Mock API Routes
+        # 2. Mock JSON API Routes
         if path == "/status":
             return self.send_json({
                 "status": 200,
@@ -189,11 +227,12 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
             })
 
         if path == "/settings":
-            return self.send_json({"success": True, "result": MOCK_STATE["settings"]})
+            return self.send_json({"status": 200, "error": None, "result": MOCK_STATE["settings"]})
 
         if path == "/networks":
             return self.send_json({
-                "success": True,
+                "status": 200,
+                "error": None,
                 "result": [
                     {"ssid": "DevNet_5G", "rssi": -48, "secure": True},
                     {"ssid": "Office_WiFi", "rssi": -65, "secure": True},
@@ -201,11 +240,11 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
                 ]
             })
 
-        if path in ("/events", "/eventsV2"):
-            return self.send_json({"success": True, "result": MOCK_STATE["events"]})
+        if path in ("/actions", "/events", "/eventsData", "/eventsV2", "/api/events"):
+            return self.send_json({"status": 200, "error": None, "result": MOCK_STATE["events"]})
 
         if path == "/flagsData":
-            return self.send_json({"success": True, "result": MOCK_STATE["flags"]})
+            return self.send_json({"status": 200, "error": None, "result": MOCK_STATE["flags"]})
 
         if path == "/logsData":
             return self.send_json(MOCK_STATE["logs"])
@@ -234,7 +273,51 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
             print(f"[FLAGS POST] Updated Flags: {MOCK_STATE['flags']}")
             return self.send_text("Flags updated!", 200)
 
-        if path in ("/updateData", "/settings", "/save"):
+        if path in ("/actions", "/events", "/eventsData"):
+            try:
+                parsed_json = json.loads(post_body)
+                if isinstance(parsed_json, list):
+                    MOCK_STATE["events"] = parsed_json
+                elif isinstance(parsed_json, dict) and "result" in parsed_json and isinstance(parsed_json["result"], list):
+                    MOCK_STATE["events"] = parsed_json["result"]
+                print(f"[ACTIONS POST] Saved {len(MOCK_STATE['events'])} actions")
+                return self.send_json({"status": 200, "error": None, "result": "Actions saved successfully!"})
+            except Exception as e:
+                print(f"[ACTIONS POST ERROR] {e}")
+                return self.send_json({"status": 400, "error": str(e), "result": None}, 400)
+
+        if path == "/":
+            if post_body.startswith("SETTINGS="):
+                try:
+                    payload = post_body[len("SETTINGS="):]
+                    settings_obj = json.loads(payload)
+                    cfg = settings_obj.get("configuration", {})
+                    for k, v in cfg.items():
+                        MOCK_STATE["settings"][k] = v
+                    print(f"[SETTINGS POST] Updated settings")
+                except Exception as e:
+                    print(f"[SETTINGS POST ERROR] {e}")
+                return self.send_text("OK", 200)
+            elif post_body.startswith("FIND="):
+                print("[FIND POST] Button find triggered")
+                return self.send_text("OK", 200)
+            elif post_body.startswith("ID="):
+                return self.send_text("ID_OK", 200)
+            return self.send_text("OK", 200)
+
+        if path == "/settings":
+            try:
+                parsed_json = json.loads(post_body)
+                cfg = parsed_json.get("configuration", parsed_json) if isinstance(parsed_json, dict) else {}
+                for k, v in cfg.items():
+                    MOCK_STATE["settings"][k] = v
+                print(f"[SETTINGS POST] Updated settings via JSON /settings")
+                return self.send_json({"status": 200, "error": None, "result": "Settings saved. Rebooting..."})
+            except Exception as e:
+                print(f"[SETTINGS POST ERROR] {e}")
+                return self.send_json({"status": 400, "error": str(e), "result": None}, 400)
+
+        if path in ("/updateData", "/save"):
             print(f"[{path} POST] Received payload: {post_body}")
             return self.send_text("OK", 200)
 
@@ -251,9 +334,10 @@ def main():
     print("=" * 60)
     print("Available Pages:")
     print(f"  - Setup / Home:      http://localhost:{PORT}/")
+    print(f"  - Action Editor:     http://localhost:{PORT}/editor")
+    print(f"  - Server Editor:     http://localhost:{PORT}/server/editor")
     print(f"  - Flags Page:        http://localhost:{PORT}/flags")
     print(f"  - Logs Page:         http://localhost:{PORT}/logs")
-    print(f"  - Server Editor:     http://localhost:{PORT}/server/editor")
     print(f"  - Dashboard:         http://localhost:{PORT}/dashboard")
     print("-" * 60)
     print(f"Registered SSR Components ({len(components)}):")

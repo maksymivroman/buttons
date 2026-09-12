@@ -17,12 +17,18 @@ static const char EVENTS_FILE_NAME[] = "/post.json";
 static const char SERVER_CONF_PATH[] = "/server_conf.json";
 static const char SERVER_HTML_FILE[] = "/custom_page.html";
 
-
-enum EVENT_TRIGGER {
-    DEFAULT_TRIGGER,
+enum class ACTION_TRIGGER {
+    SINGLE_PRESS,
+    SWITCH_ON,
+    SWITCH_OFF,
     KEYSTORE_UPDATE,
-    STATE_PRESSED,
-    STATE_RELEASED
+    REMOTE_TRIGGER
+};
+
+enum class ACTION_TYPE {
+    HTTP_REQUEST,
+    SERIAL_DATA,
+    OI_OUTPUT
 };
 
 enum BUTTON_STATE {
@@ -87,11 +93,16 @@ struct TimeZoneEntry {
 };
 
 struct EEPROM_SETTINGS {
+    /**@deprecated not used*/
     bool loggerEnabled = false;
+
     bool statisticEnabled = false;
     bool clientWebAccess = false;
     bool enableOtaUpdate = false;
+
+    /**@attention not used*/
     bool useDnsName = false;
+
     bool useSound = false;
     bool useCustomHSsid = false;
     bool remoteTriggering = false;

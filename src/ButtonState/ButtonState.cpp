@@ -33,11 +33,11 @@ void ButtonState::setToggleState(BUTTON_STATE state) {
     this->toggleableState = state;
 }
 
-EVENT_TRIGGER ButtonState::getEventTrigger(bool isToggleMode) {
+ACTION_TRIGGER ButtonState::getActionTrigger(bool isToggleMode) {
     if (!isToggleMode) {
-        return DEFAULT_TRIGGER;
+        return ACTION_TRIGGER::SINGLE_PRESS;
     }
-    return this->triggerByState.at(this->getToggleMode());
+    return this->actionTriggerByState.at(this->getToggleMode());
 }
 
 void ButtonState::setOperationMode(OPERATION_MODE mode) {

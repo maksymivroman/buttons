@@ -3,8 +3,18 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>Event button | Logs</title>
+    <title>action button | Logs</title>
     <style>
+        :root {
+            --main: #333c45;
+            --background: #eeeaea;
+            --accent: #6e79d6;
+        }
+
+        *, ::after, ::before {
+            box-sizing: border-box;
+        }
+
         html {
             font-size: 16px;
         }
@@ -12,174 +22,353 @@
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0;
-            background: #eeeaea;
+            background: var(--background);
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
+            overflow: auto;
         }
 
         .header {
-            max-height: 50px;
-            background-color: #1e5e9d;
-            width: 100vw;
-            padding: 0 12px 0 12px;
+            max-height: 46px;
+            background-color: var(--main);
+            width: 100%;
+            padding: 0 8px 0 8px;
             display: flex;
             align-items: center;
             flex: 1;
             justify-content: space-between;
+            position: fixed;
+            z-index: 100;
         }
 
-        .content {
+        .header-text {
+            color: white;
+            font-weight: 200;
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+        }
+
+        .flex-col {
             display: flex;
             flex-flow: column;
-            width: 100vw;
-            padding: 16px;
-            overflow: auto;
         }
 
         .btn {
             color: #fff;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             font-weight: 400;
+            min-width: 110px;
             text-align: center;
             white-space: nowrap;
             vertical-align: middle;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
-            padding: .375rem .75rem;
-            font-size: 1rem;
+            padding: .275rem .65rem;
+            font-size: 0.9rem;
             line-height: 1.5;
-            border-radius: .25rem;
+            border-radius: 1rem;
+            cursor: pointer;
             transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
 
-        .btn-red {
-            background-color: #cb1d38;
-            border: 1px solid #cb1d38;
+        .btn-sm {
+            min-width: auto;
+            padding: .25rem .6rem;
+            font-size: 0.85rem;
+            border-radius: 0.75rem;
         }
 
-        .btn-red:hover:not(:disabled) {
-            background-color: #a6132f;
+        .btn:disabled {
+            color: lightgray;
+            background-color: gray;
+            border: 1px solid gray;
+            cursor: not-allowed;
         }
 
-        button, input, optgroup, select, textarea {
-            margin: 0;
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
+        .btn-light {
+            background-color: #fff;
+            border: 1px solid #fff;
+            color: #000;
         }
 
-        *, ::after, ::before {
-            box-sizing: border-box;
+        .btn-light:hover:not(:disabled) {
+            background-color: #d0d0d0;
+            border-color: #d0d0d0;
+            cursor: pointer;
         }
 
-        button, select {
-            text-transform: none;
+        .btn-dark {
+            background-color: #4d5156;
+            border: 1px solid #4d5156;
+            color: #fff;
+        }
+
+        .btn-dark:hover:not(:disabled) {
+            background-color: #3b3e42;
+            border-color: #3b3e42;
+            cursor: pointer;
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+            border: 1px solid var(--accent);
+            color: #fff;
+        }
+
+        .btn-accent:hover:not(:disabled) {
+            background-color: #5863c4;
+            border-color: #5863c4;
+            cursor: pointer;
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            width: 100%;
+            padding: 1rem;
+            flex-flow: column;
+            align-items: flex-start;
+            margin-top: 46px;
+        }
+
+        .section-container {
+            display: flex;
+            flex-flow: column;
+            margin-top: 1rem;
+            align-items: flex-start;
+            border-bottom: 4px solid var(--main);
+            width: 100%;
+        }
+
+        .section-header {
+            background-color: var(--main);
+            color: white;
+            padding: 4px 12px 2px 10px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 0;
+        }
+
+        .table-responsive {
+            width: 100%;
+            flex: 1;
+            background: #fff;
+            border-radius: 5px;
+            border: 1px solid lightgray;
+            box-shadow: 0 2px 7px #13537a24;
+            overflow: auto;
+            max-height: calc(100vh - 180px);
         }
 
         table {
             background: inherit;
-            width: 100vw;
-            height: fit-content;
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-family: monospace;
+            font-size: 0.85rem;
         }
 
         th {
-            border-bottom: 1px solid gray;
+            border-bottom: 2px solid gray;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #333;
+            background-color: #fafafa;
+            font-weight: 600;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         td {
-            border-bottom: 1px solid lightgray;
+            border-bottom: 1px solid #e9ecef;
+            padding: 8px 12px;
+            vertical-align: middle;
+            background: #fff;
+        }
+
+        tr:hover td {
+            background-color: #f8faff;
+        }
+
+        .form-field {
+            background: #fff;
+            display: flex;
+            align-items: center;
+            border-radius: 4px;
+            padding: 4px 8px;
+            border: 1px solid #ced4da;
+        }
+
+        .form-field > input {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 0.85rem;
+            font-family: inherit;
+            width: 100%;
         }
 
         @media screen and (max-width: 800px) {
-            .setup-logo {
+            .--hidden-sm {
                 display: none;
             }
         }
     </style>
 </head>
 <body>
-<div style="display: flex; flex-flow: column; overflow: auto;">
-    <div class="header">
-        <div style="display: flex; align-items: center;">
-            ^DEVICE_LOGO^
-            <div style="display: flex; align-items: baseline; margin-left: 12px;">
-                <h2 style="color: white; font-weight: 200;">event button</h2>
-                <h2 style="color: white; font-weight: 200;" class="setup-logo">&nbsp|&nbsp</h2>
-                <h4 style="color: lightgray; font-weight: 200;" class="setup-logo">Logs</h4>
-            </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <button style="align-self: flex-end;" type="button" class="btn btn-red"
-                    onclick="location.href='/'">Back
-            </button>
+
+<div class="header">
+    <div class="flex-center">
+        ^DEVICE_LOGO^
+        <div style="display: flex; align-items: baseline; margin-left: 12px;">
+            <h2 class="header-text">action button</h2>
+            <h2 class="header-text --hidden-sm">&nbsp|&nbsp</h2>
+            <h4 class="header-text --hidden-sm">Logs</h4>
         </div>
     </div>
-    <div class="content">
-        <div style="overflow: auto">
-            <table id="logsTable" style="width: auto; font-family: monospace; min-width: 400px;">
-                <thead>
+    <div class="flex-center" style="gap: 10px;">
+        <button type="button" class="btn btn-light" onclick="location.href='/'">Back</button>
+    </div>
+</div>
+
+<div class="main">
+    <div class="section-container">
+        <span class="section-header">System Logs</span>
+    </div>
+
+    <div class="toolbar">
+        <div class="flex-center" style="gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-dark btn-sm" onclick="getLogs()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24"><title>refresh</title><path fill="currentColor" d="M12 20q-3.35 0-5.675-2.325T4 12t2.325-5.675T12 4q1.725 0 3.3.712T18 6.75V4h2v7h-7V9h3.2q-.8-1.4-2.187-2.2T12 6Q9.5 6 7.75 7.75T6 12t1.75 4.25T12 18q1.925 0 3.475-1.1T17.65 14h2.1q-.65 2.85-2.887 4.425T12 20"/></svg>
+                Refresh
+            </button>
+            <span id="logCountBadge" style="font-size: 0.85rem; color: #555; font-weight: 600; margin-left: 8px;">0 entries</span>
+        </div>
+        <div class="form-field" style="width: 220px;">
+            <input type="text" id="logFilter" placeholder="Filter logs..." oninput="filterLogs()">
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="logsTable">
+            <thead>
                 <tr>
-                    <th colspan="1">#</th>
-                    <th colspan="1" style="display: flex; justify-content: flex-end; padding: 4px">
-                        <button style="padding: 0 8px;" type="button" class="btn btn-red"
-                                onclick="getLogs()">refresh
-                        </button>
-                    </th>
+                    <th style="width: 80px;">#</th>
+                    <th>Message</th>
                 </tr>
-                </thead>
-                <tbody>
-                <tr></tr>
-                </tbody>
-            </table>
+            </thead>
+            <tbody id="logsTbody">
+                <!-- Log rows -->
+            </tbody>
+        </table>
+        <div id="emptyLogs" style="display: none; text-align: center; padding: 40px 20px; color: #888;">
+            No logs available
         </div>
     </div>
 </div>
+
+<script>
+    let rawLogs = {};
+
+    function renderLogs(logsObj) {
+        const tbody = document.getElementById('logsTbody');
+        const emptyEl = document.getElementById('emptyLogs');
+        const badge = document.getElementById('logCountBadge');
+        const filter = (document.getElementById('logFilter').value || '').toLowerCase().trim();
+
+        tbody.innerHTML = '';
+        const keys = Object.keys(logsObj || {});
+        let count = 0;
+
+        if (keys.length === 0) {
+            emptyEl.style.display = 'block';
+            emptyEl.textContent = 'No logs available';
+            badge.textContent = '0 entries';
+            return;
+        }
+
+        emptyEl.style.display = 'none';
+
+        keys.forEach(key => {
+            const msg = String(logsObj[key] || '');
+            if (!filter || key.toLowerCase().includes(filter) || msg.toLowerCase().includes(filter)) {
+                count++;
+                const row = `
+                    <tr>
+                        <td style="color: #666; font-weight: bold;">${escapeHtml(key)}</td>
+                        <td style="word-break: break-all;">${escapeHtml(msg)}</td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            }
+        });
+
+        badge.textContent = `${count} ${count === 1 ? 'entry' : 'entries'}`;
+        if (count === 0 && keys.length > 0) {
+            emptyEl.style.display = 'block';
+            emptyEl.textContent = 'No logs match filter';
+        }
+    }
+
+    async function getLogs() {
+        const srvURL = window.location.protocol + "//" + window.location.host + "/logsData";
+        try {
+            const res = await fetch(srvURL);
+            if (res.ok) {
+                const data = await res.json();
+                rawLogs = data || {};
+                renderLogs(rawLogs);
+            } else {
+                showError('Server returned status ' + res.status);
+            }
+        } catch (e) {
+            showError(e);
+        }
+    }
+
+    function filterLogs() {
+        renderLogs(rawLogs);
+    }
+
+    function showError(err) {
+        console.error('Error loading logs:', err);
+        const tbody = document.getElementById('logsTbody');
+        const emptyEl = document.getElementById('emptyLogs');
+        tbody.innerHTML = `<tr><td style="color: #c62828;">Error</td><td style="color: #c62828;">Failed to load logs: ${escapeHtml(String(err))}</td></tr>`;
+        emptyEl.style.display = 'none';
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    getLogs();
+</script>
 </body>
 </html>
-<script>
-    const logsTbody = document.querySelector('#logsTable').querySelector('tbody');
-    function getLogs() {
-        const srvURL = window.location.protocol + "//" + window.location.host + "/logsData";
-        const httpRequest = new XMLHttpRequest();
-        httpRequest.open("GET", srvURL, true);
-        httpRequest.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-        httpRequest.send();
-        httpRequest.responseType = 'json';
-        httpRequest.onreadystatechange = function () {
-            if (httpRequest.status === 200) {
-                if (httpRequest.response) {
-                    try {
-                        while (logsTbody.rows.length > 0) {
-                            logsTbody.deleteRow(0)
-                        }
-                        if (Object.entries(httpRequest.response).length === 0) {
-                            const row = `<tr><td>-</td><td>No logs available</td></tr>`;
-                            logsTbody.insertAdjacentHTML('beforeend', row);
-                        }
-                        for (const key in httpRequest.response) {
-                            const row = `<tr><td>${key}-</td><td>${httpRequest.response[key]}</td></tr>`;
-                            logsTbody.insertAdjacentHTML('beforeend', row);
-                        }
-                    } catch (e) {
-                        showError(`Wrong logsData: ${e}`)
-                    }
-                }
-            } else {
-                showError(httpRequest.status);
-            }
-        };
-    }
-    getLogs();
-    function showError(text) {
-        console.error('Error:', text);
-        while (logsTbody.rows.length > 0) {
-            logsTbody.deleteRow(0)
-        }
-        const row = `<tr><td>Error:</td><td>failed to load logs!</td></tr>`;
-        logsTbody.insertAdjacentHTML('beforeend', row);
-    }
-</script>

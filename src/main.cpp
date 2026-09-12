@@ -10,6 +10,7 @@
 #include "HTMLPage/index-html-page.hpp"
 #include "HTMLPage/server-editor-page.hpp"
 #include "HTMLPage/flags-html-page.hpp"
+#include "HTMLPage/action-editor-html-page.hpp"
 #include "LEDService/LEDService.h"
 #include "SettingsService/SettingsService.h"
 #include "NetworkService/NetworkService.h"
@@ -52,7 +53,7 @@ unsigned long timeToExecuteTask = 0;
 
 const char *hotspotPass = "12345678";
 
-Version currentFWVersion(1,6,0, true);
+Version currentFWVersion(0,0,0, true);
 
 ButtonState buttonState;
 LEDService ledService;
@@ -161,17 +162,53 @@ void setup() {
         request->send_P(200, "text/html", logs_page, components);
     });
 
-    server.on("/events", HTTP_GET, [](AsyncWebServerRequest *request) {
-        ApiResponse::sendSuccess(request, [](JsonObject &result) {
-            buttonSettings.getEventsJson(result);
-        }, 2048);
+    server.on("/editor", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", action_editor_html, components);
     });
+
+    server.on("/actions", HTTP_GET, [](AsyncWebServerRequest *request) {
+        ApiResponse::sendSuccessArray(request, [](JsonArray &result) {
+            buttonSettings.getEventsArray(result);
+        }, 4096);
+    });
+
+    auto *saveActionsHandler = new AsyncCallbackJsonWebHandler("/actions", [](AsyncWebServerRequest *request, JsonVariant &json) {
+        if (json.isNull() || (!json.is<JsonArray>() && !json.is<JsonObject>())) {
+            ApiResponse::sendError(request, 400, "Invalid JSON payload: expected an array of actions");
+            return;
+        }
+
+        String jsonString;
+        serializeJson(json, jsonString);
+
+        logger.log("[MAIN->POST /actions] Saving actions. Size: ", jsonString.length());
+        buttonSettings.saveEvents(jsonString);
+        eventService.SetEvents(jsonString, buttonSettings.serialEvents());
+
+        ApiResponse::sendSuccess(request, "Actions saved successfully");
+    }, 4096);
+    server.addHandler(saveActionsHandler);
 
     server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) {
         ApiResponse::sendSuccess(request, [](JsonObject &result) {
             buttonSettings.getSettingsJson(result);
         }, 2560);
     });
+
+    auto *saveSettingsHandler = new AsyncCallbackJsonWebHandler("/settings", [](AsyncWebServerRequest *request, JsonVariant &json) {
+        if (json.isNull() || !json.is<JsonObject>()) {
+            ApiResponse::sendError(request, 400, "Invalid JSON payload: expected a settings object");
+            return;
+        }
+
+        JsonObjectConst settingsObj = json.as<JsonObjectConst>();
+        logger.log("[MAIN->POST /settings] Saving device settings");
+        buttonSettings.saveSettings(settingsObj);
+        RequiredRestart.set();
+
+        ApiResponse::sendSuccess(request, "Settings saved. Rebooting...");
+    }, 4096);
+    server.addHandler(saveSettingsHandler);
 
     server.on("/networks", HTTP_GET, [](AsyncWebServerRequest *request) {
         ApiResponse::sendSuccess(request, [](JsonObject &result) {
@@ -209,6 +246,13 @@ void setup() {
         request->send(response);
     });
 
+    /**
+     * @deprecated Legacy POST / endpoint for urlencoded form commands and settings (e.g. SETTINGS={...}).
+     * Kept for backwards compatibility. Prefer modern dedicated endpoints:
+     * - POST /settings (JSON)
+     * - POST /actions (JSON)
+     * - POST /flags
+     */
     server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
         unsigned int params = request->params();
         logger.log("[MAIN->HTTP_POST] params count: ", std::to_string(params).c_str());
@@ -349,7 +393,7 @@ void setup() {
     }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
         if (!index) {
             request->_tempFile = LittleFS.open(SERVER_HTML_FILE, "w");
-            logger.log("Upload Start: %s\n", filename.c_str());
+            logger.log("[MAIN -> POST to /server/upload]: Upload Start: %s\n", filename.c_str());
         }
 
         if (request->_tempFile) {
@@ -358,7 +402,7 @@ void setup() {
 
         if (final) {
             request->_tempFile.close();
-            logger.log("Upload Finished");
+            logger.log("[MAIN -> POST to /server/upload]: Upload Finished");
 
             if (request->hasArg("path")) {
                 buttonSettings.saveServerConfig(request->arg("path"));
@@ -450,7 +494,7 @@ void loop() {
             externalInterface_ledActive = false;
             externalInterface_buzzActive = false;
             ledService.setLedAction(ACTIONS::SEND_EVENTS, false, false);
-            eventService.SendEvents(buttonState.getEventTrigger(buttonSettings.saveLastState()));
+            eventService.performAction(buttonState.getActionTrigger(buttonSettings.saveLastState()));
             ledService.resetLedAction();
 
             if (RequiredToTriggerButton) {
@@ -501,7 +545,7 @@ void loop() {
         OnKeystoreUpdateTask(
                 SendEventsOnKeystoreChange.get(), []() {
                     ledService.setLedAction(ACTIONS::KEYSTORE_UPDATE, false, false);
-                    eventService.SendEvents(KEYSTORE_UPDATE);
+                    eventService.performAction(ACTION_TRIGGER::KEYSTORE_UPDATE);
                     SendEventsOnKeystoreChange.reset();
                     timeToExecuteTask = 0;
                     ledService.resetLedAction();

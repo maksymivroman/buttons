@@ -32,6 +32,11 @@ void SettingsService::saveEvents(String events) {
     this->eventsData = events;
 }
 
+void SettingsService::saveSettings(JsonObjectConst &settings) {
+    logger.log("[SettingsService] Save Settings data (JsonObject)");
+    writeButtonEepromSettings(settings);
+}
+
 void SettingsService::saveSettings(String &settings) {
     DynamicJsonDocument jsonDoc(4096);
     deserializeJson(jsonDoc, settings);
@@ -96,9 +101,9 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
     settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
 
-    settings.loggerEnabled = jsonSettings["loggerEnabled"].as<bool>() | false;
+//    settings.loggerEnabled = jsonSettings["loggerEnabled"].as<bool>() | false;
     settings.statisticEnabled = jsonSettings["statisticEnabled"].as<bool>() | false;
-    settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
+//    settings.useDnsName = jsonSettings["useDnsName"].as<bool>() | false;
     settings.useSound = jsonSettings["useSound"].as<bool>() | false;
     settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
     settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
@@ -131,6 +136,76 @@ void SettingsService::writeButtonEepromSettings(String &config) {
     this->writeToEEPROM(settings);
 }
 
+void SettingsService::writeButtonEepromSettings(JsonObjectConst &jsonSettings) {
+    EEPROM_SETTINGS settings = {};
+
+    String wiFiName = jsonSettings["wifiSsid"] | "";
+    String wiFiPassword = jsonSettings["wifiPass"] | "";
+    String hotspotSsid = jsonSettings["hotspotSsid"] | "";
+    String statisticApi = jsonSettings["statisticApi"] | "";
+
+    char ssid[256], pass[256], hSsid[32], statApi[256];
+
+    wiFiName.toCharArray(ssid, 256);
+    wiFiPassword.toCharArray(pass, 256);
+    hotspotSsid.toCharArray(hSsid, 32);
+    statisticApi.toCharArray(statApi, 256);
+
+    strcpy(settings.wifiSsid, ssid);
+    strcpy(settings.wifiPass, pass);
+    strcpy(settings.hotspotSsid, hSsid);
+    strcpy(settings.statisticApi, statApi);
+
+    //TODO if button on client mode next settings should not be changed
+    settings.clientWebAccess = jsonSettings["clientWebAccess"].as<bool>() | false;
+    settings.enableOtaUpdate = jsonSettings["enableOtaUpdate"].as<bool>() | false;
+
+    settings.statisticEnabled = jsonSettings["statisticEnabled"].as<bool>() | false;
+    settings.useSound = jsonSettings["useSound"].as<bool>() | false;
+    settings.remoteTriggering = jsonSettings["remoteTriggering"].as<bool>() | false;
+    settings.useCustomHSsid = jsonSettings["customHSsid"].as<bool>() | false;
+    settings.loggerLevel = jsonSettings["loggerLevel"].as<unsigned int>() | 0;
+    settings.wiFiMode = jsonSettings["wiFiMode"].as<unsigned int>() | 0;
+    settings.statisticLevel = jsonSettings["statisticLevel"].as<unsigned int>() | 0;
+    settings.remoteStateChange = jsonSettings["remoteStateChange"].as<bool>() | false;
+    settings.saveLastState = jsonSettings["saveLastState"].as<bool>() | false;
+    settings.restoreLastStateOnLoad = jsonSettings["restoreLastStateOnLoad"].as<bool>() | false;
+    settings.keystoreEnabled = jsonSettings["keystoreEnabled"].as<bool>() | false;
+    settings.sendEventOnKeystoreUpdate = jsonSettings["sendEventOnKeystoreUpdate"].as<bool>() | false;
+    settings.delaySendEvents = jsonSettings["delaySendEvents"].as<bool>() | false;
+    settings.overrideLedConfig = jsonSettings["overrideLedConfig"].as<bool>() | false;
+    settings.serialEvents = jsonSettings["serialEvents"].as<bool>() | false;
+    settings.customServer = jsonSettings["customServer"].as<bool>() | false;
+    settings.timezone = static_cast<TimeZoneId>(jsonSettings["timezone"].as<unsigned int>() | 0);
+
+    JsonObjectConst led = jsonSettings["ledConfig"];
+    if (!led.isNull()) {
+        strncpy(settings.ledIdleDefault, led["ledIdleDefault"] | "", 7);
+        strncpy(settings.ledIdlePressed, led["ledIdlePressed"] | "", 7);
+        strncpy(settings.ledLoading, led["ledLoading"] | "", 7);
+        strncpy(settings.ledWarn, led["ledWarn"] | "", 7);
+        strncpy(settings.ledDone, led["ledDone"] | "", 7);
+        strncpy(settings.ledKeystoreUpdate, led["ledKeystoreUpdate"] | "", 7);
+        strncpy(settings.ledSendEvents, led["ledSendEvents"] | "", 7);
+        strncpy(settings.ledExternalInterface, led["ledExternalInterface"] | "", 7);
+    } else {
+        strncpy(settings.ledIdleDefault, buttonEepromSettings.ledIdleDefault, 7);
+        strncpy(settings.ledIdlePressed, buttonEepromSettings.ledIdlePressed, 7);
+        strncpy(settings.ledLoading, buttonEepromSettings.ledLoading, 7);
+        strncpy(settings.ledWarn, buttonEepromSettings.ledWarn, 7);
+        strncpy(settings.ledDone, buttonEepromSettings.ledDone, 7);
+        strncpy(settings.ledKeystoreUpdate, buttonEepromSettings.ledKeystoreUpdate, 7);
+        strncpy(settings.ledSendEvents, buttonEepromSettings.ledSendEvents, 7);
+        strncpy(settings.ledExternalInterface, buttonEepromSettings.ledExternalInterface, 7);
+    }
+
+    settings.fwVersion = this->buttonEepromSettings.fwVersion;
+
+    logger.log("[SettingsService] -> EEPROM config size: ", sizeof settings);
+
+    this->writeToEEPROM(settings);
+}
+
 void SettingsService::getSettingsJson(JsonObject &result) {
     result["wifiSsid"] = buttonEepromSettings.wifiSsid;
     result["wifiPass"] = buttonEepromSettings.wifiPass;
@@ -139,11 +214,11 @@ void SettingsService::getSettingsJson(JsonObject &result) {
     result["statisticApi"] = buttonEepromSettings.statisticApi;
     result["clientWebAccess"] = buttonEepromSettings.clientWebAccess;
     result["enableOtaUpdate"] = buttonEepromSettings.enableOtaUpdate;
-    result["loggerEnabled"] = buttonEepromSettings.loggerEnabled;
+//    result["loggerEnabled"] = buttonEepromSettings.loggerEnabled;
     result["loggerLevel"] = buttonEepromSettings.loggerLevel;
     result["statisticEnabled"] = buttonEepromSettings.statisticEnabled;
     result["statisticLevel"] = buttonEepromSettings.statisticLevel;
-    result["useDnsName"] = buttonEepromSettings.useDnsName;
+//    result["useDnsName"] = buttonEepromSettings.useDnsName;
     result["useSound"] = buttonEepromSettings.useSound;
     result["remoteTriggering"] = buttonEepromSettings.remoteTriggering;
     result["remoteStateChange"] = buttonEepromSettings.remoteStateChange;
@@ -185,6 +260,20 @@ void SettingsService::getEventsJson(JsonObject &result) {
     }
 }
 
+void SettingsService::getEventsArray(JsonArray &result) {
+    if (this->eventsData.isEmpty() || this->eventsData == "{}") {
+        return;
+    }
+    DynamicJsonDocument doc(4096);
+    DeserializationError error = deserializeJson(doc, this->eventsData);
+    if (!error && doc.is<JsonArray>()) {
+        JsonArray arr = doc.as<JsonArray>();
+        for (JsonVariant v : arr) {
+            result.add(v);
+        }
+    }
+}
+
 bool SettingsService::clientWebAccessEnabled() const {
     return buttonEepromSettings.clientWebAccess | false;
 }
@@ -202,7 +291,7 @@ bool SettingsService::remoteButtonTriggering() const {
 }
 
 bool SettingsService::loggerEnabled() const {
-    return buttonEepromSettings.loggerEnabled | false;
+    return buttonEepromSettings.loggerLevel > 0;
 }
 
 bool SettingsService::statisticEnabled() const {

@@ -50,6 +50,7 @@ static const OptionItem<BUTTON_WIFI_MODE> WIFI_MODE_OPTIONS[] = {
 const size_t WIFI_MODE_OPTIONS_COUNT = sizeof(WIFI_MODE_OPTIONS) / sizeof(WIFI_MODE_OPTIONS[0]);
 
 static const OptionItem<LoggerLevel> LOGGER_LEVEL_OPTIONS[] = {
+        {LoggerLevel::OFF, "OFF"},
         {LoggerLevel::SERIAL_AND_LOCAL, "Serial & Local"},
         {LoggerLevel::LOGGER_SERIAL, "Serial (115200 8-N-1)"},
         {LoggerLevel::LOGGER_LOCAL, "Local log (/logs)"}

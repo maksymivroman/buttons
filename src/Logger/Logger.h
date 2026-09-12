@@ -9,7 +9,11 @@
 #include "ArduinoJson.h"
 
 enum LoggerLevel {
-    SERIAL_AND_LOCAL, LOGGER_SERIAL, LOGGER_LOCAL
+    OFF, SERIAL_AND_LOCAL, LOGGER_SERIAL, LOGGER_LOCAL
+};
+
+enum class LoggerLogType {
+    INFO, WARN, ERROR
 };
 
 class Logger {
